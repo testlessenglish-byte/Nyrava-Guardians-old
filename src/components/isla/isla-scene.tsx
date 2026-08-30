@@ -531,7 +531,7 @@ function Pickup({
 
 function Player({ color, name }: { color: string; name: string }) {
   const group = useRef<THREE.Group>(null);
-  const [gait, setGait] = useState<"idle" | "walk" | "run">("idle");
+  const [gait, setGait] = useState<"idle" | "walk" | "run" | "swim">("idle");
   const nearRef = useRef<string | null>(null);
   const regionRef = useRef<RegionId>("city");
   const vy = useRef(0);
