@@ -59,9 +59,9 @@ export function Character({
       if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace;
       // Keep the baked armour texture readable; the guardian neon is a light wash
       // plus an emissive rim rather than a flat paint-over.
-      mat.color.copy(new THREE.Color("#ffffff").lerp(tint, 0.22));
-      mat.emissive = tint.clone().multiplyScalar(0.32);
-      mat.emissiveIntensity = 0.9;
+      mat.color.copy(new THREE.Color("#ffffff").lerp(tint, 0.14));
+      mat.emissive = tint.clone().multiplyScalar(0.07);
+      mat.emissiveIntensity = 1;
       mat.metalness = 0.65;
       mat.roughness = 0.35;
       mat.envMapIntensity = 1.2;
