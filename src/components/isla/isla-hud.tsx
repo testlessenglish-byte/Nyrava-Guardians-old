@@ -296,8 +296,64 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
       {/* joystick + controls */}
       <div className="pointer-events-none absolute bottom-6 left-6 space-y-2">
         <Joystick />
-        <p className="text-[11px] text-muted-foreground">WASD or click the ground to walk · Shift to sprint · Space to jump · drag to look · scroll to zoom · V for first person · E to interact</p>
+        <p className="max-w-xs text-[11px] leading-relaxed text-muted-foreground">
+          WASD or click the ground to walk · Shift to sprint · Space to jump · drag to look · scroll to zoom · V for
+          first person · E to interact
+        </p>
       </div>
+
+      {/* camera + action pad */}
+      <div className="pointer-events-auto absolute bottom-8 right-6 flex flex-col items-end gap-2">
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              islaControls.camDistance = Math.max(3.5, islaControls.camDistance - 3);
+            }}
+            className="h-10 w-10 rounded-full border border-border/70 bg-background/70 text-lg font-bold backdrop-blur"
+            aria-label="Zoom in"
+          >
+            +
+          </button>
+          <button
+            onClick={() => {
+              islaControls.camDistance = Math.min(34, islaControls.camDistance + 3);
+            }}
+            className="h-10 w-10 rounded-full border border-border/70 bg-background/70 text-lg font-bold backdrop-blur"
+            aria-label="Zoom out"
+          >
+            −
+          </button>
+        </div>
+        <button
+          onClick={() => toggleIslaView()}
+          className="rounded-full border border-primary/50 bg-primary/15 px-4 py-2 text-xs font-bold text-primary backdrop-blur"
+        >
+          Switch view (V)
+        </button>
+        <button
+          onPointerDown={() => {
+            islaControls.jump = true;
+          }}
+          className="rounded-full border border-border/70 bg-background/70 px-5 py-2 text-xs font-bold backdrop-blur"
+        >
+          Jump
+        </button>
+        <button
+          onPointerDown={() => {
+            islaControls.sprint = true;
+          }}
+          onPointerUp={() => {
+            islaControls.sprint = false;
+          }}
+          onPointerLeave={() => {
+            islaControls.sprint = false;
+          }}
+          className="rounded-full border border-border/70 bg-background/70 px-5 py-2 text-xs font-bold backdrop-blur"
+        >
+          Run
+        </button>
+      </div>
+
 
       {/* crystal challenge */}
       {challengeCrystal?.challenge && (
