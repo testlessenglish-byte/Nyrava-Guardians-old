@@ -360,6 +360,49 @@ function SpacePort({ locked }: { locked: boolean }) {
   );
 }
 
+/** A tropical palapa hut: timber posts, sand-plaster walls, thatched roof. */
+function Palapa({ position, scale = 1, rotation = 0 }: { position: [number, number, number]; scale?: number; rotation?: number }) {
+  return (
+    <group position={position} rotation-y={rotation} scale={scale}>
+      {/* raised deck */}
+      <mesh position={[0, 0.35, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[3.4, 3.6, 0.7, 8]} />
+        <meshStandardMaterial color="#a9805a" roughness={0.95} />
+      </mesh>
+      {/* walls of woven cane */}
+      <mesh position={[0, 2.1, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[2.8, 3, 3.1, 8]} />
+        <meshStandardMaterial color="#d9bd8c" roughness={1} />
+      </mesh>
+      {/* corner posts */}
+      {[0, 1, 2, 3].map((i) => (
+        <mesh
+          key={i}
+          position={[Math.cos((i / 4) * Math.PI * 2) * 3.1, 2.2, Math.sin((i / 4) * Math.PI * 2) * 3.1]}
+          castShadow
+        >
+          <cylinderGeometry args={[0.16, 0.2, 4, 6]} />
+          <meshStandardMaterial color="#6f4a2c" roughness={1} />
+        </mesh>
+      ))}
+      {/* thatch roof — two stacked palm layers */}
+      <mesh position={[0, 4.5, 0]} castShadow>
+        <coneGeometry args={[4.6, 2.6, 8]} />
+        <meshStandardMaterial color="#b98b46" roughness={1} />
+      </mesh>
+      <mesh position={[0, 5.6, 0]} castShadow>
+        <coneGeometry args={[3.1, 2.1, 8]} />
+        <meshStandardMaterial color="#9c7134" roughness={1} />
+      </mesh>
+      {/* warm lantern in the doorway */}
+      <mesh position={[0, 1.9, 3.02]}>
+        <planeGeometry args={[1.3, 2]} />
+        <meshStandardMaterial color="#3b2a18" emissive="#f59e0b" emissiveIntensity={0.5} />
+      </mesh>
+    </group>
+  );
+}
+
 function CentralCity() {
   const towers = useMemo<Instance[]>(() => {
     const rand = mulberry32(99);
@@ -376,9 +419,11 @@ function CentralCity() {
 
   return (
     <>
-      <Instanced items={towers} color="#dbeafe" yOffset={4} emissive="#38bdf8">
-        <boxGeometry args={[3.6, 8, 3.6]} />
-      </Instanced>
+      {/* Island village: palapa huts instead of glass slabs */}
+      {towers.map((hut, i) => (
+        <Palapa key={i} position={hut.p} scale={0.75 + (hut.s % 1) * 0.5} rotation={hut.r} />
+      ))}
+
 
       {/* Guardian Plaza */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 2.26 * S * 0.8, 0]} receiveShadow>
