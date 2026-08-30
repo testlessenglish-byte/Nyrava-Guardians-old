@@ -876,6 +876,8 @@ export function IslaScene({
       />
       <Terrain />
       <Ocean />
+      <Sky />
+      <GroundCover />
       <CentralCity />
       <Forest />
       <Mountains />
