@@ -61,11 +61,12 @@ export function Character({
         mat.map.anisotropy = 8;
         mat.map.needsUpdate = true;
       }
-      // Show the baked armour texture at full strength. The guardian identity
-      // comes from an emissive neon rim, not from painting over the diffuse.
-      mat.color.setRGB(1, 1, 1);
-      mat.emissive = tint.clone().multiplyScalar(0.22);
-      mat.emissiveIntensity = 1.1;
+      // Show the baked armour texture at full strength: white diffuse keeps
+      // the texture's own colours and detail. Guardian identity is a gentle
+      // tint on the diffuse plus a faint neon rim — not an emissive flood.
+      mat.color.setRGB(1, 1, 1).lerp(tint, 0.22);
+      mat.emissive = tint.clone().multiplyScalar(0.09);
+      mat.emissiveIntensity = 0.55;
       mat.metalness = mat.metalnessMap ? 1 : 0.18;
       mat.roughness = mat.roughnessMap ? 1 : 0.62;
       mat.envMapIntensity = 1.4;
