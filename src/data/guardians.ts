@@ -13,6 +13,7 @@ export const GUARDIAN_IMAGES: Record<string, string> = {
   lex: lexImg,
   nova: novaImg,
   zoey: zoeyImg,
+  zoe: zoeyImg,
   jacob: jacobImg,
   dayana: dayanaImg,
   sarah: sarahImg,

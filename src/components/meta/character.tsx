@@ -20,7 +20,10 @@ export function Character({
   guardianId?: string;
   height?: number;
 }) {
-  const avatarImgUrl = GUARDIAN_IMAGES[guardianId] ?? GUARDIAN_IMAGES["lex"]!;
+  const avatarImgUrl =
+    GUARDIAN_IMAGES[guardianId] ??
+    GUARDIAN_IMAGES[guardianId.toLowerCase()] ??
+    GUARDIAN_IMAGES["lex"]!;
   const texture = useTexture(avatarImgUrl);
   texture.colorSpace = THREE.SRGBColorSpace;
 
@@ -30,14 +33,14 @@ export function Character({
     <group>
       <group rotation-x={swimming ? Math.PI / 2.35 : 0} position-y={swimming ? 0.5 : 0}>
         {/* High-Resolution Guardian Hero Avatar matching front of site 100% */}
-        <Billboard position={[0, height * 0.6, 0]} follow={true} lockX={true} lockZ={true}>
+        <Billboard position={[0, height * 0.6, 0]}>
           <mesh>
             <planeGeometry args={[height * 0.85, height * 1.2]} />
             <meshBasicMaterial
               map={texture}
               transparent
               side={THREE.DoubleSide}
-              alphaTest={0.5}
+              alphaTest={0.1}
             />
           </mesh>
         </Billboard>
