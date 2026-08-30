@@ -163,6 +163,22 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
         </button>
       </div>
 
+      {/* Talk prompt — the class/conversation starts ONLY when the student clicks this box (or presses E) */}
+      {nearGuardian && !guardianMessage && (
+        <div className="pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2">
+          <button
+            onClick={() => {
+              islaControls.interact = true;
+            }}
+            className="flex items-center gap-2 rounded-2xl border-2 border-cyan-400/60 bg-slate-950/90 px-5 py-3 text-sm font-extrabold text-cyan-200 shadow-2xl backdrop-blur-xl transition hover:bg-cyan-950"
+          >
+            <MessageCircle className="h-4 w-4 text-cyan-400" />
+            Talk to {nearGuardian.name} · start class
+            <span className="rounded-md border border-cyan-400/40 px-1.5 py-0.5 text-[10px] text-cyan-300">E</span>
+          </button>
+        </div>
+      )}
+
       {/* Ongoing Guardian Conversational Overlay */}
       {guardianMessage && (
         <div className="pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2 w-full max-w-xl p-4">
