@@ -30,7 +30,7 @@ export function Character({
     <group>
       <group rotation-x={swimming ? Math.PI / 2.35 : 0} position-y={swimming ? 0.5 : 0}>
         {/* High-Resolution Guardian Hero Avatar matching front of site */}
-        <Billboard position={[0, height * 0.6, 0]}>
+        <group position={[0, height * 0.6, 0]}>
           <mesh>
             <planeGeometry args={[height * 0.85, height * 1.2]} />
             <meshStandardMaterial
@@ -44,7 +44,7 @@ export function Character({
               alphaTest={0.05}
             />
           </mesh>
-        </Billboard>
+        </group>
 
         {/* Guardian Energy Core */}
         <mesh position={[0, height * 0.4, 0.05]}>
