@@ -68,6 +68,7 @@ export function Character({
     const size = box.getSize(new THREE.Vector3());
     object.scale.setScalar(height / (size.y || 1));
 
+    object.traverse((c:any)=>{ if(c.isMesh){ c.geometry.computeBoundingBox(); const b=c.geometry.boundingBox; console.log("[char-mesh]", c.name, b.min.toArray().map((n:number)=>n.toFixed(2)), b.max.toArray().map((n:number)=>n.toFixed(2))); }});
     console.log("[char] rawSize", size.toArray(), "scale", object.scale.x, "clips", animations.map(a=>a.name));
     const scaled = new THREE.Box3().setFromObject(object);
     object.position.y -= scaled.min.y;
