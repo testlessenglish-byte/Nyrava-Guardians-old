@@ -30,6 +30,8 @@ export type IslaState = {
   classComplete: boolean;
   /** transient */
   near: NearTarget;
+  /** Guardian station the player is standing next to (conversation starts only on click/E). */
+  nearGuardian: string | null;
   region: RegionId;
   toast: { title: string; body: string } | null;
   challengeFor: string | null;
@@ -48,6 +50,7 @@ const initial: IslaState = {
   xp: 0,
   classComplete: false,
   near: null,
+  nearGuardian: null,
   region: "city",
   toast: null,
   challengeFor: null,

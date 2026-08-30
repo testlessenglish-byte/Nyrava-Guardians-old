@@ -15,6 +15,8 @@ import {
 import { ISLAND_RADIUS } from "@/lib/isla-terrain";
 import { useGuardian } from "@/lib/guardian-context";
 import { conversationalVoiceEngine, type ConversationState } from "@/services/ai/conversational-voice-engine";
+import { CLASS_GUARDIANS } from "@/lib/class-guardians";
+import { MessageCircle } from "lucide-react";
 import { UI_STRINGS } from "@/data/bilingual-dictionary";
 import { Globe, Mic, MicOff, Volume2, Sparkles, X } from "lucide-react";
 
@@ -89,6 +91,17 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
 
   const ui = UI_STRINGS[locale] ?? UI_STRINGS["en-US"];
 
+  const nearGuardian = state.nearGuardian
+    ? CLASS_GUARDIANS.find((g) => g.id === state.nearGuardian)
+    : null;
+
+  // Clear the conversation bubble shortly after leaving the guardian.
+  useEffect(() => {
+    if (state.nearGuardian) return;
+    const t = setTimeout(() => setGuardianMessage(null), 2600);
+    return () => clearTimeout(t);
+  }, [state.nearGuardian]);
+
   const mission = useMemo(
     () => ({
       crystals: state.crystals.length,
@@ -149,6 +162,22 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
           <span>{isMuted ? ui['unmuteMic'] : ui['muteMic']}</span>
         </button>
       </div>
+
+      {/* Talk prompt — the class/conversation starts ONLY when the student clicks this box (or presses E) */}
+      {nearGuardian && !guardianMessage && (
+        <div className="pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2">
+          <button
+            onClick={() => {
+              islaControls.interact = true;
+            }}
+            className="flex items-center gap-2 rounded-2xl border-2 border-cyan-400/60 bg-slate-950/90 px-5 py-3 text-sm font-extrabold text-cyan-200 shadow-2xl backdrop-blur-xl transition hover:bg-cyan-950"
+          >
+            <MessageCircle className="h-4 w-4 text-cyan-400" />
+            Talk to {nearGuardian.name} · start class
+            <span className="rounded-md border border-cyan-400/40 px-1.5 py-0.5 text-[10px] text-cyan-300">E</span>
+          </button>
+        </div>
+      )}
 
       {/* Ongoing Guardian Conversational Overlay */}
       {guardianMessage && (

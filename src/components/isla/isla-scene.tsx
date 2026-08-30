@@ -747,6 +747,7 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
   const [gait, setGait] = useState<"idle" | "walk" | "run" | "swim">("idle");
   const nearRef = useRef<string | null>(null);
   const nearStationRef = useRef<string | null>(null);
+  const talkingRef = useRef(false);
   const regionRef = useRef<RegionId>("city");
   const vy = useRef(0);
   const airborne = useRef(false);
@@ -901,12 +902,14 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
 
     const stationKey = nearestStation ? nearestStation.id : null;
     if (stationKey !== nearStationRef.current) {
-      if (nearestStation) {
-        conversationalVoiceEngine.triggerProximityGreeting(nearestStation.id);
-      } else if (nearStationRef.current) {
+      // No auto pop-up or talking: only remember who is nearby. The student
+      // starts the conversation by clicking the talk box or pressing E.
+      if (!stationKey && talkingRef.current) {
         conversationalVoiceEngine.handleWalkAway();
+        talkingRef.current = false;
       }
       nearStationRef.current = stationKey;
+      patchIsla({ nearGuardian: stationKey });
     }
 
     // proximity: crystals, secrets, academy door
@@ -940,6 +943,11 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
 
     if (islaControls.interact) {
       islaControls.interact = false;
+      if (stationKey && !talkingRef.current) {
+        // Student explicitly asked to start: greet only now.
+        talkingRef.current = true;
+        conversationalVoiceEngine.triggerProximityGreeting(stationKey);
+      }
       if (near?.kind === "crystal") tryCollectCrystal(near.id);
       if (near?.kind === "secret") {
         const secret = SECRETS.find((item) => item.id === near.id);
