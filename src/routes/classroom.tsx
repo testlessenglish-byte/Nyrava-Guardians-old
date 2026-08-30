@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { ClassroomScene } from "@/components/meta/classroom-scene";
 import { ClassHud } from "@/components/meta/class-hud";
 import { controls } from "@/lib/class-store";
+import { CLASS_GUARDIANS } from "@/lib/class-guardians";
+import { useGuardian } from "@/lib/guardian-context";
 
 export const Route = createFileRoute("/classroom")({
   ssr: false,
@@ -30,6 +32,10 @@ export const Route = createFileRoute("/classroom")({
 
 function ClassroomPage() {
   const dragging = useRef(false);
+  const { guardianId, guardianName } = useGuardian();
+  const chosen = CLASS_GUARDIANS.find((g) => g.id === guardianId);
+  const playerColor = chosen?.color ?? "#f4f7ff";
+  const playerLabel = `${guardianName || "You"}${chosen ? ` · ${chosen.name}` : ""}`;
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -75,7 +81,7 @@ function ClassroomPage() {
         onPointerCancel={() => (dragging.current = false)}
       >
         <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 5, 13], fov: 58 }}>
-          <ClassroomScene />
+          <ClassroomScene playerColor={playerColor} playerLabel={playerLabel} />
         </Canvas>
       </div>
       <ClassHud />

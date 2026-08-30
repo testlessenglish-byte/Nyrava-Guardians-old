@@ -4,7 +4,8 @@ import { Mic, MicOff, Send, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { Joystick } from "./joystick";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
-import { pushMessage, setClassState, useClassState } from "@/lib/class-store";
+import { pushMessage, setClassState, travelTo, useClassState } from "@/lib/class-store";
+import { ZONES, getZone } from "@/lib/worlds";
 import { guardianChat, guardianSpeak } from "@/lib/classroom.functions";
 import { useGuardian } from "@/lib/guardian-context";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,8 @@ type SpeechRecognitionLike = {
 };
 
 export function ClassHud() {
-  const { messages, nearby, thinking, voiceEnabled, listening } = useClassState();
+  const { messages, nearby, thinking, voiceEnabled, listening, zone } = useClassState();
+  const current = getZone(zone);
   const chat = useServerFn(guardianChat);
   const speak = useServerFn(guardianSpeak);
   const [draft, setDraft] = useState("");
@@ -33,8 +35,11 @@ export function ClassHud() {
   const { guardianName } = useGuardian();
   const learnerName = guardianName || "Guardian";
 
+  const host =
+    CLASS_GUARDIANS.find((g) => g.id === current.npcs[0]) ??
+    CLASS_GUARDIANS[CLASS_GUARDIANS.length - 1];
   const active = (CLASS_GUARDIANS.find((g) => g.id === nearby) ??
-    CLASS_GUARDIANS[CLASS_GUARDIANS.length - 1]) as (typeof CLASS_GUARDIANS)[number];
+    host) as (typeof CLASS_GUARDIANS)[number];
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
@@ -115,7 +120,30 @@ export function ClassHud() {
     <div className="pointer-events-none fixed inset-0 z-20">
       {/* Presence banner */}
       <div className="pointer-events-none absolute left-1/2 top-20 -translate-x-1/2 rounded-full border border-border/60 bg-background/70 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-muted-foreground backdrop-blur">
-        {nearby ? `Talking with ${active.name}` : "Walk up to a guardian to start class"}
+        {nearby ? `Talking with ${active.name}` : `${current.name} · walk into a portal to travel`}
+      </div>
+
+      {/* World switcher */}
+      <div className="pointer-events-auto absolute left-6 top-32 w-52 rounded-3xl border border-border/60 bg-background/75 p-3 backdrop-blur-xl">
+        <p className="px-1 pb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Worlds</p>
+        <div className="flex flex-col gap-1">
+          {ZONES.map((z) => (
+            <button
+              key={z.id}
+              type="button"
+              onClick={() => travelTo(z.id)}
+              className={`rounded-xl px-3 py-2 text-left text-sm transition ${
+                z.id === zone
+                  ? "bg-primary/15 font-semibold text-foreground"
+                  : "text-muted-foreground hover:bg-muted/40"
+              }`}
+              style={z.id === zone ? { color: z.accent } : undefined}
+            >
+              {z.name}
+            </button>
+          ))}
+        </div>
+        <p className="px-1 pt-2 text-[11px] leading-snug text-muted-foreground">{current.blurb}</p>
       </div>
 
       {/* Movement */}
