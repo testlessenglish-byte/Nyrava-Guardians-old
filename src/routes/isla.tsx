@@ -8,7 +8,7 @@ class IslaErrorBoundary extends Component<{ children: ReactNode }, { hasError: b
     this.state = { hasError: false };
   }
 
-  static override getDerivedStateFromError() {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 
