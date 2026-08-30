@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AcademyRouteImport } from './routes/academy'
+import { Route as BuilderRouteImport } from './routes/builder'
+import { Route as CoreRouteImport } from './routes/core'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as PersonalizeRouteImport } from './routes/personalize'
@@ -24,6 +26,16 @@ const IndexRoute = IndexRouteImport.update({
 const AcademyRoute = AcademyRouteImport.update({
   id: '/academy',
   path: '/academy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuilderRoute = BuilderRouteImport.update({
+  id: '/builder',
+  path: '/builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoreRoute = CoreRouteImport.update({
+  id: '/core',
+  path: '/core',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeRoute = HomeRouteImport.update({
@@ -50,6 +62,8 @@ const WorldRoute = WorldRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
+  '/builder': typeof BuilderRoute
+  '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/missions': typeof MissionsRoute
   '/personalize': typeof PersonalizeRoute
@@ -58,6 +72,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
+  '/builder': typeof BuilderRoute
+  '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/missions': typeof MissionsRoute
   '/personalize': typeof PersonalizeRoute
@@ -67,6 +83,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
+  '/builder': typeof BuilderRoute
+  '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/missions': typeof MissionsRoute
   '/personalize': typeof PersonalizeRoute
@@ -75,13 +93,30 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/academy' | '/home' | '/missions' | '/personalize' | '/world'
+    | '/'
+    | '/academy'
+    | '/builder'
+    | '/core'
+    | '/home'
+    | '/missions'
+    | '/personalize'
+    | '/world'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/academy' | '/home' | '/missions' | '/personalize' | '/world'
+  to:
+    | '/'
+    | '/academy'
+    | '/builder'
+    | '/core'
+    | '/home'
+    | '/missions'
+    | '/personalize'
+    | '/world'
   id:
     | '__root__'
     | '/'
     | '/academy'
+    | '/builder'
+    | '/core'
     | '/home'
     | '/missions'
     | '/personalize'
@@ -91,6 +126,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcademyRoute: typeof AcademyRoute
+  BuilderRoute: typeof BuilderRoute
+  CoreRoute: typeof CoreRoute
   HomeRoute: typeof HomeRoute
   MissionsRoute: typeof MissionsRoute
   PersonalizeRoute: typeof PersonalizeRoute
@@ -111,6 +148,20 @@ declare module '@tanstack/react-router' {
       path: '/academy'
       fullPath: '/academy'
       preLoaderRoute: typeof AcademyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/builder': {
+      id: '/builder'
+      path: '/builder'
+      fullPath: '/builder'
+      preLoaderRoute: typeof BuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/core': {
+      id: '/core'
+      path: '/core'
+      fullPath: '/core'
+      preLoaderRoute: typeof CoreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home': {
@@ -147,6 +198,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcademyRoute: AcademyRoute,
+  BuilderRoute: BuilderRoute,
+  CoreRoute: CoreRoute,
   HomeRoute: HomeRoute,
   MissionsRoute: MissionsRoute,
   PersonalizeRoute: PersonalizeRoute,
