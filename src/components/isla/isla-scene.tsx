@@ -19,7 +19,7 @@ import {
   patchIsla,
   tryCollectCrystal,
 } from "@/lib/isla-store";
-import { ISLAND_RADIUS, isWalkable, terrainHeight } from "@/lib/isla-terrain";
+import { ISLAND_RADIUS, WORLD_SCALE as S, isWalkable, terrainHeight, ws } from "@/lib/isla-terrain";
 
 const SPEED = 9.5;
 const move = new THREE.Vector3();
@@ -53,7 +53,7 @@ function regionAt(x: number, z: number): RegionId {
 function Terrain() {
   const geometry = useMemo(() => {
     const size = ISLAND_RADIUS * 2.6;
-    const seg = 200;
+    const seg = 300;
     const geo = new THREE.PlaneGeometry(size, size, seg, seg);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes['position'] as THREE.BufferAttribute;
@@ -84,7 +84,15 @@ function Terrain() {
   }, []);
 
   return (
-    <mesh geometry={geometry} receiveShadow>
+    <mesh
+      geometry={geometry}
+      receiveShadow
+      onPointerUp={(e) => {
+        if (islaControls.dragged) return;
+        e.stopPropagation();
+        islaControls.moveTarget = { x: e.point.x, z: e.point.z };
+      }}
+    >
       <meshStandardMaterial vertexColors roughness={0.96} metalness={0.02} />
     </mesh>
   );
@@ -97,7 +105,7 @@ function Ocean() {
   });
   return (
     <mesh ref={ref} rotation-x={-Math.PI / 2} position-y={-0.1}>
-      <circleGeometry args={[420, 64]} />
+      <circleGeometry args={[1400, 72]} />
       <meshStandardMaterial
         color="#0e7490"
         transparent
@@ -181,7 +189,7 @@ function Instanced({
 }
 
 function Forest() {
-  const trees = useScatter(11, 130, [-44, -40], 32, 1.2);
+  const trees = useScatter(11, 420, ws([-44, -40]), 32 * S, 1.2);
   return (
     <>
       <Instanced items={trees} color="#5b3a22" yOffset={1.6}>
@@ -203,8 +211,8 @@ function Waterfall() {
       m.opacity = 0.65 + Math.sin(clock.elapsedTime * 3) * 0.1;
     }
   });
-  const x = -47;
-  const z = -47;
+  const x = -47 * S;
+  const z = -47 * S;
   return (
     <group position={[x, terrainHeight(x, z), z]}>
       <mesh ref={ref} position={[0, 3.4, 0]}>
@@ -220,14 +228,14 @@ function Waterfall() {
 }
 
 function Mountains() {
-  const rocks = useScatter(21, 70, [44, -46], 32, 3);
+  const rocks = useScatter(21, 220, ws([44, -46]), 32 * S, 3);
   const peaks = useMemo<Instance[]>(() => {
     const rand = mulberry32(7);
-    return Array.from({ length: 9 }, () => {
+    return Array.from({ length: 22 }, () => {
       const a = rand() * Math.PI * 2;
-      const d = rand() * 22;
-      const x = 44 + Math.cos(a) * d;
-      const z = -46 + Math.sin(a) * d;
+      const d = rand() * 22 * S;
+      const x = 44 * S + Math.cos(a) * d;
+      const z = -46 * S + Math.sin(a) * d;
       return { p: [x, terrainHeight(x, z), z] as [number, number, number], s: 1.4 + rand() * 2.2, r: rand() * 3 };
     });
   }, []);
@@ -240,7 +248,7 @@ function Mountains() {
         <coneGeometry args={[3.4, 8, 6]} />
       </Instanced>
       {/* Summit observation temple */}
-      <group position={[46, terrainHeight(46, -52), -52]}>
+      <group position={[46 * S, terrainHeight(46 * S, -52 * S), -52 * S]}>
         {[0, 1, 2, 3].map((i) => (
           <mesh key={i} position={[Math.cos((i / 4) * Math.PI * 2) * 3.4, 2.2, Math.sin((i / 4) * Math.PI * 2) * 3.4]} castShadow>
             <cylinderGeometry args={[0.4, 0.5, 4.4, 8]} />
@@ -257,13 +265,13 @@ function Mountains() {
 }
 
 function Valley() {
-  const stones = useScatter(31, 46, [-26, 48], 22, 0.7);
+  const stones = useScatter(31, 150, ws([-26, 48]), 22 * S, 0.7);
   return (
     <>
       <Instanced items={stones} color="#c9b489" yOffset={1.4}>
         <cylinderGeometry args={[0.5, 0.6, 3.2, 8]} />
       </Instanced>
-      <group position={[-26, terrainHeight(-26, 48), 48]}>
+      <group position={[-26 * S, terrainHeight(-26 * S, 48 * S), 48 * S]}>
         <mesh rotation-x={-Math.PI / 2} position={[0, 0.07, 0]} receiveShadow>
           <ringGeometry args={[6, 12, 32]} />
           <meshStandardMaterial color="#e7d4a3" />
@@ -278,7 +286,7 @@ function Valley() {
 }
 
 function Desert() {
-  const ruins = useScatter(41, 34, [-58, 16], 26, 0.8);
+  const ruins = useScatter(41, 120, ws([-58, 16]), 26 * S, 0.8);
   return (
     <Instanced items={ruins} color="#b98b3d" yOffset={1.2}>
       <boxGeometry args={[1.6, 2.6, 1.6]} />
@@ -287,7 +295,7 @@ function Desert() {
 }
 
 function Beach() {
-  const palms = useScatter(51, 34, [30, 52], 24, 0.7);
+  const palms = useScatter(51, 120, ws([30, 52]), 24 * S, 0.7);
   return (
     <>
       <Instanced items={palms} color="#8a5a2b" yOffset={2.2}>
@@ -298,7 +306,7 @@ function Beach() {
       </Instanced>
       {/* docks + boats */}
       {[0, 1, 2].map((i) => (
-        <group key={i} position={[34 + i * 5, 0.4, 62 + i * 2]}>
+        <group key={i} position={[(34 + i * 5) * S, 0.4, (62 + i * 2) * S]}>
           <mesh castShadow receiveShadow>
             <boxGeometry args={[2.2, 0.3, 14]} />
             <meshStandardMaterial color="#8b5e3c" />
@@ -318,9 +326,9 @@ function SpacePort({ locked }: { locked: boolean }) {
   useFrame((_, d) => {
     if (ring.current) ring.current.rotation.z += d * 0.4;
   });
-  const y = terrainHeight(62, 8);
+  const y = terrainHeight(62 * S, 8 * S);
   return (
-    <group position={[62, y, 8]}>
+    <group position={[62 * S, y, 8 * S]}>
       <mesh position={[0, 9, 0]} castShadow>
         <cylinderGeometry args={[1.6, 2.6, 18, 12]} />
         <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.3} />
@@ -346,9 +354,9 @@ function CentralCity() {
   const towers = useMemo<Instance[]>(() => {
     const rand = mulberry32(99);
     const out: Instance[] = [];
-    for (let i = 0; i < 16; i++) {
-      const a = (i / 16) * Math.PI * 2 + rand() * 0.2;
-      const d = 17 + rand() * 7;
+    for (let i = 0; i < 34; i++) {
+      const a = (i / 34) * Math.PI * 2 + rand() * 0.35;
+      const d = (16 + rand() * 8) * S;
       const x = Math.cos(a) * d;
       const z = Math.sin(a) * d;
       out.push({ p: [x, terrainHeight(x, z), z], s: 0.8 + rand() * 1.6, r: rand() * 3 });
@@ -363,13 +371,21 @@ function CentralCity() {
       </Instanced>
 
       {/* Guardian Plaza */}
-      <mesh rotation-x={-Math.PI / 2} position={[0, 2.26, 0]} receiveShadow>
-        <circleGeometry args={[14, 48]} />
-        <meshStandardMaterial color="#cbd5f5" emissive="#38bdf8" emissiveIntensity={0.12} />
+      <mesh rotation-x={-Math.PI / 2} position={[0, 2.26 * S * 0.8, 0]} receiveShadow>
+        <circleGeometry args={[11 * S, 64]} />
+        <meshStandardMaterial color="#33465f" roughness={0.85} emissive="#0ea5e9" emissiveIntensity={0.06} />
       </mesh>
 
+      {/* plaza inlay rings so the ground reads as built, not blank */}
+      {[5, 8, 10.4].map((r) => (
+        <mesh key={r} rotation-x={-Math.PI / 2} position={[0, 2.26 * S * 0.8 + 0.02, 0]}>
+          <ringGeometry args={[r * S - 0.5, r * S, 72]} />
+          <meshStandardMaterial color="#7dd3fc" emissive="#38bdf8" emissiveIntensity={0.7} />
+        </mesh>
+      ))}
+
       {/* Nyrava Command Center — the landmark */}
-      <group position={[0, 2.2, 0]}>
+      <group position={[0, 2.26 * S * 0.8, 0]}>
         <mesh position={[0, 11, 0]} castShadow>
           <cylinderGeometry args={[2.4, 4.4, 22, 8]} />
           <meshStandardMaterial color="#f1f5f9" metalness={0.4} roughness={0.35} />
@@ -384,7 +400,7 @@ function CentralCity() {
       </group>
 
       {/* Academy entrance */}
-      <group position={[ACADEMY_DOOR[0], terrainHeight(ACADEMY_DOOR[0], ACADEMY_DOOR[1]), ACADEMY_DOOR[1] - 6]}>
+      <group position={[ACADEMY_DOOR[0], terrainHeight(ACADEMY_DOOR[0], ACADEMY_DOOR[1]), ACADEMY_DOOR[1] - 12]}>
         <mesh position={[0, 4, 0]} castShadow receiveShadow>
           <boxGeometry args={[18, 8, 12]} />
           <meshStandardMaterial color="#e2e8f0" />
@@ -399,7 +415,7 @@ function CentralCity() {
       </group>
 
       {/* Mission board */}
-      <group position={[8, terrainHeight(8, 10) + 1.6, 10]}>
+      <group position={[8 * S, terrainHeight(8 * S, 10 * S) + 1.6, 10 * S]}>
         <mesh castShadow>
           <boxGeometry args={[4, 3, 0.3]} />
           <meshStandardMaterial color="#0f172a" emissive="#22d3ee" emissiveIntensity={0.3} />
@@ -449,16 +465,28 @@ function Pickup({
 function Player({ color, name, guardianColor }: { color: string; name: string; guardianColor: string }) {
   const group = useRef<THREE.Group>(null);
   const companion = useRef<THREE.Group>(null);
-  const [moving, setMoving] = useState(false);
+  const [gait, setGait] = useState<"idle" | "walk" | "run">("idle");
   const [companionMoving, setCompanionMoving] = useState(false);
   const nearRef = useRef<string | null>(null);
   const regionRef = useRef<RegionId>("city");
+  const vy = useRef(0);
+  const airborne = useRef(false);
+  const camPos = useRef(new THREE.Vector3());
+  const [firstPerson, setFirstPerson] = useState(islaControls.view === "first");
+
+  useEffect(() => {
+    const onView = () => setFirstPerson(islaControls.view === "first");
+    window.addEventListener("isla-view", onView);
+    return () => window.removeEventListener("isla-view", onView);
+  }, []);
 
   useEffect(() => {
     if (group.current) {
-      group.current.position.set(0, terrainHeight(0, 12), 12);
-      islaControls.player.x = 0;
-      islaControls.player.z = 12;
+      const sx = 0;
+      const sz = 12 * S;
+      group.current.position.set(sx, terrainHeight(sx, sz), sz);
+      islaControls.player.x = sx;
+      islaControls.player.z = sz;
     }
   }, []);
 
@@ -467,21 +495,43 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
     const player = group.current;
     if (!player) return;
     const snapshot = getIsla();
+    const busy = !!snapshot.challengeFor || snapshot.reporting;
 
     const keys = islaControls.keys;
     let ix = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0);
-    let iz = (keys.has("s") ? 1 : 0) - (keys.has("w") ? 1 : 0);
+    let iz = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0);
     ix += islaControls.joystick.x;
-    iz += islaControls.joystick.y;
+    iz -= islaControls.joystick.y;
 
-    const len = Math.hypot(ix, iz);
-    const isMoving = len > 0.08 && !snapshot.challengeFor && !snapshot.reporting;
-    if (isMoving) {
+    let len = Math.hypot(ix, iz);
+    const yaw = islaControls.cameraYaw;
+
+    // Camera-relative movement: forward is the direction the camera looks.
+    if (len > 0.08) {
+      islaControls.moveTarget = null;
       ix /= len;
       iz /= len;
-      const yaw = islaControls.cameraYaw;
-      move.set(ix * Math.cos(yaw) - iz * Math.sin(yaw), 0, ix * Math.sin(yaw) + iz * Math.cos(yaw));
-      const step = SPEED * delta;
+      move.set(ix * Math.cos(yaw) + iz * -Math.sin(yaw), 0, -ix * Math.sin(yaw) + iz * -Math.cos(yaw));
+    } else if (islaControls.moveTarget) {
+      // Click-to-walk: steer toward the clicked spot until we arrive.
+      const dx = islaControls.moveTarget.x - player.position.x;
+      const dz = islaControls.moveTarget.z - player.position.z;
+      const d = Math.hypot(dx, dz);
+      if (d < 1.4) {
+        islaControls.moveTarget = null;
+        len = 0;
+      } else {
+        move.set(dx / d, 0, dz / d);
+        len = 1;
+      }
+    } else {
+      len = 0;
+    }
+
+    const sprinting = islaControls.sprint || keys.has("shift");
+    const isMoving = len > 0.08 && !busy;
+    if (isMoving) {
+      const step = (sprinting ? SPEED * 1.85 : SPEED) * delta;
       const nx = player.position.x + move.x * step;
       const nz = player.position.z + move.z * step;
       const targetRegion = regionAt(nx, nz);
@@ -493,6 +543,8 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
         player.position.z = nz;
       } else if (isWalkable(nx, player.position.z) && !isRegionLocked(regionAt(nx, player.position.z))) {
         player.position.x = nx;
+      } else {
+        islaControls.moveTarget = null;
       }
 
       const targetRot = Math.atan2(move.x, move.z);
@@ -500,9 +552,30 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       player.rotation.y += diff * (1 - Math.exp(-12 * delta));
     }
-    if (isMoving !== moving) setMoving(isMoving);
+    const nextGait = !isMoving ? "idle" : sprinting ? "run" : "walk";
+    if (nextGait !== gait) setGait(nextGait);
 
-    player.position.y = terrainHeight(player.position.x, player.position.z);
+    // jump + gravity
+    const ground = terrainHeight(player.position.x, player.position.z);
+    if (islaControls.jump) {
+      islaControls.jump = false;
+      if (!airborne.current && !busy) {
+        vy.current = 9.5;
+        airborne.current = true;
+      }
+    }
+    if (airborne.current) {
+      vy.current -= 24 * delta;
+      player.position.y += vy.current * delta;
+      if (player.position.y <= ground) {
+        player.position.y = ground;
+        vy.current = 0;
+        airborne.current = false;
+      }
+    } else {
+      player.position.y += (ground - player.position.y) * (1 - Math.exp(-18 * delta));
+    }
+
     islaControls.player.x = player.position.x;
     islaControls.player.z = player.position.z;
     islaControls.player.y = player.position.y;
@@ -516,7 +589,7 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
 
     // proximity: crystals, secrets, academy door
     let near: ReturnType<typeof getIsla>["near"] = null;
-    let best = 4.2;
+    let best = 6;
     for (const c of CRYSTALS) {
       if (snapshot.crystals.includes(c.id)) continue;
       const d = Math.hypot(player.position.x - c.position[0], player.position.z - c.position[1]);
@@ -525,16 +598,16 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
         near = { kind: "crystal", id: c.id, label: "a glowing Knowledge Crystal" };
       }
     }
-    for (const s of SECRETS) {
-      if (snapshot.secrets.includes(s.id)) continue;
-      const d = Math.hypot(player.position.x - s.position[0], player.position.z - s.position[1]);
+    for (const sec of SECRETS) {
+      if (snapshot.secrets.includes(sec.id)) continue;
+      const d = Math.hypot(player.position.x - sec.position[0], player.position.z - sec.position[1]);
       if (d < best) {
         best = d;
-        near = { kind: "secret", id: s.id, label: s.name };
+        near = { kind: "secret", id: sec.id, label: sec.name };
       }
     }
     const dAcademy = Math.hypot(player.position.x - ACADEMY_DOOR[0], player.position.z - ACADEMY_DOOR[1]);
-    if (dAcademy < 6 && dAcademy < best) {
+    if (dAcademy < 10 && dAcademy < best) {
       near = { kind: "academy", id: "academy", label: "the Nyrava Academy doors" };
     }
     const nearKey = near ? `${near.kind}:${near.id}` : null;
@@ -547,19 +620,19 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
       islaControls.interact = false;
       if (near?.kind === "crystal") tryCollectCrystal(near.id);
       if (near?.kind === "secret") {
-        const secret = SECRETS.find((s) => s.id === near.id);
+        const secret = SECRETS.find((item) => item.id === near.id);
         if (secret) collectSecret(secret.id, secret.name, secret.note);
       }
       if (near?.kind === "academy") patchIsla({ reporting: true });
     }
 
-    // companion guardian trails the child
+    // companion guardian trails behind the child
     const buddy = companion.current;
     if (buddy) {
       const target = new THREE.Vector3(
-        player.position.x - Math.sin(player.rotation.y) * 2.6 + 1.6,
+        player.position.x + Math.sin(player.rotation.y) * -3.2 + 2,
         0,
-        player.position.z - Math.cos(player.rotation.y) * 2.6,
+        player.position.z + Math.cos(player.rotation.y) * -3.2,
       );
       const dist = buddy.position.distanceTo(target);
       buddy.position.lerp(target, 1 - Math.exp(-4 * delta));
@@ -569,23 +642,39 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
       buddy.lookAt(player.position.x, buddy.position.y, player.position.z);
     }
 
-    // third-person camera with terrain-aware height
-    const yaw = islaControls.cameraYaw;
-    const camTarget = new THREE.Vector3(
-      player.position.x + Math.sin(yaw) * 9,
-      player.position.y + 6.2,
-      player.position.z + Math.cos(yaw) * 9,
-    );
-    const ground = terrainHeight(camTarget.x, camTarget.z) + 2.6;
-    camTarget.y = Math.max(camTarget.y, ground);
-    camera.position.lerp(camTarget, 1 - Math.exp(-6 * delta));
-    camera.lookAt(player.position.x, player.position.y + 1.7, player.position.z);
+    // ---- camera: first person (avatar's eyes) or orbiting third person
+    const pitch = islaControls.cameraPitch;
+    if (islaControls.view === "first") {
+      const eye = new THREE.Vector3(
+        player.position.x - Math.sin(player.rotation.y) * 0.15,
+        player.position.y + 1.62,
+        player.position.z - Math.cos(player.rotation.y) * 0.15,
+      );
+      camera.position.lerp(eye, 1 - Math.exp(-22 * delta));
+      camera.lookAt(
+        eye.x + Math.sin(yaw) * -10,
+        eye.y - Math.sin(pitch) * 10,
+        eye.z + Math.cos(yaw) * -10,
+      );
+    } else {
+      const dist = islaControls.camDistance;
+      const camTarget = new THREE.Vector3(
+        player.position.x + Math.sin(yaw) * dist * Math.cos(pitch),
+        player.position.y + 2.2 + dist * Math.sin(pitch) + dist * 0.18,
+        player.position.z + Math.cos(yaw) * dist * Math.cos(pitch),
+      );
+      const camGround = terrainHeight(camTarget.x, camTarget.z) + 1.8;
+      camTarget.y = Math.max(camTarget.y, camGround);
+      camPos.current.copy(camera.position).lerp(camTarget, 1 - Math.exp(-8 * delta));
+      camera.position.copy(camPos.current);
+      camera.lookAt(player.position.x, player.position.y + 1.6, player.position.z);
+    }
   });
 
   return (
     <>
-      <group ref={group}>
-        <Character color={color} clip={moving ? "run" : "idle"} height={1.8} />
+      <group ref={group} visible={!firstPerson}>
+        <Character color={color} clip={gait} height={1.8} />
         <Billboard position={[0, 2.5, 0]}>
           <Text fontSize={0.42} color="#e0f2fe" anchorX="center">
             {name}
@@ -617,19 +706,19 @@ export function IslaScene({
   return (
     <>
       <color attach="background" args={["#8ec8ea"]} />
-      <fog attach="fog" args={["#9fd4ef", 90, 240]} />
+      <fog attach="fog" args={["#9fd4ef", 200, 620]} />
       <hemisphereLight args={["#cfe9ff", "#3b4a3f", 0.85]} />
       <directionalLight
-        position={[60, 90, 40]}
+        position={[140, 210, 90]}
         intensity={2.1}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-left={-120}
-        shadow-camera-right={120}
-        shadow-camera-top={120}
-        shadow-camera-bottom={-120}
-        shadow-camera-far={300}
+        shadow-camera-left={-240}
+        shadow-camera-right={240}
+        shadow-camera-top={240}
+        shadow-camera-bottom={-240}
+        shadow-camera-far={700}
       />
       <Terrain />
       <Ocean />

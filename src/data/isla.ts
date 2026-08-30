@@ -4,6 +4,8 @@
  * server-driven world definition without touching the renderer.
  */
 
+import { WORLD_SCALE, ws } from "@/lib/isla-terrain";
+
 export type RegionId =
   | "city"
   | "forest"
@@ -247,3 +249,21 @@ export const REPORT_CHALLENGE: Challenge = {
 
 export const ACADEMY_DOOR: [number, number] = [0, -18];
 export const COMMAND_CENTER: [number, number] = [0, 0];
+
+/* ---------------------------------------------------------------- world scale
+ * Regions, crystals and secrets above are authored in design units. The
+ * renderer works in world units, so lift them once at module load. */
+for (const region of REGIONS) {
+  region.center = ws(region.center);
+  region.radius *= WORLD_SCALE;
+}
+for (const crystal of CRYSTALS) {
+  crystal.position = ws(crystal.position);
+}
+for (const secret of SECRETS) {
+  secret.position = ws(secret.position);
+}
+ACADEMY_DOOR[0] *= WORLD_SCALE;
+ACADEMY_DOOR[1] *= WORLD_SCALE;
+COMMAND_CENTER[0] *= WORLD_SCALE;
+COMMAND_CENTER[1] *= WORLD_SCALE;

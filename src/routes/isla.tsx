@@ -3,7 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useRef } from "react";
 import { IslaScene } from "@/components/isla/isla-scene";
 import { IslaHud } from "@/components/isla/isla-hud";
-import { hydrateIsla, islaControls } from "@/lib/isla-store";
+import { hydrateIsla, islaControls, toggleIslaView } from "@/lib/isla-store";
 import { useGuardian } from "@/lib/guardian-context";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
 
@@ -33,19 +33,33 @@ function IslaCentral() {
   const { guardianId, guardianName } = useGuardian();
   const guardian =
     CLASS_GUARDIANS.find((g) => g.id === guardianId) ?? (CLASS_GUARDIANS[0] as (typeof CLASS_GUARDIANS)[number]);
+  const wrap = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+  const dragDist = useRef(0);
 
   useEffect(() => {
     hydrateIsla();
+    // Handy for debugging camera/movement state from the console.
+    (window as unknown as { __isla?: typeof islaControls }).__isla = islaControls;
   }, []);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
       if (["w", "a", "s", "d"].includes(key)) islaControls.keys.add(key);
+      if (key === "shift") islaControls.sprint = true;
       if (key === "e") islaControls.interact = true;
+      if (key === "v") toggleIslaView();
+      if (e.code === "Space") {
+        e.preventDefault();
+        islaControls.jump = true;
+      }
     };
-    const up = (e: KeyboardEvent) => islaControls.keys.delete(e.key.toLowerCase());
+    const up = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      islaControls.keys.delete(key);
+      if (key === "shift") islaControls.sprint = false;
+    };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     return () => {
@@ -54,23 +68,51 @@ function IslaCentral() {
     };
   }, []);
 
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
+      const next = islaControls.camDistance * Math.exp(dy * 0.0015);
+      islaControls.camDistance = Math.min(34, Math.max(3.5, next));
+      if (islaControls.camDistance <= 4 && islaControls.view === "third") toggleIslaView();
+      if (islaControls.camDistance > 5 && islaControls.view === "first") toggleIslaView();
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
   return (
     <div
-      className="fixed inset-0 bg-background"
+      ref={wrap}
+      className="fixed inset-0 z-50 touch-none bg-background"
       onPointerDown={() => {
         dragging.current = true;
+        dragDist.current = 0;
+        islaControls.dragged = false;
       }}
       onPointerUp={() => {
         dragging.current = false;
+        window.setTimeout(() => {
+          islaControls.dragged = false;
+        }, 0);
       }}
       onPointerLeave={() => {
         dragging.current = false;
       }}
       onPointerMove={(e) => {
-        if (dragging.current) islaControls.cameraYaw -= e.movementX * 0.005;
+        if (!dragging.current) return;
+        dragDist.current += Math.abs(e.movementX) + Math.abs(e.movementY);
+        if (dragDist.current > 6) islaControls.dragged = true;
+        islaControls.cameraYaw -= e.movementX * 0.005;
+        islaControls.cameraPitch = Math.min(
+          0.85,
+          Math.max(-0.15, islaControls.cameraPitch + e.movementY * 0.003),
+        );
       }}
     >
-      <Canvas shadows camera={{ position: [0, 12, 24], fov: 58 }} dpr={[1, 1.6]}>
+      <Canvas shadows camera={{ position: [0, 26, 52], fov: 58, near: 0.1, far: 5000 }} dpr={[1, 1.6]}>
         <Suspense fallback={null}>
           <IslaScene
             playerColor={guardian.color}
