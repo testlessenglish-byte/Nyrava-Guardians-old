@@ -204,7 +204,88 @@ function Instanced({
   );
 }
 
+/** Island-wide dressing: grass tufts, wildflowers, bushes and boulders. */
+function GroundCover() {
+  const r = ISLAND_RADIUS * 0.92;
+  const grass = useScatter(101, 1400, [0, 0], r, 0.9);
+  const flowers = useScatter(103, 380, [0, 0], r * 0.8, 1.2);
+  const bushes = useScatter(107, 320, [0, 0], r * 0.85, 1.1);
+  const boulders = useScatter(109, 180, [0, 0], r * 0.9, 1.4);
+  return (
+    <>
+      <Instanced items={grass} color="#4f9e4a" yOffset={0.42}>
+        <coneGeometry args={[0.22, 0.95, 4]} />
+      </Instanced>
+      <Instanced items={flowers} color="#f7b1d8" yOffset={0.75} emissive="#f7b1d8">
+        <icosahedronGeometry args={[0.16, 0]} />
+      </Instanced>
+      <Instanced items={bushes} color="#2f6f42" yOffset={0.4}>
+        <dodecahedronGeometry args={[0.75, 0]} />
+      </Instanced>
+      <Instanced items={boulders} color="#8b8d92" yOffset={0.25}>
+        <icosahedronGeometry args={[0.85, 0]} />
+      </Instanced>
+    </>
+  );
+}
+
+/** Drifting cloud banks + a lazy flock, so the sky is not a flat gradient. */
+function Sky() {
+  const clouds = useRef<THREE.Group>(null);
+  const birds = useRef<THREE.Group>(null);
+  const puffs = useMemo(() => {
+    const rand = mulberry32(211);
+    return Array.from({ length: 22 }, () => {
+      const a = rand() * Math.PI * 2;
+      const d = 120 + rand() * ISLAND_RADIUS * 1.1;
+      return {
+        p: [Math.cos(a) * d, 95 + rand() * 70, Math.sin(a) * d] as [number, number, number],
+        s: 14 + rand() * 26,
+      };
+    });
+  }, []);
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    if (clouds.current) clouds.current.rotation.y = t * 0.004;
+    if (birds.current) {
+      birds.current.rotation.y = t * 0.05;
+      birds.current.position.y = 46 + Math.sin(t * 0.4) * 4;
+    }
+  });
+
+  return (
+    <>
+      <group ref={clouds}>
+        {puffs.map((c, i) => (
+          <group key={i} position={c.p}>
+            {[0, 1, 2].map((k) => (
+              <mesh key={k} position={[k * c.s * 0.5 - c.s * 0.5, (k % 2) * c.s * 0.14, (k % 2) * c.s * 0.3]}>
+                <sphereGeometry args={[c.s * (0.5 + (k % 2) * 0.18), 10, 8]} />
+                <meshStandardMaterial color="#ffffff" roughness={1} transparent opacity={0.82} />
+              </mesh>
+            ))}
+          </group>
+        ))}
+      </group>
+      <group ref={birds} position={[0, 46, 0]}>
+        {Array.from({ length: 9 }, (_, i) => {
+          const a = (i / 9) * Math.PI * 2;
+          const d = 150 + (i % 3) * 40;
+          return (
+            <mesh key={i} position={[Math.cos(a) * d, (i % 4) * 5, Math.sin(a) * d]} rotation-y={-a}>
+              <coneGeometry args={[0.5, 2.4, 3]} />
+              <meshStandardMaterial color="#1f2937" />
+            </mesh>
+          );
+        })}
+      </group>
+    </>
+  );
+}
+
 function Forest() {
+
   const trees = useScatter(11, 420, ws([-44, -40]), 32 * S, 1.2);
   return (
     <>
