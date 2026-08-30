@@ -19,10 +19,16 @@ import {
   patchIsla,
   tryCollectCrystal,
 } from "@/lib/isla-store";
-import { ISLAND_RADIUS, WORLD_SCALE as S, isWalkable, terrainHeight, ws } from "@/lib/isla-terrain";
+import { ISLAND_RADIUS, WATER_LEVEL, WORLD_SCALE as S, isWalkable, terrainHeight, ws } from "@/lib/isla-terrain";
 
 const SPEED = 9.5;
+const SWIM_SPEED = 5.6;
+/** How far out from the island you may swim before the current pushes you back. */
+const SWIM_LIMIT = ISLAND_RADIUS + 70;
+/** Water surface the swimmer floats at (the ocean plane bobs around y = -0.1). */
+const SWIM_Y = WATER_LEVEL - 0.55;
 const move = new THREE.Vector3();
+
 
 function mulberry32(seed: number) {
   let a = seed;
