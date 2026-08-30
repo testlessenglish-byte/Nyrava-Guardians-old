@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Canvas } from "@react-three/fiber";
-import { Component, Suspense, useEffect, useRef, type ReactNode } from "react";
+import { Component, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 
 class IslaErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -71,8 +71,10 @@ function IslaCentral() {
   const wrap = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const dragDist = useRef(0);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     hydrateIsla();
     // Handy for debugging camera/movement state from the console.
     (window as unknown as { __isla?: typeof islaControls }).__isla = islaControls;
@@ -157,17 +159,19 @@ function IslaCentral() {
         );
       }}
     >
-      <IslaErrorBoundary>
-        <Canvas shadows camera={{ position: [0, 26, 52], fov: 58, near: 0.1, far: 5000 }} dpr={[1, 1.6]}>
-          <Suspense fallback={null}>
-            <IslaScene
-              playerColor={guardian.color}
-              playerName={guardianName || "Guardian"}
-              playerGuardian={guardian.id}
-            />
-          </Suspense>
-        </Canvas>
-      </IslaErrorBoundary>
+      {mounted && (
+        <IslaErrorBoundary>
+          <Canvas shadows camera={{ position: [0, 26, 52], fov: 58, near: 0.1, far: 5000 }} dpr={[1, 1.6]}>
+            <Suspense fallback={null}>
+              <IslaScene
+                playerColor={guardian.color}
+                playerName={guardianName || "Guardian"}
+                playerGuardian={guardian.id}
+              />
+            </Suspense>
+          </Canvas>
+        </IslaErrorBoundary>
+      )}
       <IslaHud guardianName={guardian.name} />
     </div>
   );
