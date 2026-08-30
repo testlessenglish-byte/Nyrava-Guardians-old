@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Suspense } from "react";
 import { ProgressBar } from "@/components/progress-bar";
-import { GUARDIANS, GUARDIAN_IMAGES } from "@/data/guardians";
+import { GUARDIAN_IMAGES, resolveGuardian, resolveGuardianId } from "@/data/guardians";
 import { GUARDIAN_STYLES } from "@/lib/guardian-colors";
 import { useGuardian } from "@/lib/guardian-context";
 import { cn } from "@/lib/utils";
@@ -77,12 +77,13 @@ function HomeContent() {
     queryFn: () => MasteryService.listAchievements(),
   });
 
-  const activeId = guardianId ?? "zoey";
-  const guardian = GUARDIANS.find((g) => g.id === activeId)!;
+  const activeId = resolveGuardianId(guardianId);
+  const guardian = resolveGuardian(activeId);
   const styles = GUARDIAN_STYLES[activeId];
   const level = levelFromXp(xp);
   const intoLevel = xp % 250;
-  const objGuardian = GUARDIANS.find((g) => g.id === objective.guardianId)!;
+  const objGuardianId = resolveGuardianId(objective.guardianId);
+  const objGuardian = resolveGuardian(objGuardianId);
 
   return (
     <div className="space-y-6 pb-8">
@@ -141,7 +142,7 @@ function HomeContent() {
           <p className="text-xs text-muted-foreground">{objective.description}</p>
         </div>
         <img
-          src={GUARDIAN_IMAGES[objective.guardianId]}
+          src={GUARDIAN_IMAGES[objGuardianId]}
           alt={`${objGuardian.name} is guiding this objective`}
           className="hidden h-14 w-14 rounded-xl object-cover object-top sm:block"
         />

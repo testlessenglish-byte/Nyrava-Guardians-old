@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Brain, Heart, Shield } from "lucide-react";
 import { useState } from "react";
-import { COSMETIC_SLOTS, GUARDIANS, GUARDIAN_IMAGES } from "@/data/guardians";
+import { COSMETIC_SLOTS, GUARDIANS, GUARDIAN_IMAGES, resolveGuardian } from "@/data/guardians";
 import { GUARDIAN_STYLES } from "@/lib/guardian-colors";
 import { useGuardian } from "@/lib/guardian-context";
 import { cn } from "@/lib/utils";
@@ -55,7 +55,7 @@ function PersonalizePage() {
     );
   }
 
-  const guardian = GUARDIANS.find((g) => g.id === guardianId)!;
+  const guardian = resolveGuardian(guardianId);
   const styles = GUARDIAN_STYLES[guardianId];
   const visibleSlots = COSMETIC_SLOTS.filter((s) =>
     ["hair", "hair-color", "hoodie", "face-accessory"].includes(s.id),
