@@ -53,6 +53,8 @@ export function Character({
       mesh.receiveShadow = true;
       const source = mesh.material as THREE.MeshStandardMaterial;
       const mat = source.clone();
+      // The CC0 rig ships baked vertex colours which would swallow the tint.
+      mat.vertexColors = false;
       const luminance = source.color.r * 0.3 + source.color.g * 0.6 + source.color.b * 0.1;
       if (luminance > 0.3) {
         mat.color.copy(tint);
