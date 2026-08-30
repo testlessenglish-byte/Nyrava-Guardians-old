@@ -100,10 +100,7 @@ export function Character({
     mixer.stopAllAction();
   }, [mixer]);
 
-  useFrame((_, delta) => {
-    mixer.update(delta);
-    (window as unknown as Record<string, unknown>).__char = { mixer, model, action: current.current };
-  });
+  useFrame((_, delta) => mixer.update(delta));
 
   return (
     <group ref={group}>
