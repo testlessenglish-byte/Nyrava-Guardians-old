@@ -91,9 +91,11 @@ export function Character({
       run: ["Run", "Running"],
       talk: ["Idle"],
       wave: ["Idle"],
+      swim: ["Swim", "Walk"],
     };
     return pickClip(names, map[clip]);
   }, [names, clip]);
+
 
   useEffect(() => {
     const source = animations.find((a) => a.name === clipName);
