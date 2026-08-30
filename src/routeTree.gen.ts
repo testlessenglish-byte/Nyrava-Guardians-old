@@ -16,6 +16,7 @@ import { Route as ClassroomRouteImport } from './routes/classroom'
 import { Route as CoreRouteImport } from './routes/core'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as MissionsRouteImport } from './routes/missions'
+import { Route as ModeltestRouteImport } from './routes/modeltest'
 import { Route as PersonalizeRouteImport } from './routes/personalize'
 import { Route as WorldRouteImport } from './routes/world'
 
@@ -54,6 +55,11 @@ const MissionsRoute = MissionsRouteImport.update({
   path: '/missions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ModeltestRoute = ModeltestRouteImport.update({
+  id: '/modeltest',
+  path: '/modeltest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PersonalizeRoute = PersonalizeRouteImport.update({
   id: '/personalize',
   path: '/personalize',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/missions': typeof MissionsRoute
+  '/modeltest': typeof ModeltestRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/missions': typeof MissionsRoute
+  '/modeltest': typeof ModeltestRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/missions': typeof MissionsRoute
+  '/modeltest': typeof ModeltestRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/core'
     | '/home'
     | '/missions'
+    | '/modeltest'
     | '/personalize'
     | '/world'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/core'
     | '/home'
     | '/missions'
+    | '/modeltest'
     | '/personalize'
     | '/world'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/core'
     | '/home'
     | '/missions'
+    | '/modeltest'
     | '/personalize'
     | '/world'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   CoreRoute: typeof CoreRoute
   HomeRoute: typeof HomeRoute
   MissionsRoute: typeof MissionsRoute
+  ModeltestRoute: typeof ModeltestRoute
   PersonalizeRoute: typeof PersonalizeRoute
   WorldRoute: typeof WorldRoute
 }
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/modeltest': {
+      id: '/modeltest'
+      path: '/modeltest'
+      fullPath: '/modeltest'
+      preLoaderRoute: typeof ModeltestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/personalize': {
       id: '/personalize'
       path: '/personalize'
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoreRoute: CoreRoute,
   HomeRoute: HomeRoute,
   MissionsRoute: MissionsRoute,
+  ModeltestRoute: ModeltestRoute,
   PersonalizeRoute: PersonalizeRoute,
   WorldRoute: WorldRoute,
 }
