@@ -13,6 +13,7 @@ import {
   useIsla,
 } from "@/lib/isla-store";
 import { ISLAND_RADIUS } from "@/lib/isla-terrain";
+import { toggleIslaView } from "@/lib/isla-store";
 
 const MAP = 200;
 
@@ -295,7 +296,7 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
       {/* joystick + controls */}
       <div className="pointer-events-none absolute bottom-6 left-6 space-y-2">
         <Joystick />
-        <p className="text-[11px] text-muted-foreground">WASD to walk · drag to look · E to interact</p>
+        <p className="text-[11px] text-muted-foreground">WASD or click the ground to walk · Shift to sprint · Space to jump · drag to look · scroll to zoom · V for first person · E to interact</p>
       </div>
 
       {/* crystal challenge */}

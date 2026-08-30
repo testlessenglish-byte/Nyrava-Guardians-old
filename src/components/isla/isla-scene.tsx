@@ -372,9 +372,17 @@ function CentralCity() {
 
       {/* Guardian Plaza */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 2.26 * S * 0.8, 0]} receiveShadow>
-        <circleGeometry args={[14 * S, 64]} />
-        <meshStandardMaterial color="#cbd5f5" emissive="#38bdf8" emissiveIntensity={0.12} />
+        <circleGeometry args={[11 * S, 64]} />
+        <meshStandardMaterial color="#33465f" roughness={0.85} emissive="#0ea5e9" emissiveIntensity={0.06} />
       </mesh>
+
+      {/* plaza inlay rings so the ground reads as built, not blank */}
+      {[5, 8, 10.4].map((r) => (
+        <mesh key={r} rotation-x={-Math.PI / 2} position={[0, 2.26 * S * 0.8 + 0.02, 0]}>
+          <ringGeometry args={[r * S - 0.5, r * S, 72]} />
+          <meshStandardMaterial color="#7dd3fc" emissive="#38bdf8" emissiveIntensity={0.7} />
+        </mesh>
+      ))}
 
       {/* Nyrava Command Center — the landmark */}
       <group position={[0, 2.26 * S * 0.8, 0]}>
