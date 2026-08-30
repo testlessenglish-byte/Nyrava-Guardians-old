@@ -460,6 +460,18 @@ function CentralCity() {
           <boxGeometry args={[18, 8, 12]} />
           <meshStandardMaterial color="#d9bd8c" roughness={0.95} />
         </mesh>
+        {/* thatched hip roof so the academy reads as island architecture */}
+        <mesh position={[0, 9.4, 0]} rotation-y={Math.PI / 4} castShadow>
+          <coneGeometry args={[14, 5, 4]} />
+          <meshStandardMaterial color="#b98b46" roughness={1} />
+        </mesh>
+        {[-8, 8].map((x) => (
+          <mesh key={x} position={[x, 4, 6]} castShadow>
+            <cylinderGeometry args={[0.3, 0.36, 8, 8]} />
+            <meshStandardMaterial color="#6f4a2c" roughness={1} />
+          </mesh>
+        ))}
+
         <mesh position={[0, 2.4, 6.1]}>
           <planeGeometry args={[4, 5]} />
           <meshStandardMaterial color="#0ea5e9" emissive="#38bdf8" emissiveIntensity={0.8} />
