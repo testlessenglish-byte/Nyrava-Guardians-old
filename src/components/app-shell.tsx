@@ -1,7 +1,7 @@
-import {
-  Compass, Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Bot,
+  Compass,
   Cpu,
   GraduationCap,
   Home,
