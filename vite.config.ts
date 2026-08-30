@@ -18,8 +18,16 @@ function stripDevtoolsSourceIn3D(): Plugin {
     enforce: "post",
     apply: "serve",
     transform(code, id) {
-      if (!id.includes("/components/meta/")) return null;
+      if (!/\.(t|j)sx$/.test(id.split("?")[0] ?? "")) return null;
       if (!code.includes("data-tsd-source")) return null;
+      // Any file that renders three.js elements must not carry the devtools
+      // annotation: R3F treats dashed props as pierced property paths.
+      const is3D =
+        id.includes("/components/meta/") ||
+        id.includes("/components/isla/") ||
+        code.includes("@react-three/fiber") ||
+        code.includes("@react-three/drei");
+      if (!is3D) return null;
       return {
         code: code.replace(/\s*"data-tsd-source":\s*"[^"]*",?/g, ""),
         map: null,
