@@ -1,13 +1,21 @@
 import type { CosmeticSlot, Guardian } from "@/types";
 import lexImg from "@/assets/guardians/lex.png";
 import novaImg from "@/assets/guardians/nova.png";
-import tessImg from "@/assets/guardians/tess.png";
-import byteImg from "@/assets/guardians/byte.png";
-import echoImg from "@/assets/guardians/echo.png";
+import zoeyImg from "@/assets/guardians/zoey.png";
+import jacobImg from "@/assets/guardians/jacob.png";
+import dayanaImg from "@/assets/guardians/dayana.png";
+import sarahImg from "@/assets/guardians/sarah.png";
+import tessImg from "@/assets/guardians/zoey.png";
+import byteImg from "@/assets/guardians/jacob.png";
+import echoImg from "@/assets/guardians/dayana.png";
 
 export const GUARDIAN_IMAGES: Record<string, string> = {
   lex: lexImg,
   nova: novaImg,
+  zoey: zoeyImg,
+  jacob: jacobImg,
+  dayana: dayanaImg,
+  sarah: sarahImg,
   tess: tessImg,
   byte: byteImg,
   echo: echoImg,
@@ -35,8 +43,8 @@ export const GUARDIANS: Guardian[] = [
     equippedCosmetics: { hoodie: "violet", hair: "ponytail" },
   },
   {
-    id: "tess",
-    name: "Tess",
+    id: "zoey",
+    name: "Zoey",
     role: "The Protector",
     tagline: "Shields up. Keeps you and your friends safe online.",
     visualTheme: "guardian-tess",
@@ -45,8 +53,8 @@ export const GUARDIANS: Guardian[] = [
     equippedCosmetics: { hoodie: "azure", hair: "curls" },
   },
   {
-    id: "byte",
-    name: "Byte",
+    id: "jacob",
+    name: "Jacob",
     role: "The Builder",
     tagline: "Turns ideas into real things. Code is his toolbox.",
     visualTheme: "guardian-byte",
@@ -55,14 +63,24 @@ export const GUARDIANS: Guardian[] = [
     equippedCosmetics: { glasses: "round", hoodie: "amber" },
   },
   {
-    id: "echo",
-    name: "Echo",
+    id: "dayana",
+    name: "Dayana",
     role: "The Communicator",
-    tagline: "Connects people. Kindness travels far with Echo.",
+    tagline: "Connects people. Kindness travels far with Dayana.",
     visualTheme: "guardian-echo",
     level: 12,
     masterySummary: "Digital kindness and clear communication mastery.",
     equippedCosmetics: { hat: "beanie", hoodie: "sky" },
+  },
+  {
+    id: "sarah",
+    name: "Sarah",
+    role: "AI Companion",
+    tagline: "Your AI guide, helper and learning companion.",
+    visualTheme: "guardian-echo",
+    level: 15,
+    masterySummary: "AI safety guidance and real-time support.",
+    equippedCosmetics: { hoodie: "sky" },
   },
 ];
 
