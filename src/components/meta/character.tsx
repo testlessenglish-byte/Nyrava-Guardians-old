@@ -170,6 +170,16 @@ export function Character({
       {/* Controllers rotate this group so +Z points along world movement. */}
       <group rotation-x={swimming ? -Math.PI / 2.35 : 0} position-y={swimming ? 0.5 : 0}>
         <primitive object={model} />
+        {/* Guardian identity accents: chest core + soft aura light. */}
+        <mesh position={[0, height * 0.6, height * 0.11]}>
+          <icosahedronGeometry args={[height * 0.045, 1]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={3} toneMapped={false} />
+        </mesh>
+        <mesh rotation-x={-Math.PI / 2} position={[0, 0.03, 0]}>
+          <ringGeometry args={[height * 0.22, height * 0.28, 32]} />
+          <meshBasicMaterial color={color} transparent opacity={0.35} toneMapped={false} />
+        </mesh>
+        <pointLight position={[0, height * 0.7, 0]} color={color} intensity={2.2} distance={height * 2.4} />
       </group>
     </group>
   );
