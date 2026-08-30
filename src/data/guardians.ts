@@ -1,4 +1,4 @@
-import type { CosmeticSlot, Guardian } from "@/types";
+import type { CosmeticSlot, Guardian, GuardianId } from "@/types";
 import lexImg from "@/assets/guardians/lex.png";
 import novaImg from "@/assets/guardians/nova.png";
 import zoeyImg from "@/assets/guardians/zoey.png";
