@@ -107,11 +107,9 @@ export function Character({
 
   return (
     <group ref={group}>
-      {/* The Mixamo rig is authored facing +Z away from the camera; flip it so the
-          avatar walks face-first in the direction it is steering. */}
-      <group rotation-y={Math.PI}>
-        <primitive object={model} />
-      </group>
+      {/* This rig's visible forward axis is +Z. The player controller rotates
+          this group so +Z points along the actual world-space movement vector. */}
+      <primitive object={model} />
     </group>
   );
 }

@@ -472,11 +472,9 @@ function Pickup({
 
 /* -------------------------------------------------------------------- player */
 
-function Player({ color, name, guardianColor }: { color: string; name: string; guardianColor: string }) {
+function Player({ color, name }: { color: string; name: string }) {
   const group = useRef<THREE.Group>(null);
-  const companion = useRef<THREE.Group>(null);
   const [gait, setGait] = useState<"idle" | "walk" | "run">("idle");
-  const [companionMoving, setCompanionMoving] = useState(false);
   const nearRef = useRef<string | null>(null);
   const regionRef = useRef<RegionId>("city");
   const vy = useRef(0);
@@ -636,25 +634,6 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
       if (near?.kind === "academy") patchIsla({ reporting: true });
     }
 
-    // companion guardian trails behind the child
-    const buddy = companion.current;
-    if (buddy) {
-      const target = new THREE.Vector3(
-        player.position.x + Math.sin(player.rotation.y) * -3.2 + 2,
-        0,
-        player.position.z + Math.cos(player.rotation.y) * -3.2,
-      );
-      const dist = buddy.position.distanceTo(target);
-      buddy.position.lerp(target, 1 - Math.exp(-4 * delta));
-      buddy.position.y = terrainHeight(buddy.position.x, buddy.position.z);
-      const walking = dist > 1.4;
-      if (walking !== companionMoving) setCompanionMoving(walking);
-      // lookAt aims +Z at the player; the rig is flipped inside <Character>, so
-      // spin a half turn to have the guide actually look at the child.
-      buddy.lookAt(player.position.x, buddy.position.y, player.position.z);
-      buddy.rotation.y += Math.PI;
-    }
-
     // ---- camera: first person (avatar's eyes) or orbiting third person
     const pitch = islaControls.cameraPitch;
     if (islaControls.view === "first") {
@@ -694,14 +673,6 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
           </Text>
         </Billboard>
       </group>
-      <group ref={companion}>
-        <Character color={guardianColor} clip={companionMoving ? "run" : "idle"} height={1.55} />
-        <Billboard position={[0, 2.15, 0]}>
-          <Text fontSize={0.3} color="#94e2ff" anchorX="center">
-            guide
-          </Text>
-        </Billboard>
-      </group>
     </>
   );
 }
@@ -711,11 +682,9 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
 export function IslaScene({
   playerColor,
   playerName,
-  guardianColor,
 }: {
   playerColor: string;
   playerName: string;
-  guardianColor: string;
 }) {
   const found = getIsla();
   const crystals = found.crystals;
@@ -755,7 +724,7 @@ export function IslaScene({
         <Pickup key={s.id} position={s.position} color="#fbbf24" found={secrets.includes(s.id)} shape="secret" />
       ))}
 
-      <Player color={playerColor} name={playerName} guardianColor={guardianColor} />
+      <Player color={playerColor} name={playerName} />
     </>
   );
 }
