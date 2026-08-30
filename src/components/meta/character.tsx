@@ -99,9 +99,9 @@ export function Character({
       }
       // Keep the hand-painted texture at full strength, add a soft guardian
       // wash and a neon emissive rim so each kid reads in their own colour.
-      mat.color.setRGB(1, 1, 1).lerp(tint, 0.24);
-      mat.emissive = tint.clone().multiplyScalar(0.3);
-      mat.emissiveIntensity = 1.1;
+      mat.color.setRGB(1, 1, 1).lerp(tint, 0.12);
+      mat.emissive = tint.clone().multiplyScalar(0.1);
+      mat.emissiveIntensity = 0.55;
       mat.metalness = 0.22;
       mat.roughness = 0.55;
       mat.envMapIntensity = 1.6;
@@ -177,9 +177,9 @@ export function Character({
         </mesh>
         <mesh rotation-x={-Math.PI / 2} position={[0, 0.03, 0]}>
           <ringGeometry args={[height * 0.22, height * 0.28, 32]} />
-          <meshBasicMaterial color={color} transparent opacity={0.35} toneMapped={false} />
+          <meshBasicMaterial color={color} transparent opacity={0.22} toneMapped={false} />
         </mesh>
-        <pointLight position={[0, height * 0.7, 0]} color={color} intensity={2.2} distance={height * 2.4} />
+        <pointLight position={[0, height * 0.7, 0]} color={color} intensity={0.9} distance={height * 2} />
       </group>
     </group>
   );
