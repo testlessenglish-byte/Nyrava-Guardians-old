@@ -203,7 +203,7 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
       <div className="pointer-events-auto absolute left-4 top-24 w-[19rem] space-y-3 rounded-2xl border border-white/12 bg-background/75 p-4 backdrop-blur">
         <p className="text-xs uppercase tracking-[0.28em] text-primary">Class 1 · Discover Isla Central</p>
         <div className="flex items-center gap-3 text-sm">
-          <span className="font-semibold text-foreground">🔷 Crystals {mission.crystals}/5</span>
+          <span className="font-semibold text-foreground">Crystals {mission.crystals}/5</span>
           <span className="text-muted-foreground">Challenges {mission.challenges}/3</span>
         </div>
         {target ? (
@@ -360,7 +360,7 @@ function ReportPanel({ guardianName }: { guardianName: string }) {
             ? `${guardianName}: “You made it back. Before I log this class, one last question.”`
             : `${guardianName}: “You still have crystals out there. Come back when you've found all five.”`}
         </p>
-        <p className="text-sm">🔷 Crystals {state.crystals.length}/5 · ✨ Secrets {state.secrets.length}/5</p>
+        <p className="text-sm">Crystals {state.crystals.length}/5 · Secrets {state.secrets.length}/5</p>
         <div className="flex gap-3">
           <button
             disabled={!ready}

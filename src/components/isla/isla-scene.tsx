@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Text } from "@react-three/drei";
+import { Billboard, Text } from "@react-three/drei";
 import * as THREE from "three";
 import { Character } from "@/components/meta/character";
 import {
@@ -586,9 +586,11 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
     <>
       <group ref={group}>
         <Character color={color} clip={moving ? "run" : "idle"} height={1.8} />
-        <Text position={[0, 2.5, 0]} fontSize={0.42} color="#e0f2fe" anchorX="center">
-          {name}
-        </Text>
+        <Billboard position={[0, 2.5, 0]}>
+          <Text fontSize={0.42} color="#e0f2fe" anchorX="center">
+            {name}
+          </Text>
+        </Billboard>
       </group>
       <group ref={companion}>
         <Character color={guardianColor} clip={companionMoving ? "run" : "idle"} height={1.7} />
