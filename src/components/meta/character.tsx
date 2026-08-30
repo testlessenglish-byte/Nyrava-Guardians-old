@@ -37,9 +37,6 @@ const PROP_WORDS = [
   "mug",
   "smokebomb",
   "badge",
-  "rectangle",
-  "round",
-  "spike_",
 ];
 
 function isProp(name: string) {
@@ -102,12 +99,22 @@ export function Character({
       }
       // Keep the hand-painted texture at full strength, add a soft guardian
       // wash and a neon emissive rim so each kid reads in their own colour.
-      mat.color.setRGB(1, 1, 1).lerp(tint, 0.18);
-      mat.emissive = tint.clone().multiplyScalar(0.16);
-      mat.emissiveIntensity = 0.8;
-      mat.metalness = 0.15;
-      mat.roughness = 0.68;
-      mat.envMapIntensity = 1.25;
+      mat.color.setRGB(1, 1, 1).lerp(tint, 0.24);
+      mat.emissive = tint.clone().multiplyScalar(0.3);
+      mat.emissiveIntensity = 1.1;
+      mat.metalness = 0.22;
+      mat.roughness = 0.55;
+      mat.envMapIntensity = 1.6;
+      // Punch up saturation + contrast on the baked texture so the guardians
+      // read as vivid toy-like heroes instead of muddy low-poly figures.
+      mat.onBeforeCompile = (shader) => {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          "#include <color_fragment>",
+          `#include <color_fragment>
+           float _lum = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+           diffuseColor.rgb = clamp(mix(vec3(_lum), diffuseColor.rgb, 1.55) * 1.08, 0.0, 1.0);`,
+        );
+      };
       mat.needsUpdate = true;
       mesh.material = mat;
     });
