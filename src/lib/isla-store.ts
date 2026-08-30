@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { CRYSTALS, REGIONS, type RegionId } from "@/data/isla";
+import { loadIslaCloud, saveIslaCloud } from "@/lib/cloud-save";
 
 /**
  * PLAYER PROGRESS for World 1. Pure state + localStorage persistence.
@@ -68,6 +69,7 @@ function persist() {
     KEY,
     JSON.stringify({ crystals, secrets, solved, hints, visited, mastery, xp, classComplete }),
   );
+  saveIslaCloud({ crystals, secrets, solved, hints, visited, mastery, xp, classComplete });
 }
 
 export function hydrateIsla() {
@@ -80,6 +82,16 @@ export function hydrateIsla() {
   } catch {
     /* corrupt save — start fresh */
   }
+  // Cloud save wins when the signed-in account is further along than this device.
+  void loadIslaCloud().then((cloud) => {
+    if (!cloud) return;
+    if ((cloud.xp ?? 0) < state.xp) {
+      persist();
+      return;
+    }
+    state = { ...state, ...(cloud as Partial<IslaState>) };
+    emit();
+  });
 }
 
 export function patchIsla(patch: Partial<IslaState>) {
