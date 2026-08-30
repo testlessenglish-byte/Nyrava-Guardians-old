@@ -39,6 +39,8 @@ function IslaCentral() {
 
   useEffect(() => {
     hydrateIsla();
+    // Handy for debugging camera/movement state from the console.
+    (window as unknown as { __isla?: typeof islaControls }).__isla = islaControls;
   }, []);
 
   useEffect(() => {
