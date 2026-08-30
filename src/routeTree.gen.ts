@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AcademyRouteImport } from './routes/academy'
 import { Route as BuilderRouteImport } from './routes/builder'
+import { Route as ClassroomRouteImport } from './routes/classroom'
 import { Route as CoreRouteImport } from './routes/core'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as MissionsRouteImport } from './routes/missions'
@@ -31,6 +32,11 @@ const AcademyRoute = AcademyRouteImport.update({
 const BuilderRoute = BuilderRouteImport.update({
   id: '/builder',
   path: '/builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClassroomRoute = ClassroomRouteImport.update({
+  id: '/classroom',
+  path: '/classroom',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoreRoute = CoreRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
   '/builder': typeof BuilderRoute
+  '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/missions': typeof MissionsRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
   '/builder': typeof BuilderRoute
+  '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/missions': typeof MissionsRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
   '/builder': typeof BuilderRoute
+  '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/missions': typeof MissionsRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/academy'
     | '/builder'
+    | '/classroom'
     | '/core'
     | '/home'
     | '/missions'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/academy'
     | '/builder'
+    | '/classroom'
     | '/core'
     | '/home'
     | '/missions'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/academy'
     | '/builder'
+    | '/classroom'
     | '/core'
     | '/home'
     | '/missions'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcademyRoute: typeof AcademyRoute
   BuilderRoute: typeof BuilderRoute
+  ClassroomRoute: typeof ClassroomRoute
   CoreRoute: typeof CoreRoute
   HomeRoute: typeof HomeRoute
   MissionsRoute: typeof MissionsRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/builder'
       fullPath: '/builder'
       preLoaderRoute: typeof BuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/classroom': {
+      id: '/classroom'
+      path: '/classroom'
+      fullPath: '/classroom'
+      preLoaderRoute: typeof ClassroomRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/core': {
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcademyRoute: AcademyRoute,
   BuilderRoute: BuilderRoute,
+  ClassroomRoute: ClassroomRoute,
   CoreRoute: CoreRoute,
   HomeRoute: HomeRoute,
   MissionsRoute: MissionsRoute,
