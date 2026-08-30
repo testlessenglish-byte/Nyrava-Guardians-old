@@ -262,7 +262,7 @@ function Mountains() {
         {[0, 1, 2, 3].map((i) => (
           <mesh key={i} position={[Math.cos((i / 4) * Math.PI * 2) * 3.4, 2.2, Math.sin((i / 4) * Math.PI * 2) * 3.4]} castShadow>
             <cylinderGeometry args={[0.4, 0.5, 4.4, 8]} />
-            <meshStandardMaterial color="#cbd5f5" roughness={0.6} />
+            <meshStandardMaterial color="#c2a373" roughness={0.9} />
           </mesh>
         ))}
         <mesh position={[0, 4.7, 0]} castShadow>
@@ -323,7 +323,7 @@ function Beach() {
           </mesh>
           <mesh position={[2.6, 0.3, 5]} castShadow>
             <boxGeometry args={[2.2, 0.9, 4.4]} />
-            <meshStandardMaterial color="#f8fafc" />
+            <meshStandardMaterial color="#a9805a" roughness={0.95} />
           </mesh>
         </group>
       ))}
@@ -341,7 +341,7 @@ function SpacePort({ locked }: { locked: boolean }) {
     <group position={[62 * S, y, 8 * S]}>
       <mesh position={[0, 9, 0]} castShadow>
         <cylinderGeometry args={[1.6, 2.6, 18, 12]} />
-        <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.3} />
+        <meshStandardMaterial color="#cbb79a" metalness={0.35} roughness={0.55} />
       </mesh>
       <mesh position={[0, 19.4, 0]} castShadow>
         <coneGeometry args={[1.6, 4, 12]} />
@@ -443,7 +443,7 @@ function CentralCity() {
       <group position={[0, 2.26 * S * 0.8, 0]}>
         <mesh position={[0, 11, 0]} castShadow>
           <cylinderGeometry args={[2.4, 4.4, 22, 8]} />
-          <meshStandardMaterial color="#f1f5f9" metalness={0.4} roughness={0.35} />
+          <meshStandardMaterial color="#c9ae86" metalness={0.25} roughness={0.6} />
         </mesh>
         <mesh position={[0, 23.4, 0]} castShadow>
           <octahedronGeometry args={[3.2, 0]} />
@@ -458,7 +458,7 @@ function CentralCity() {
       <group position={[ACADEMY_DOOR[0], terrainHeight(ACADEMY_DOOR[0], ACADEMY_DOOR[1]), ACADEMY_DOOR[1] - 12]}>
         <mesh position={[0, 4, 0]} castShadow receiveShadow>
           <boxGeometry args={[18, 8, 12]} />
-          <meshStandardMaterial color="#e2e8f0" />
+          <meshStandardMaterial color="#d9bd8c" roughness={0.95} />
         </mesh>
         <mesh position={[0, 2.4, 6.1]}>
           <planeGeometry args={[4, 5]} />
