@@ -639,7 +639,10 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
       buddy.position.y = terrainHeight(buddy.position.x, buddy.position.z);
       const walking = dist > 1.4;
       if (walking !== companionMoving) setCompanionMoving(walking);
+      // lookAt aims +Z at the player; the rig is flipped inside <Character>, so
+      // spin a half turn to have the guide actually look at the child.
       buddy.lookAt(player.position.x, buddy.position.y, player.position.z);
+      buddy.rotation.y += Math.PI;
     }
 
     // ---- camera: first person (avatar's eyes) or orbiting third person
