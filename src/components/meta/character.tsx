@@ -70,8 +70,10 @@ export function Character({
   height?: number;
 }) {
   const group = useRef<THREE.Group>(null);
-  const url = MODELS[guardianId] ?? DEFAULT_MODEL;
-  const { scene, animations } = useGLTF(url);
+  const url = (MODELS[guardianId] ?? DEFAULT_MODEL) as string;
+  const gltf = useGLTF(url) as unknown as { scene: THREE.Group; animations: THREE.AnimationClip[] };
+  const scene = gltf.scene;
+  const animations = gltf.animations;
 
   const model = useMemo(() => {
     scene.updateMatrixWorld(true);
@@ -128,7 +130,7 @@ export function Character({
   }, [scene, color, height]);
 
   const mixer = useMemo(() => new THREE.AnimationMixer(model), [model]);
-  const names = useMemo(() => animations.map((a) => a.name), [animations]);
+  const names = useMemo(() => animations.map((a: THREE.AnimationClip) => a.name), [animations]);
   const current = useRef<THREE.AnimationAction | null>(null);
 
   const clipName = useMemo(() => {
@@ -144,7 +146,7 @@ export function Character({
   }, [names, clip]);
 
   useEffect(() => {
-    const source = animations.find((a) => a.name === clipName);
+    const source = animations.find((a: THREE.AnimationClip) => a.name === clipName);
     if (!source) return;
     const next = mixer.clipAction(source);
     next.reset().setEffectiveWeight(1).fadeIn(FADE).play();
