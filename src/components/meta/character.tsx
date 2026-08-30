@@ -42,6 +42,7 @@ export function Character({
   const { scene, animations } = useGLTF(MODEL_URL);
 
   const model = useMemo(() => {
+    scene.updateMatrixWorld(true);
     const object = skeletonClone(scene);
     const tint = new THREE.Color(color);
 
