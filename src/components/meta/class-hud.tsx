@@ -33,7 +33,8 @@ export function ClassHud() {
   const { guardianName } = useGuardian();
   const learnerName = guardianName || "Guardian";
 
-  const active = CLASS_GUARDIANS.find((g) => g.id === nearby) ?? CLASS_GUARDIANS[4];
+  const active = (CLASS_GUARDIANS.find((g) => g.id === nearby) ??
+    CLASS_GUARDIANS[CLASS_GUARDIANS.length - 1]) as (typeof CLASS_GUARDIANS)[number];
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
