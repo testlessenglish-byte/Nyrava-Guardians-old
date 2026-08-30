@@ -30,8 +30,9 @@ export const Route = createFileRoute("/isla")({
 });
 
 function IslaCentral() {
-  const { profile } = useGuardian();
-  const guardian = CLASS_GUARDIANS.find((g) => g.id === profile.guardianId) ?? CLASS_GUARDIANS[0];
+  const { guardianId, guardianName } = useGuardian();
+  const guardian =
+    CLASS_GUARDIANS.find((g) => g.id === guardianId) ?? (CLASS_GUARDIANS[0] as (typeof CLASS_GUARDIANS)[number]);
   const dragging = useRef(false);
 
   useEffect(() => {
@@ -73,7 +74,7 @@ function IslaCentral() {
         <Suspense fallback={null}>
           <IslaScene
             playerColor={guardian.color}
-            playerName={profile.name || "Guardian"}
+            playerName={guardianName || "Guardian"}
             guardianColor={guardian.color}
           />
         </Suspense>
