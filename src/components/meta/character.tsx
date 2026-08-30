@@ -12,6 +12,10 @@ import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.j
 const MODELS: Record<string, string> = {
   lex: "/models/kay_Knight.glb",
   nova: "/models/kay_Mage.glb",
+  zoey: "/models/kay_Rogue.glb",
+  jacob: "/models/kay_Barbarian.glb",
+  dayana: "/models/kay_Rogue_Hooded.glb",
+  sarah: "/models/guardian.glb",
   tess: "/models/kay_Rogue.glb",
   byte: "/models/kay_Barbarian.glb",
   echo: "/models/kay_Rogue_Hooded.glb",

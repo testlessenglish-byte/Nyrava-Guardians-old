@@ -5,7 +5,7 @@
  * know whether data is mock, REST, or RPC.
  */
 
-export type GuardianId = "lex" | "nova" | "tess" | "byte" | "echo";
+export type GuardianId = "lex" | "nova" | "zoey" | "jacob" | "dayana" | "sarah" | "tess" | "byte" | "echo";
 
 export interface Guardian {
   id: GuardianId;

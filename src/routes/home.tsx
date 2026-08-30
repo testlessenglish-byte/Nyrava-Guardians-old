@@ -77,7 +77,7 @@ function HomeContent() {
     queryFn: () => MasteryService.listAchievements(),
   });
 
-  const activeId = guardianId ?? "tess";
+  const activeId = guardianId ?? "zoey";
   const guardian = GUARDIANS.find((g) => g.id === activeId)!;
   const styles = GUARDIAN_STYLES[activeId];
   const level = levelFromXp(xp);
