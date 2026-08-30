@@ -44,3 +44,11 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [x] Restore armour textures on avatars (light neon wash instead of flat paint)
 - [x] Fix props (trees/rocks) vanishing when the player walks up to them
 - [ ] Next art pass: distinct per-guardian kid models
+
+## Safe shared metaverse rooms
+- [ ] Subscriber accounts and child-safe profiles with verified age bands and interests
+- [ ] Live room presence so eligible Guardians appear together in the same classroom/world
+- [ ] Age-banded, interest-aware room matching with strict capacity and separation rules
+- [ ] Moderated text and voice communication with reporting, blocking, audit events, and guardian controls
+- [ ] Safety-first matching algorithm with no unrestricted adult/minor or cross-age direct messaging
+- [ ] Realtime avatar movement and room state synchronization
