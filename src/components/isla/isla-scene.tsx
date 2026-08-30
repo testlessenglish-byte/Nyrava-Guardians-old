@@ -542,6 +542,7 @@ function Player({ color, name }: { color: string; name: string }) {
   const regionRef = useRef<RegionId>("city");
   const vy = useRef(0);
   const airborne = useRef(false);
+  const swimming = useRef(false);
   const camPos = useRef(new THREE.Vector3());
   const [firstPerson, setFirstPerson] = useState(islaControls.view === "first");
 
