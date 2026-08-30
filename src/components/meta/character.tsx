@@ -16,7 +16,7 @@ const MODELS: Record<string, string> = {
   byte: "/models/kay_Barbarian.glb",
   echo: "/models/kay_Rogue_Hooded.glb",
 };
-const DEFAULT_MODEL = MODELS.lex;
+const DEFAULT_MODEL = MODELS["lex"]!;
 
 Object.values(MODELS).forEach((url) => useGLTF.preload(url));
 

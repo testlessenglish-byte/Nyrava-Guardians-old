@@ -519,7 +519,7 @@ function HutInterior() {
         {[-0.6, -0.3, 0, 0.35, 0.65].map((x, i) => (
           <mesh key={x} position={[x, 1.32, 0]} castShadow>
             <boxGeometry args={[0.16, 0.36, 0.3]} />
-            <meshStandardMaterial color={["#38bdf8", "#f472b6", "#facc15", "#4ade80", "#c084fc"][i]} roughness={0.8} />
+            <meshStandardMaterial color={(["#38bdf8", "#f472b6", "#facc15", "#4ade80", "#c084fc"] as const)[i]!} roughness={0.8} />
           </mesh>
         ))}
       </group>
