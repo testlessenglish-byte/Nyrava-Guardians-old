@@ -102,10 +102,11 @@ export function Character({
     if (!source) return;
     const next = mixer.clipAction(source);
     next.reset().setEffectiveWeight(1).fadeIn(FADE).play();
+    next.timeScale = clip === "swim" ? 0.55 : 1;
     const previous = current.current;
     if (previous && previous !== next) previous.fadeOut(FADE);
     current.current = next;
-  }, [mixer, animations, clipName]);
+  }, [mixer, animations, clipName, clip]);
 
   useEffect(() => () => {
     mixer.stopAllAction();
@@ -113,11 +114,16 @@ export function Character({
 
   useFrame((_, delta) => mixer.update(delta));
 
+  const swimming = clip === "swim";
+
   return (
     <group ref={group}>
       {/* This rig's visible forward axis is +Z. The player controller rotates
           this group so +Z points along the actual world-space movement vector. */}
-      <primitive object={model} />
+      <group rotation-x={swimming ? -Math.PI / 2.35 : 0} position-y={swimming ? 0.55 : 0}>
+        <primitive object={model} />
+      </group>
     </group>
   );
+
 }
