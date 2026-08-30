@@ -74,7 +74,7 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
   const [voiceState, setVoiceState] = useState<ConversationState>("IDLE");
   const [guardianMessage, setGuardianMessage] = useState<string | null>(null);
   const [childTranscript, setChildTranscript] = useState<string>("");
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const unsubscribe = conversationalVoiceEngine.subscribe({
