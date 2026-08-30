@@ -44,9 +44,19 @@ function IslaCentral() {
   }, []);
 
   useEffect(() => {
+    const ARROW_MAP: Record<string, string> = {
+      arrowup: "w",
+      arrowdown: "s",
+      arrowleft: "a",
+      arrowright: "d",
+    };
     const down = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
-      if (["w", "a", "s", "d"].includes(key)) islaControls.keys.add(key);
+      const moveKey = ARROW_MAP[key] ?? (["w", "a", "s", "d"].includes(key) ? key : null);
+      if (moveKey) {
+        if (ARROW_MAP[key]) e.preventDefault();
+        islaControls.keys.add(moveKey);
+      }
       if (key === "shift") islaControls.sprint = true;
       if (key === "e") islaControls.interact = true;
       if (key === "v") toggleIslaView();
@@ -57,7 +67,7 @@ function IslaCentral() {
     };
     const up = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
-      islaControls.keys.delete(key);
+      islaControls.keys.delete(ARROW_MAP[key] ?? key);
       if (key === "shift") islaControls.sprint = false;
     };
     window.addEventListener("keydown", down);
