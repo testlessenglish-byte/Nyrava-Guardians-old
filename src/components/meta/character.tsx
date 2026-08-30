@@ -26,7 +26,7 @@ Object.values(MODELS).forEach((url) => useGLTF.preload(url));
 
 const FADE = 0.22;
 /** Props bundled with the rig that a guardian should never carry. */
-const PROP_WORDS = [
+const WEAPON_PROPS = [
   "sword",
   "shield",
   "axe",
@@ -41,18 +41,15 @@ const PROP_WORDS = [
   "mug",
   "smokebomb",
   "badge",
-  "helmet",
-  "headgear",
-  "knight",
-  "visor",
-  "cape",
-  "shoulder",
-  "hat_knight",
 ];
 
 function isProp(name: string) {
   const n = name.toLowerCase();
-  return PROP_WORDS.some((w) => n.includes(w));
+  // Never hide main character body/mesh nodes
+  if (n.includes("body") || n.includes("head") || n.includes("armature") || n.includes("skin") || n.includes("character")) {
+    return false;
+  }
+  return WEAPON_PROPS.some((w) => n.includes(w));
 }
 
 function pickClip(names: string[], wanted: string[]) {
