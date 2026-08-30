@@ -168,7 +168,7 @@ export function Character({
   return (
     <group ref={group}>
       {/* Controllers rotate this group so +Z points along world movement. */}
-      <group rotation-x={swimming ? -Math.PI / 2.35 : 0} position-y={swimming ? 0.5 : 0}>
+      <group rotation-x={swimming ? Math.PI / 2.35 : 0} position-y={swimming ? 0.5 : 0}>
         <primitive object={model} />
         {/* Guardian identity accents: chest core + soft aura light. */}
         <mesh position={[0, height * 0.6, height * 0.11]}>
