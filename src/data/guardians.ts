@@ -1,4 +1,4 @@
-import type { CosmeticSlot, Guardian } from "@/types";
+import type { CosmeticSlot, Guardian, GuardianId } from "@/types";
 import lexImg from "@/assets/guardians/lex.png";
 import novaImg from "@/assets/guardians/nova.png";
 import zoeyImg from "@/assets/guardians/zoey.png";
@@ -256,3 +256,27 @@ export const HOME_DECOR_SLOTS: CosmeticSlot[] = [
     ],
   },
 ];
+
+/**
+ * Legacy roster ids (tess/byte/echo) still live in mock content and old saves.
+ * Map them onto the current roster so lookups never return undefined.
+ */
+export const GUARDIAN_ALIASES: Record<string, GuardianId> = {
+  tess: "zoey",
+  zoe: "zoey",
+  byte: "jacob",
+  echo: "dayana",
+};
+
+export function resolveGuardianId(id: string | null | undefined): GuardianId {
+  if (!id) return "zoey";
+  const alias = GUARDIAN_ALIASES[id];
+  if (alias) return alias;
+  return (GUARDIANS.find((g) => g.id === id)?.id ?? "zoey") as GuardianId;
+}
+
+/** Always returns a Guardian — falls back to Zoey for unknown/legacy ids. */
+export function resolveGuardian(id: string | null | undefined): Guardian {
+  const resolved = resolveGuardianId(id);
+  return (GUARDIANS.find((g) => g.id === resolved) ?? GUARDIANS[0]) as Guardian;
+}

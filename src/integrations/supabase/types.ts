@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_builder_requests: {
+        Row: {
+          created_at: string
+          generated_world_version: number | null
+          id: string
+          prompt: string
+          safety_result: string
+          status: string
+          updated_at: string
+          user_id: string
+          world_plan: Json | null
+        }
+        Insert: {
+          created_at?: string
+          generated_world_version?: number | null
+          id?: string
+          prompt: string
+          safety_result?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          world_plan?: Json | null
+        }
+        Update: {
+          created_at?: string
+          generated_world_version?: number | null
+          id?: string
+          prompt?: string
+          safety_result?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          world_plan?: Json | null
+        }
+        Relationships: []
+      }
+      ai_requests: {
+        Row: {
+          created_at: string
+          id: string
+          latency_ms: number
+          model: string
+          provider: string
+          safety_outcome: string
+          success: boolean
+          task_class: string
+          usage_metadata: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          latency_ms?: number
+          model: string
+          provider: string
+          safety_outcome?: string
+          success?: boolean
+          task_class: string
+          usage_metadata?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          latency_ms?: number
+          model?: string
+          provider?: string
+          safety_outcome?: string
+          success?: boolean
+          task_class?: string
+          usage_metadata?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      audit_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          details: Json
+          id: string
+          resource: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          resource: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          resource?: string
+        }
+        Relationships: []
+      }
       guardian_links: {
         Row: {
           created_at: string
@@ -38,6 +140,78 @@ export type Database = {
           learner_user_id?: string
           status?: Database["public"]["Enums"]["link_status"]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      guardian_mastery: {
+        Row: {
+          confidence: number
+          created_at: string
+          demonstrated_count: number
+          evidence_version: number
+          id: string
+          last_demonstrated_at: string
+          mastery_score: number
+          skill_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          demonstrated_count?: number
+          evidence_version?: number
+          id?: string
+          last_demonstrated_at?: string
+          mastery_score?: number
+          skill_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          demonstrated_count?: number
+          evidence_version?: number
+          id?: string
+          last_demonstrated_at?: string
+          mastery_score?: number
+          skill_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      guardian_profiles: {
+        Row: {
+          cosmetics: Json
+          created_at: string
+          display_name: string
+          id: string
+          progression_summary: Json
+          selected_guardian: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cosmetics?: Json
+          created_at?: string
+          display_name: string
+          id?: string
+          progression_summary?: Json
+          selected_guardian?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cosmetics?: Json
+          created_at?: string
+          display_name?: string
+          id?: string
+          progression_summary?: Json
+          selected_guardian?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -146,6 +320,45 @@ export type Database = {
         }
         Relationships: []
       }
+      mastery_events: {
+        Row: {
+          confidence: number
+          evidence_reference: string | null
+          id: string
+          result: string
+          skill_id: string
+          source: string
+          timestamp: string
+          user_id: string
+          validation_state: string
+          version: number
+        }
+        Insert: {
+          confidence?: number
+          evidence_reference?: string | null
+          id?: string
+          result: string
+          skill_id: string
+          source: string
+          timestamp?: string
+          user_id: string
+          validation_state?: string
+          version?: number
+        }
+        Update: {
+          confidence?: number
+          evidence_reference?: string | null
+          id?: string
+          result?: string
+          skill_id?: string
+          source?: string
+          timestamp?: string
+          user_id?: string
+          validation_state?: string
+          version?: number
+        }
+        Relationships: []
+      }
       memberships: {
         Row: {
           created_at: string
@@ -173,6 +386,71 @@ export type Database = {
           tier?: Database["public"]["Enums"]["membership_tier"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      mission_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          learning_evidence: Json
+          mission_id: string
+          outcome: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          learning_evidence?: Json
+          mission_id: string
+          outcome: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          learning_evidence?: Json
+          mission_id?: string
+          outcome?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_attempts_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missions: {
+        Row: {
+          briefing: string
+          created_at: string
+          difficulty: number
+          id: string
+          title: string
+          xp_reward: number
+          zone: string
+        }
+        Insert: {
+          briefing: string
+          created_at?: string
+          difficulty: number
+          id: string
+          title: string
+          xp_reward?: number
+          zone: string
+        }
+        Update: {
+          briefing?: string
+          created_at?: string
+          difficulty?: number
+          id?: string
+          title?: string
+          xp_reward?: number
+          zone?: string
         }
         Relationships: []
       }
@@ -362,6 +640,33 @@ export type Database = {
         }
         Relationships: []
       }
+      safety_events: {
+        Row: {
+          created_at: string
+          details: Json
+          event_type: string
+          id: string
+          reason_code: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          event_type: string
+          id?: string
+          reason_code: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          event_type?: string
+          id?: string
+          reason_code?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       safety_reports: {
         Row: {
           category: string
@@ -481,12 +786,150 @@ export type Database = {
         }
         Relationships: []
       }
+      world_change_events: {
+        Row: {
+          change_type: string
+          created_at: string
+          details: Json
+          id: string
+          performed_by: string
+          world_id: string
+        }
+        Insert: {
+          change_type: string
+          created_at?: string
+          details?: Json
+          id?: string
+          performed_by: string
+          world_id: string
+        }
+        Update: {
+          change_type?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          performed_by?: string
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "world_change_events_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      world_objects: {
+        Row: {
+          asset_type: string
+          created_at: string
+          id: string
+          object_id: string
+          properties: Json
+          validated: boolean
+          world_id: string
+        }
+        Insert: {
+          asset_type: string
+          created_at?: string
+          id?: string
+          object_id: string
+          properties?: Json
+          validated?: boolean
+          world_id: string
+        }
+        Update: {
+          asset_type?: string
+          created_at?: string
+          id?: string
+          object_id?: string
+          properties?: Json
+          validated?: boolean
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "world_objects_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      world_versions: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          state: Json
+          version: number
+          world_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          state: Json
+          version: number
+          world_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          state?: Json
+          version?: number
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "world_versions_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worlds: {
+        Row: {
+          created_at: string
+          current_version: number
+          id: string
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_version?: number
+          id?: string
+          state?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_version?: number
+          id?: string
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_approved_guardian: {
+        Args: { _guardian: string; _learner: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "guardian" | "learner" | "moderator" | "admin"

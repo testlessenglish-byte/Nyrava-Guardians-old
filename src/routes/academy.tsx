@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Clock, Lock, PlayCircle } from "lucide-react";
 import { Suspense } from "react";
 import { ProgressBar } from "@/components/progress-bar";
-import { GUARDIANS, GUARDIAN_IMAGES } from "@/data/guardians";
+import { GUARDIAN_IMAGES, resolveGuardian, resolveGuardianId } from "@/data/guardians";
 import { GUARDIAN_STYLES } from "@/lib/guardian-colors";
 import { cn } from "@/lib/utils";
 import { AcademyService } from "@/services/mock";
@@ -54,8 +54,9 @@ function AcademyContent() {
 
       <div className="space-y-5">
         {labs.map((lab) => {
-          const guardian = GUARDIANS.find((g) => g.id === lab.guardianId)!;
-          const styles = GUARDIAN_STYLES[lab.guardianId];
+          const guardianId = resolveGuardianId(lab.guardianId);
+          const guardian = resolveGuardian(guardianId);
+          const styles = GUARDIAN_STYLES[guardianId];
           const overall = Math.round(
             lab.lessons.reduce((sum, l) => sum + l.progress, 0) / lab.lessons.length,
           );
@@ -71,7 +72,7 @@ function AcademyContent() {
                   )}
                 >
                   <img
-                    src={GUARDIAN_IMAGES[lab.guardianId]}
+                    src={GUARDIAN_IMAGES[guardianId]}
                     alt={`${guardian.name} leads the ${lab.name}`}
                     className="h-full w-full object-cover object-top"
                   />
