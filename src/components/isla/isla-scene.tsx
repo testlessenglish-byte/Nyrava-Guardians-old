@@ -19,7 +19,7 @@ import {
   patchIsla,
   tryCollectCrystal,
 } from "@/lib/isla-store";
-import { ISLAND_RADIUS, isWalkable, terrainHeight } from "@/lib/isla-terrain";
+import { ISLAND_RADIUS, WORLD_SCALE as S, isWalkable, terrainHeight, ws } from "@/lib/isla-terrain";
 
 const SPEED = 9.5;
 const move = new THREE.Vector3();
@@ -181,7 +181,7 @@ function Instanced({
 }
 
 function Forest() {
-  const trees = useScatter(11, 130, [-44, -40], 32, 1.2);
+  const trees = useScatter(11, 420, ws([-44, -40]), 32 * S, 1.2);
   return (
     <>
       <Instanced items={trees} color="#5b3a22" yOffset={1.6}>
@@ -203,8 +203,8 @@ function Waterfall() {
       m.opacity = 0.65 + Math.sin(clock.elapsedTime * 3) * 0.1;
     }
   });
-  const x = -47;
-  const z = -47;
+  const x = -47 * S;
+  const z = -47 * S;
   return (
     <group position={[x, terrainHeight(x, z), z]}>
       <mesh ref={ref} position={[0, 3.4, 0]}>
@@ -220,14 +220,14 @@ function Waterfall() {
 }
 
 function Mountains() {
-  const rocks = useScatter(21, 70, [44, -46], 32, 3);
+  const rocks = useScatter(21, 220, ws([44, -46]), 32 * S, 3);
   const peaks = useMemo<Instance[]>(() => {
     const rand = mulberry32(7);
-    return Array.from({ length: 9 }, () => {
+    return Array.from({ length: 22 }, () => {
       const a = rand() * Math.PI * 2;
-      const d = rand() * 22;
-      const x = 44 + Math.cos(a) * d;
-      const z = -46 + Math.sin(a) * d;
+      const d = rand() * 22 * S;
+      const x = 44 * S + Math.cos(a) * d;
+      const z = -46 * S + Math.sin(a) * d;
       return { p: [x, terrainHeight(x, z), z] as [number, number, number], s: 1.4 + rand() * 2.2, r: rand() * 3 };
     });
   }, []);
@@ -240,7 +240,7 @@ function Mountains() {
         <coneGeometry args={[3.4, 8, 6]} />
       </Instanced>
       {/* Summit observation temple */}
-      <group position={[46, terrainHeight(46, -52), -52]}>
+      <group position={[46 * S, terrainHeight(46 * S, -52 * S), -52 * S]}>
         {[0, 1, 2, 3].map((i) => (
           <mesh key={i} position={[Math.cos((i / 4) * Math.PI * 2) * 3.4, 2.2, Math.sin((i / 4) * Math.PI * 2) * 3.4]} castShadow>
             <cylinderGeometry args={[0.4, 0.5, 4.4, 8]} />
@@ -257,13 +257,13 @@ function Mountains() {
 }
 
 function Valley() {
-  const stones = useScatter(31, 46, [-26, 48], 22, 0.7);
+  const stones = useScatter(31, 150, ws([-26, 48]), 22 * S, 0.7);
   return (
     <>
       <Instanced items={stones} color="#c9b489" yOffset={1.4}>
         <cylinderGeometry args={[0.5, 0.6, 3.2, 8]} />
       </Instanced>
-      <group position={[-26, terrainHeight(-26, 48), 48]}>
+      <group position={[-26 * S, terrainHeight(-26 * S, 48 * S), 48 * S]}>
         <mesh rotation-x={-Math.PI / 2} position={[0, 0.07, 0]} receiveShadow>
           <ringGeometry args={[6, 12, 32]} />
           <meshStandardMaterial color="#e7d4a3" />
@@ -278,7 +278,7 @@ function Valley() {
 }
 
 function Desert() {
-  const ruins = useScatter(41, 34, [-58, 16], 26, 0.8);
+  const ruins = useScatter(41, 120, ws([-58, 16]), 26 * S, 0.8);
   return (
     <Instanced items={ruins} color="#b98b3d" yOffset={1.2}>
       <boxGeometry args={[1.6, 2.6, 1.6]} />
@@ -287,7 +287,7 @@ function Desert() {
 }
 
 function Beach() {
-  const palms = useScatter(51, 34, [30, 52], 24, 0.7);
+  const palms = useScatter(51, 120, ws([30, 52]), 24 * S, 0.7);
   return (
     <>
       <Instanced items={palms} color="#8a5a2b" yOffset={2.2}>
@@ -298,7 +298,7 @@ function Beach() {
       </Instanced>
       {/* docks + boats */}
       {[0, 1, 2].map((i) => (
-        <group key={i} position={[34 + i * 5, 0.4, 62 + i * 2]}>
+        <group key={i} position={[(34 + i * 5) * S, 0.4, (62 + i * 2) * S]}>
           <mesh castShadow receiveShadow>
             <boxGeometry args={[2.2, 0.3, 14]} />
             <meshStandardMaterial color="#8b5e3c" />
@@ -318,9 +318,9 @@ function SpacePort({ locked }: { locked: boolean }) {
   useFrame((_, d) => {
     if (ring.current) ring.current.rotation.z += d * 0.4;
   });
-  const y = terrainHeight(62, 8);
+  const y = terrainHeight(62 * S, 8 * S);
   return (
-    <group position={[62, y, 8]}>
+    <group position={[62 * S, y, 8 * S]}>
       <mesh position={[0, 9, 0]} castShadow>
         <cylinderGeometry args={[1.6, 2.6, 18, 12]} />
         <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.3} />
@@ -346,9 +346,9 @@ function CentralCity() {
   const towers = useMemo<Instance[]>(() => {
     const rand = mulberry32(99);
     const out: Instance[] = [];
-    for (let i = 0; i < 16; i++) {
-      const a = (i / 16) * Math.PI * 2 + rand() * 0.2;
-      const d = 17 + rand() * 7;
+    for (let i = 0; i < 34; i++) {
+      const a = (i / 34) * Math.PI * 2 + rand() * 0.35;
+      const d = (16 + rand() * 8) * S;
       const x = Math.cos(a) * d;
       const z = Math.sin(a) * d;
       out.push({ p: [x, terrainHeight(x, z), z], s: 0.8 + rand() * 1.6, r: rand() * 3 });
@@ -363,13 +363,13 @@ function CentralCity() {
       </Instanced>
 
       {/* Guardian Plaza */}
-      <mesh rotation-x={-Math.PI / 2} position={[0, 2.26, 0]} receiveShadow>
-        <circleGeometry args={[14, 48]} />
+      <mesh rotation-x={-Math.PI / 2} position={[0, 2.26 * S * 0.8, 0]} receiveShadow>
+        <circleGeometry args={[14 * S, 64]} />
         <meshStandardMaterial color="#cbd5f5" emissive="#38bdf8" emissiveIntensity={0.12} />
       </mesh>
 
       {/* Nyrava Command Center — the landmark */}
-      <group position={[0, 2.2, 0]}>
+      <group position={[0, 2.26 * S * 0.8, 0]}>
         <mesh position={[0, 11, 0]} castShadow>
           <cylinderGeometry args={[2.4, 4.4, 22, 8]} />
           <meshStandardMaterial color="#f1f5f9" metalness={0.4} roughness={0.35} />
@@ -384,7 +384,7 @@ function CentralCity() {
       </group>
 
       {/* Academy entrance */}
-      <group position={[ACADEMY_DOOR[0], terrainHeight(ACADEMY_DOOR[0], ACADEMY_DOOR[1]), ACADEMY_DOOR[1] - 6]}>
+      <group position={[ACADEMY_DOOR[0], terrainHeight(ACADEMY_DOOR[0], ACADEMY_DOOR[1]), ACADEMY_DOOR[1] - 12]}>
         <mesh position={[0, 4, 0]} castShadow receiveShadow>
           <boxGeometry args={[18, 8, 12]} />
           <meshStandardMaterial color="#e2e8f0" />
@@ -399,7 +399,7 @@ function CentralCity() {
       </group>
 
       {/* Mission board */}
-      <group position={[8, terrainHeight(8, 10) + 1.6, 10]}>
+      <group position={[8 * S, terrainHeight(8 * S, 10 * S) + 1.6, 10 * S]}>
         <mesh castShadow>
           <boxGeometry args={[4, 3, 0.3]} />
           <meshStandardMaterial color="#0f172a" emissive="#22d3ee" emissiveIntensity={0.3} />
