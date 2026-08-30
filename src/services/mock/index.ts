@@ -10,7 +10,6 @@ import {
   ACADEMY_LABS,
   ACHIEVEMENTS,
   CHILD_WORLD,
-  GUARDIANS,
   MASTERIES,
   MISSIONS,
   NEXT_OBJECTIVE,
@@ -18,8 +17,6 @@ import {
 } from "@/data/world";
 import { GUARDIANS as GUARDIAN_LIST } from "@/data/guardians";
 import type { BuilderRequest, Mission } from "@/types";
-
-void GUARDIANS;
 
 const delay = (ms = 120) => new Promise((r) => setTimeout(r, ms));
 
