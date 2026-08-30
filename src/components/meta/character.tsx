@@ -62,7 +62,7 @@ export function Character({
       }
       mat.metalness = 0.85;
       mat.roughness = 0.28;
-      mesh.material = mat;
+      mesh.material = new THREE.MeshBasicMaterial({ color: "#ff0000" });
     });
 
 
