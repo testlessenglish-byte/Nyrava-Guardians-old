@@ -65,6 +65,7 @@ export function Character({
       mat.metalness = 0.65;
       mat.roughness = 0.35;
       mat.envMapIntensity = 1.2;
+      if (import.meta.env.DEV) console.log("[char]", mesh.name, "map:", !!mat.map, mat.type);
       mesh.material = mat;
     });
 
