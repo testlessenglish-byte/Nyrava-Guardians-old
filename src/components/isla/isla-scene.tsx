@@ -173,10 +173,20 @@ function Instanced({
       mesh.setMatrixAt(i, dummy.matrix);
     });
     mesh.instanceMatrix.needsUpdate = true;
+    // Without this the batch keeps the single-geometry bounds and the whole
+    // clump vanishes as soon as you walk close to it.
+    mesh.computeBoundingSphere();
+    mesh.count = items.length;
   }, [items, yOffset]);
 
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, Math.max(items.length, 1)]} castShadow receiveShadow>
+    <instancedMesh
+      ref={ref}
+      args={[undefined, undefined, Math.max(items.length, 1)]}
+      frustumCulled={false}
+      castShadow
+      receiveShadow
+    >
       {children}
       <meshStandardMaterial
         color={color}
