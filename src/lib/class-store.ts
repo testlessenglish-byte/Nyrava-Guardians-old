@@ -24,7 +24,7 @@ let state: ClassState = {
   nearby: null,
   speaking: null,
   thinking: false,
-  voiceEnabled: true,
+  voiceEnabled: false,
   listening: false,
   zone: "academy",
   travelTick: 0,
