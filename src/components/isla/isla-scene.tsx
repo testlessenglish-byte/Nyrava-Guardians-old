@@ -885,7 +885,7 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
     if (region !== regionRef.current) {
       regionRef.current = region;
       enterRegion(region);
-      audioEngine.setWorldZone(region === "digital_city" ? "digital-city" : "hq");
+      audioEngine.setWorldZone(region === "city" ? "digital-city" : "hq");
     }
 
     // Guardian Station Proximity Detection & Conversational Voice Trigger

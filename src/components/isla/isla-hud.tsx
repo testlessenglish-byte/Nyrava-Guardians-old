@@ -22,7 +22,7 @@ const MAP = 200;
 
 function MiniMap() {
   const state = useIsla();
-  const pos = state.pos;
+  const pos = islaControls.player;
 
   function toMap(val: number) {
     return ((val + ISLAND_RADIUS) / (ISLAND_RADIUS * 2)) * MAP;
@@ -32,8 +32,8 @@ function MiniMap() {
     <svg className="h-44 w-44 rounded-3xl border border-white/20 bg-background/80 p-2 shadow-2xl backdrop-blur">
       <circle cx={MAP / 2} cy={MAP / 2} r={MAP / 2 - 8} fill="#090d16" stroke="#38bdf8" strokeWidth={1} />
       {REGIONS.map((r) => {
-        const discovered = state.discoveredRegions.includes(r.id);
-        const locked = (r.requiredCrystals ?? 0) > state.crystals.length;
+        const discovered = state.visited.includes(r.id);
+        const locked = (r.lock?.requires ?? 0) > state.crystals.length;
         return (
           <g key={r.id}>
             <circle
@@ -82,7 +82,9 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
       onTranscript: (text) => setChildTranscript(text),
       onGuardianResponse: (text) => setGuardianMessage(text),
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const ui = UI_STRINGS[locale] ?? UI_STRINGS["en-US"];
@@ -144,7 +146,7 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
           }`}
         >
           {isMuted ? <MicOff className="h-3.5 w-3.5 text-red-400" /> : <Mic className="h-3.5 w-3.5 text-emerald-400" />}
-          <span>{isMuted ? ui.unmuteMic : ui.muteMic}</span>
+          <span>{isMuted ? ui['unmuteMic'] : ui['muteMic']}</span>
         </button>
       </div>
 

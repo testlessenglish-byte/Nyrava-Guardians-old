@@ -8,15 +8,15 @@ class IslaErrorBoundary extends Component<{ children: ReactNode }, { hasError: b
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError() {
+  static override getDerivedStateFromError() {
     return { hasError: true };
   }
 
-  componentDidCatch(error: unknown) {
+  override componentDidCatch(error: unknown) {
     console.error("3D World Scene render error:", error);
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return (
         <div className="flex h-full w-full flex-col items-center justify-center bg-slate-950 p-6 text-center text-white">

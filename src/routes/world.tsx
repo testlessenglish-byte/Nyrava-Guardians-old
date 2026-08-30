@@ -169,7 +169,7 @@ function WorldMapContent() {
               <div className="flex flex-col items-center">
                 {/* Pin Badge */}
                 <div
-                  style={{ borderColor: zone.color, shadowColor: zone.color }}
+                  style={{ borderColor: zone.color }}
                   className="flex items-center gap-2 rounded-2xl border-2 bg-slate-900/90 px-3.5 py-1.5 shadow-lg backdrop-blur-md transition-all group-hover:bg-slate-900 group-hover:shadow-cyan-500/50"
                 >
                   <div

@@ -21,7 +21,7 @@ class ConversationalVoiceEngine {
   private activeGuardian: string = "lex";
   private locale: LocaleId = "en-US";
   private isMuted = false;
-  private recognition: SpeechRecognition | null = null;
+  private recognition: any = null;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -31,9 +31,8 @@ class ConversationalVoiceEngine {
 
   private initRecognition() {
     if (typeof window === "undefined") return;
-    const SpeechRecognition =
-      (window as unknown as { SpeechRecognition: typeof window.SpeechRecognition }).SpeechRecognition ||
-      (window as unknown as { webkitSpeechRecognition: typeof window.SpeechRecognition }).webkitSpeechRecognition;
+    const w = window as unknown as Record<string, any>;
+    const SpeechRecognition = w['SpeechRecognition'] || w['webkitSpeechRecognition'];
 
     if (SpeechRecognition) {
       try {
@@ -42,7 +41,7 @@ class ConversationalVoiceEngine {
         this.recognition.interimResults = true;
         this.recognition.lang = this.locale;
 
-        this.recognition.onresult = (event) => {
+        this.recognition.onresult = (event: any) => {
           let finalTranscript = "";
           let interimTranscript = "";
 

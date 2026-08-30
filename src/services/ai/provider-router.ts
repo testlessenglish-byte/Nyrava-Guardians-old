@@ -42,7 +42,7 @@ export class GroqAdapter implements ProviderAdapter {
   name = "groq" as const;
 
   async execute(request: AIProviderRequest, timeoutMs: number): Promise<AIProviderResponse> {
-    const apiKey = process.env.GROQ_API_KEY;
+    const apiKey = process.env['GROQ_API_KEY'];
     const startTime = Date.now();
 
     if (!apiKey) {
@@ -88,7 +88,7 @@ export class GroqAdapter implements ProviderAdapter {
           totalTokens: data.usage?.total_tokens ?? 0,
         },
         safetyStatus: "passed",
-        idempotencyKey: request.idempotencyKey,
+        ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
       };
     } catch (err: any) {
       clearTimeout(timer);
@@ -101,7 +101,7 @@ export class GeminiAdapter implements ProviderAdapter {
   name = "gemini" as const;
 
   async execute(request: AIProviderRequest, timeoutMs: number): Promise<AIProviderResponse> {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env['GEMINI_API_KEY'];
     const startTime = Date.now();
 
     if (!apiKey) {
@@ -142,7 +142,7 @@ export class GeminiAdapter implements ProviderAdapter {
           totalTokens: data.usageMetadata?.totalTokenCount ?? 0,
         },
         safetyStatus: "passed",
-        idempotencyKey: request.idempotencyKey,
+        ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
       };
     } catch (err: any) {
       clearTimeout(timer);
@@ -158,10 +158,10 @@ export class AIProviderRouter {
 
   private get config() {
     return {
-      defaultProvider: process.env.AI_DEFAULT_PROVIDER ?? "groq",
-      fallbackProvider: process.env.AI_FALLBACK_PROVIDER ?? "gemini",
-      timeoutMs: Number(process.env.AI_TIMEOUT_MS ?? 30000),
-      maxRetries: Number(process.env.AI_MAX_RETRIES ?? 2),
+      defaultProvider: process.env['AI_DEFAULT_PROVIDER'] ?? "groq",
+      fallbackProvider: process.env['AI_FALLBACK_PROVIDER'] ?? "gemini",
+      timeoutMs: Number(process.env['AI_TIMEOUT_MS'] ?? 30000),
+      maxRetries: Number(process.env['AI_MAX_RETRIES'] ?? 2),
     };
   }
 
@@ -198,7 +198,7 @@ export class AIProviderRouter {
         model: "safe-fallback-v1",
         latencyMs: 0,
         safetyStatus: "passed",
-        idempotencyKey: request.idempotencyKey,
+        ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
       };
       if (request.idempotencyKey) this.cache.set(request.idempotencyKey, fallbackRes);
       return fallbackRes;
