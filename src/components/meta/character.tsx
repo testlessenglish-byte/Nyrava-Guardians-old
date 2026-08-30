@@ -68,10 +68,11 @@ export function Character({
     const size = box.getSize(new THREE.Vector3());
     object.scale.setScalar(height / (size.y || 1));
 
+    console.log("[char] rawSize", size.toArray(), "scale", object.scale.x, "clips", animations.map(a=>a.name));
     const scaled = new THREE.Box3().setFromObject(object);
     object.position.y -= scaled.min.y;
     return object;
-  }, [scene, color, height]);
+  }, [scene, color, height, animations]);
 
   const { actions, names } = useAnimations(animations, group);
   const previous = useRef<string | null>(null);
