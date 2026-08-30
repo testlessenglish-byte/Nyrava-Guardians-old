@@ -362,12 +362,29 @@ function Mountains() {
 }
 
 function Valley() {
-  const stones = useScatter(31, 150, ws([-26, 48]), 22 * S, 0.7);
+  // Large weathered ruins instead of a forest of thin posts: broad broken
+  // columns on stepped plinths, heavy capitals and toppled blocks.
+  const columns = useScatter(31, 34, ws([-26, 48]), 22 * S, 0.7);
+  const rubble = useScatter(37, 46, ws([-26, 48]), 24 * S, 0.7);
   return (
     <>
-      <Instanced items={stones} color="#c9b489" yOffset={1.4}>
-        <cylinderGeometry args={[0.5, 0.6, 3.2, 8]} />
+      {/* stepped plinths */}
+      <Instanced items={columns} color="#b9a077" yOffset={0.6}>
+        <boxGeometry args={[5.2, 1.2, 5.2]} />
       </Instanced>
+      {/* massive fluted column shafts */}
+      <Instanced items={columns} color="#d3c1a0" yOffset={5.4}>
+        <cylinderGeometry args={[1.5, 1.9, 9.6, 12]} />
+      </Instanced>
+      {/* broken capitals crowning the shafts */}
+      <Instanced items={columns} color="#c9b489" yOffset={10.6}>
+        <boxGeometry args={[4.2, 1.4, 4.2]} />
+      </Instanced>
+      {/* toppled blocks and shattered drums scattered between them */}
+      <Instanced items={rubble} color="#bfae8c" yOffset={0.8}>
+        <boxGeometry args={[3.4, 1.6, 2.2]} />
+      </Instanced>
+
       <group position={[-26 * S, terrainHeight(-26 * S, 48 * S), 48 * S]}>
         <mesh rotation-x={-Math.PI / 2} position={[0, 0.07, 0]} receiveShadow>
           <ringGeometry args={[6, 12, 32]} />
