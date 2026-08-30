@@ -54,14 +54,15 @@ export function Character({
       const source = mesh.material as THREE.MeshStandardMaterial;
       const mat = source.clone();
       const luminance = source.color.r * 0.3 + source.color.g * 0.6 + source.color.b * 0.1;
-      if (luminance > 0.55) {
+      if (luminance > 0.3) {
         mat.color.copy(tint);
-        mat.emissive = tint.clone().multiplyScalar(0.45);
+        mat.emissive = tint.clone().multiplyScalar(0.35);
+        mat.emissiveIntensity = 1.1;
       } else {
-        mat.color.setRGB(0.09, 0.1, 0.13);
+        mat.color.setRGB(0.16, 0.18, 0.24);
         mat.emissive = new THREE.Color("#000000");
       }
-      mat.metalness = 0.85;
+      mat.metalness = 0.7;
       mat.roughness = 0.28;
       mesh.material = mat;
     });
