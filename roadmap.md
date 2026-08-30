@@ -34,8 +34,9 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [ ] Keep service-boundary architecture (world data / mission data / progress / AI / mastery separated)
 
 ## Isla Central polish pass (Aug 30)
-- [ ] Bigger island world (scale terrain + regions), denser props
-- [ ] Immersive fullscreen layout for 3D routes (no site chrome overlap)
-- [ ] Fix avatar walking backwards (camera-relative input)
-- [ ] Camera modes: third-person / first-person (eyes), wheel zoom
-- [ ] Click-to-walk to a spot, jump (Space), sprint (Shift)
+- [x] Bigger island world (scale terrain + regions), denser props
+- [x] Immersive fullscreen layout for 3D routes (no site chrome overlap)
+- [x] Fix avatar walking backwards (camera-relative input)
+- [x] Camera modes: third-person / first-person (eyes), wheel zoom
+- [x] Click-to-walk to a spot, jump (Space), sprint (Shift)
+- [ ] Next art pass: real textures + CC0 kid-guardian models instead of soldier rig
