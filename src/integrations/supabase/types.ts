@@ -41,6 +41,84 @@ export type Database = {
         }
         Relationships: []
       }
+      guardian_state: {
+        Row: {
+          completed_missions: string[]
+          cosmetics: Json
+          created_at: string
+          guardian_id: string | null
+          guardian_name: string
+          home_decor: Json
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          completed_missions?: string[]
+          cosmetics?: Json
+          created_at?: string
+          guardian_id?: string | null
+          guardian_name?: string
+          home_decor?: Json
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          completed_missions?: string[]
+          cosmetics?: Json
+          created_at?: string
+          guardian_id?: string | null
+          guardian_name?: string
+          home_decor?: Json
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: []
+      }
+      isla_progress: {
+        Row: {
+          class_complete: boolean
+          created_at: string
+          crystals: string[]
+          hints: Json
+          mastery: Json
+          secrets: string[]
+          solved: string[]
+          updated_at: string
+          user_id: string
+          visited: string[]
+          xp: number
+        }
+        Insert: {
+          class_complete?: boolean
+          created_at?: string
+          crystals?: string[]
+          hints?: Json
+          mastery?: Json
+          secrets?: string[]
+          solved?: string[]
+          updated_at?: string
+          user_id: string
+          visited?: string[]
+          xp?: number
+        }
+        Update: {
+          class_complete?: boolean
+          created_at?: string
+          crystals?: string[]
+          hints?: Json
+          mastery?: Json
+          secrets?: string[]
+          solved?: string[]
+          updated_at?: string
+          user_id?: string
+          visited?: string[]
+          xp?: number
+        }
+        Relationships: []
+      }
       learner_profiles: {
         Row: {
           created_at: string
