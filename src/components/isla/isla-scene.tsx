@@ -447,8 +447,90 @@ function SpacePort({ locked }: { locked: boolean }) {
   );
 }
 
-/** A tropical palapa hut: timber posts, sand-plaster walls, thatched roof. */
+/** Simple furniture kit used to dress every hut interior. */
+function HutInterior() {
+  return (
+    <group>
+      {/* woven floor rug */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.72, 0]} receiveShadow>
+        <circleGeometry args={[2.2, 24]} />
+        <meshStandardMaterial color="#b45309" roughness={1} />
+      </mesh>
+      {/* bed */}
+      <group position={[-1.5, 0.7, -1.1]} rotation-y={0.5}>
+        <mesh position={[0, 0.28, 0]} castShadow receiveShadow>
+          <boxGeometry args={[1.1, 0.4, 2]} />
+          <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
+        </mesh>
+        <mesh position={[0, 0.56, 0.1]} castShadow>
+          <boxGeometry args={[1.05, 0.18, 1.7]} />
+          <meshStandardMaterial color="#e0f2fe" roughness={0.95} />
+        </mesh>
+        <mesh position={[0, 0.68, -0.75]} castShadow>
+          <boxGeometry args={[0.7, 0.16, 0.35]} />
+          <meshStandardMaterial color="#f8fafc" roughness={1} />
+        </mesh>
+      </group>
+      {/* table + two stools */}
+      <group position={[1.4, 0.7, 0.4]}>
+        <mesh position={[0, 0.72, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[0.75, 0.75, 0.1, 12]} />
+          <meshStandardMaterial color="#a16207" roughness={0.85} />
+        </mesh>
+        <mesh position={[0, 0.35, 0]} castShadow>
+          <cylinderGeometry args={[0.12, 0.16, 0.72, 8]} />
+          <meshStandardMaterial color="#6f4a2c" roughness={1} />
+        </mesh>
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 1.15, 0.28, s * 0.3]} castShadow>
+            <cylinderGeometry args={[0.3, 0.32, 0.55, 10]} />
+            <meshStandardMaterial color="#7c5a3a" roughness={1} />
+          </mesh>
+        ))}
+        {/* fruit bowl */}
+        <mesh position={[0, 0.86, 0]} castShadow>
+          <sphereGeometry args={[0.2, 12, 10]} />
+          <meshStandardMaterial color="#f97316" roughness={0.7} />
+        </mesh>
+      </group>
+      {/* shelf with books */}
+      <group position={[0.2, 0.7, -2.1]}>
+        <mesh position={[0, 1.1, 0]} castShadow>
+          <boxGeometry args={[1.8, 0.1, 0.5]} />
+          <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
+        </mesh>
+        {[-0.6, -0.3, 0, 0.35, 0.65].map((x, i) => (
+          <mesh key={x} position={[x, 1.32, 0]} castShadow>
+            <boxGeometry args={[0.16, 0.36, 0.3]} />
+            <meshStandardMaterial color={["#38bdf8", "#f472b6", "#facc15", "#4ade80", "#c084fc"][i]} roughness={0.8} />
+          </mesh>
+        ))}
+      </group>
+      {/* hanging lantern */}
+      <mesh position={[0, 2.9, 0]}>
+        <sphereGeometry args={[0.28, 14, 12]} />
+        <meshStandardMaterial color="#fde68a" emissive="#f59e0b" emissiveIntensity={2.4} toneMapped={false} />
+      </mesh>
+      <pointLight position={[0, 2.7, 0]} color="#ffb457" intensity={9} distance={9} castShadow={false} />
+    </group>
+  );
+}
+
+/**
+ * A tropical palapa hut you can actually walk into: the cane wall is built
+ * from segments with a doorway gap at the front, and the inside is furnished.
+ */
 function Palapa({ position, scale = 1, rotation = 0 }: { position: [number, number, number]; scale?: number; rotation?: number }) {
+  // 8 wall panels around the octagon, skipping the front one for the doorway.
+  const panels = useMemo(() => {
+    const out: { a: number; skip: boolean }[] = [];
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      out.push({ a, skip: i === 2 });
+    }
+    return out;
+  }, []);
+
   return (
     <group position={position} rotation-y={rotation} scale={scale}>
       {/* raised deck */}
@@ -456,11 +538,45 @@ function Palapa({ position, scale = 1, rotation = 0 }: { position: [number, numb
         <cylinderGeometry args={[3.4, 3.6, 0.7, 8]} />
         <meshStandardMaterial color="#a9805a" roughness={0.95} />
       </mesh>
-      {/* walls of woven cane */}
-      <mesh position={[0, 2.1, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[2.8, 3, 3.1, 8]} />
-        <meshStandardMaterial color="#d9bd8c" roughness={1} />
-      </mesh>
+      {/* walls of woven cane, doorway left open */}
+      {panels.map(({ a, skip }, i) =>
+        skip ? null : (
+          <mesh
+            key={i}
+            position={[Math.cos(a) * 2.85, 2.1, Math.sin(a) * 2.85]}
+            rotation-y={-a}
+            castShadow
+            receiveShadow
+          >
+            <boxGeometry args={[0.18, 3.1, 2.3]} />
+            <meshStandardMaterial color="#d9bd8c" roughness={1} side={THREE.DoubleSide} />
+          </mesh>
+        ),
+      )}
+      {/* door frame + swung-open door leaf */}
+      <group position={[Math.cos(Math.PI / 2) * 2.85, 0.7, Math.sin(Math.PI / 2) * 2.85]}>
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 1.1, 1.4, 0]} castShadow>
+            <boxGeometry args={[0.22, 2.8, 0.3]} />
+            <meshStandardMaterial color="#6f4a2c" roughness={1} />
+          </mesh>
+        ))}
+        <mesh position={[0, 2.9, 0]} castShadow>
+          <boxGeometry args={[2.5, 0.25, 0.32]} />
+          <meshStandardMaterial color="#6f4a2c" roughness={1} />
+        </mesh>
+        <mesh position={[1.55, 1.35, 0.5]} rotation-y={-1.1} castShadow>
+          <boxGeometry args={[1.9, 2.6, 0.12]} />
+          <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
+        </mesh>
+      </group>
+      {/* window openings glow warm at dusk */}
+      {[0, Math.PI].map((a, i) => (
+        <mesh key={i} position={[Math.cos(a) * 2.78, 2.3, Math.sin(a) * 2.78]} rotation-y={-a}>
+          <planeGeometry args={[1.1, 0.9]} />
+          <meshStandardMaterial color="#3b2a18" emissive="#f59e0b" emissiveIntensity={0.9} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
       {/* corner posts */}
       {[0, 1, 2, 3].map((i) => (
         <mesh
@@ -472,23 +588,27 @@ function Palapa({ position, scale = 1, rotation = 0 }: { position: [number, numb
           <meshStandardMaterial color="#6f4a2c" roughness={1} />
         </mesh>
       ))}
-      {/* thatch roof — two stacked palm layers */}
+      {/* thatch roof — two stacked palm layers, open underneath */}
       <mesh position={[0, 4.5, 0]} castShadow>
-        <coneGeometry args={[4.6, 2.6, 8]} />
-        <meshStandardMaterial color="#b98b46" roughness={1} />
+        <coneGeometry args={[4.6, 2.6, 8, 1, true]} />
+        <meshStandardMaterial color="#b98b46" roughness={1} side={THREE.DoubleSide} />
       </mesh>
       <mesh position={[0, 5.6, 0]} castShadow>
         <coneGeometry args={[3.1, 2.1, 8]} />
         <meshStandardMaterial color="#9c7134" roughness={1} />
       </mesh>
-      {/* warm lantern in the doorway */}
-      <mesh position={[0, 1.9, 3.02]}>
-        <planeGeometry args={[1.3, 2]} />
-        <meshStandardMaterial color="#3b2a18" emissive="#f59e0b" emissiveIntensity={0.5} />
-      </mesh>
+      {/* entry steps up to the deck */}
+      {[0, 1].map((i) => (
+        <mesh key={i} position={[0, 0.18 + i * 0.24, 3.6 + (1 - i) * 0.55]} castShadow receiveShadow>
+          <boxGeometry args={[1.9, 0.24, 0.7]} />
+          <meshStandardMaterial color="#8b6b47" roughness={1} />
+        </mesh>
+      ))}
+      <HutInterior />
     </group>
   );
 }
+
 
 function CentralCity() {
   const towers = useMemo<Instance[]>(() => {
