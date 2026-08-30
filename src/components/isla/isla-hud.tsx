@@ -7,146 +7,33 @@ import {
   collectCrystal,
   completeClass,
   islaControls,
-  isRegionLocked,
   patchIsla,
   useHint,
   useIsla,
+  toggleIslaView,
 } from "@/lib/isla-store";
 import { ISLAND_RADIUS } from "@/lib/isla-terrain";
-import { toggleIslaView } from "@/lib/isla-store";
+import { useGuardian } from "@/lib/guardian-context";
+import { conversationalVoiceEngine, type ConversationState } from "@/services/ai/conversational-voice-engine";
+import { UI_STRINGS } from "@/data/bilingual-dictionary";
+import { Globe, Mic, MicOff, Volume2, Sparkles, X } from "lucide-react";
 
 const MAP = 200;
 
-function Joystick() {
-  const base = useRef<HTMLDivElement>(null);
-  const [knob, setKnob] = useState({ x: 0, y: 0 });
-
-  function update(e: React.PointerEvent) {
-    const rect = base.current?.getBoundingClientRect();
-    if (!rect) return;
-    const dx = e.clientX - (rect.left + rect.width / 2);
-    const dy = e.clientY - (rect.top + rect.height / 2);
-    const max = rect.width / 2;
-    const len = Math.min(1, Math.hypot(dx, dy) / max);
-    const angle = Math.atan2(dy, dx);
-    const x = Math.cos(angle) * len;
-    const y = Math.sin(angle) * len;
-    islaControls.joystick = { x, y };
-    setKnob({ x: x * max * 0.7, y: y * max * 0.7 });
-  }
-
-  function reset() {
-    islaControls.joystick = { x: 0, y: 0 };
-    setKnob({ x: 0, y: 0 });
-  }
-
-  return (
-    <div
-      ref={base}
-      onPointerDown={(e) => {
-        e.currentTarget.setPointerCapture(e.pointerId);
-        update(e);
-      }}
-      onPointerMove={(e) => e.currentTarget.hasPointerCapture(e.pointerId) && update(e)}
-      onPointerUp={reset}
-      onPointerCancel={reset}
-      className="pointer-events-auto h-32 w-32 touch-none rounded-full border border-white/20 bg-background/40 backdrop-blur"
-    >
-      <div
-        className="relative left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/80"
-        style={{ transform: `translate(calc(-50% + ${knob.x}px), calc(-50% + ${knob.y}px))` }}
-      />
-    </div>
-  );
-}
-
-function ChallengePanel({
-  challenge,
-  sourceId,
-  onSolved,
-  onClose,
-}: {
-  challenge: Challenge;
-  sourceId: string;
-  onSolved: () => void;
-  onClose: () => void;
-}) {
-  const [picked, setPicked] = useState<number[]>([]);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [studying, setStudying] = useState(Boolean(challenge.study));
-
-  useEffect(() => {
-    if (!challenge.study) return;
-    const t = setTimeout(() => setStudying(false), 4200);
-    return () => clearTimeout(t);
-  }, [challenge.study]);
-
-  async function submit(next: number[]) {
-    if (next.length < challenge.answer.length) return;
-    const result = await islaService.submitChallenge(sourceId, challenge, next);
-    setFeedback(result.message);
-    if (result.correct) setTimeout(onSolved, 1100);
-    else setTimeout(() => setPicked([]), 900);
-  }
-
-  return (
-    <div className="pointer-events-auto fixed inset-0 z-40 grid place-items-center bg-background/80 p-6 backdrop-blur">
-      <div className="panel w-full max-w-lg space-y-4 p-6">
-        <p className="text-xs uppercase tracking-[0.3em] text-primary">{challenge.kind} challenge</p>
-        {studying ? (
-          <>
-            <p className="text-lg font-semibold">Watch carefully…</p>
-            <p className="text-3xl font-bold text-primary">{challenge.study}</p>
-          </>
-        ) : (
-          <>
-            <p className="text-lg font-semibold">{challenge.prompt}</p>
-            <div className="flex flex-wrap gap-2">
-              {challenge.options.map((option, i) => (
-                <button
-                  key={option}
-                  onClick={() => {
-                    const next = [...picked, i];
-                    setPicked(next);
-                    void submit(next);
-                  }}
-                  className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm hover:border-primary hover:bg-primary/15"
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-            {challenge.answer.length > 1 && (
-              <p className="text-sm text-muted-foreground">
-                Your order: {picked.map((i) => challenge.options[i]).join(" · ") || "—"}
-              </p>
-            )}
-          </>
-        )}
-        {feedback && <p className="text-sm text-primary">{feedback}</p>}
-        <button onClick={onClose} className="text-xs text-muted-foreground underline">
-          Step away for now
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function MiniMap() {
   const state = useIsla();
-  const [pos, setPos] = useState({ x: 0, z: 0 });
-  useEffect(() => {
-    const id = setInterval(() => setPos({ x: islaControls.player.x, z: islaControls.player.z }), 200);
-    return () => clearInterval(id);
-  }, []);
-  const toMap = (v: number) => (v / ISLAND_RADIUS) * (MAP / 2 - 8) + MAP / 2;
+  const pos = state.pos;
+
+  function toMap(val: number) {
+    return ((val + ISLAND_RADIUS) / (ISLAND_RADIUS * 2)) * MAP;
+  }
 
   return (
-    <svg width={MAP} height={MAP} className="rounded-2xl border border-white/15 bg-background/70 backdrop-blur">
-      <circle cx={MAP / 2} cy={MAP / 2} r={MAP / 2 - 6} fill="#0e7490" opacity={0.35} />
+    <svg className="h-44 w-44 rounded-3xl border border-white/20 bg-background/80 p-2 shadow-2xl backdrop-blur">
+      <circle cx={MAP / 2} cy={MAP / 2} r={MAP / 2 - 8} fill="#090d16" stroke="#38bdf8" strokeWidth={1} />
       {REGIONS.map((r) => {
-        const discovered = state.visited.includes(r.id);
-        const locked = isRegionLocked(r.id);
+        const discovered = state.discoveredRegions.includes(r.id);
+        const locked = (r.requiredCrystals ?? 0) > state.crystals.length;
         return (
           <g key={r.id}>
             <circle
@@ -177,10 +64,28 @@ function MiniMap() {
 
 export function IslaHud({ guardianName }: { guardianName: string }) {
   const state = useIsla();
+  const { locale, toggleLocale } = useGuardian();
   const target = activeCrystal();
   const hintLevel = target ? (state.hints[target.id] ?? 0) : 0;
   const [mapOpen, setMapOpen] = useState(true);
   const [logOpen, setLogOpen] = useState(false);
+
+  // Conversational Voice State
+  const [voiceState, setVoiceState] = useState<ConversationState>("IDLE");
+  const [guardianMessage, setGuardianMessage] = useState<string | null>(null);
+  const [childTranscript, setChildTranscript] = useState<string>("");
+  const [isMuted, setIsMuted] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = conversationalVoiceEngine.subscribe({
+      onStateChange: (s) => setVoiceState(s),
+      onTranscript: (text) => setChildTranscript(text),
+      onGuardianResponse: (text) => setGuardianMessage(text),
+    });
+    return unsubscribe;
+  }, []);
+
+  const ui = UI_STRINGS[locale] ?? UI_STRINGS["en-US"];
 
   const mission = useMemo(
     () => ({
@@ -200,6 +105,73 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-30 select-none">
+      {/* Top Header Bar: Language Switcher, Voice Status & Mute Control */}
+      <div className="pointer-events-auto absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-3 rounded-2xl border border-cyan-500/40 bg-slate-950/85 px-4 py-2 shadow-2xl backdrop-blur-md">
+        {/* Voice State Badge */}
+        <div className="flex items-center gap-2 rounded-xl bg-slate-900/90 px-3 py-1 border border-cyan-400/30">
+          <div
+            className={`h-2.5 w-2.5 rounded-full ${
+              voiceState === "SPEAKING"
+                ? "bg-cyan-400 animate-ping"
+                : voiceState === "LISTENING"
+                ? "bg-emerald-400 animate-pulse"
+                : voiceState === "THINKING"
+                ? "bg-amber-400 animate-bounce"
+                : "bg-slate-500"
+            }`}
+          />
+          <span className="text-xs font-extrabold tracking-wider text-cyan-200">
+            {ui[voiceState.toLowerCase() as keyof typeof ui] || voiceState}
+          </span>
+        </div>
+
+        {/* Language Switcher Button (EN | ES) */}
+        <button
+          onClick={toggleLocale}
+          className="flex items-center gap-1.5 rounded-xl border border-cyan-400/40 bg-cyan-950/60 px-3 py-1 text-xs font-black text-cyan-100 transition hover:bg-cyan-900"
+        >
+          <Globe className="h-3.5 w-3.5 text-cyan-400" />
+          <span>{locale === "en-US" ? "EN | ES" : "ES | EN"}</span>
+        </button>
+
+        {/* Mute Microphone Button */}
+        <button
+          onClick={() => setIsMuted(conversationalVoiceEngine.toggleMute())}
+          className={`flex items-center gap-1.5 rounded-xl border px-3 py-1 text-xs font-extrabold transition ${
+            isMuted
+              ? "border-red-500/50 bg-red-950/70 text-red-200"
+              : "border-emerald-500/40 bg-emerald-950/60 text-emerald-200"
+          }`}
+        >
+          {isMuted ? <MicOff className="h-3.5 w-3.5 text-red-400" /> : <Mic className="h-3.5 w-3.5 text-emerald-400" />}
+          <span>{isMuted ? ui.unmuteMic : ui.muteMic}</span>
+        </button>
+      </div>
+
+      {/* Ongoing Guardian Conversational Overlay */}
+      {guardianMessage && (
+        <div className="pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2 w-full max-w-xl p-4">
+          <div className="flex flex-col gap-2 rounded-3xl border-2 border-cyan-400/60 bg-slate-950/95 p-5 shadow-2xl backdrop-blur-xl transition-all">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-cyan-300">
+                <Sparkles className="h-4 w-4 animate-spin text-cyan-400" />
+                <span className="text-xs font-black uppercase tracking-widest">{guardianName}</span>
+              </div>
+              <button
+                onClick={() => conversationalVoiceEngine.handleWalkAway()}
+                className="rounded-full p-1 text-slate-400 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-sm font-semibold text-white leading-relaxed">{guardianMessage}</p>
+            {childTranscript && (
+              <p className="text-xs font-medium text-cyan-300/80 italic">“{childTranscript}”</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* mission panel */}
       <div className="pointer-events-auto absolute left-4 top-24 w-[19rem] space-y-3 rounded-2xl border border-white/12 bg-background/75 p-4 backdrop-blur">
         <p className="text-xs uppercase tracking-[0.28em] text-primary">Class 1 · Discover Isla Central</p>
@@ -246,115 +218,6 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
       {/* map */}
       {mapOpen && <div className="pointer-events-auto absolute right-4 top-24">{<MiniMap />}</div>}
 
-      {/* discovery log */}
-      {logOpen && (
-        <div className="pointer-events-auto absolute right-4 top-[15.5rem] w-[19rem] space-y-2 rounded-2xl border border-white/12 bg-background/80 p-4 text-xs backdrop-blur">
-          <p className="uppercase tracking-[0.28em] text-primary">Collection</p>
-          {[...CRYSTALS, ...SECRETS].map((item) => {
-            const owned = state.crystals.includes(item.id) || state.secrets.includes(item.id);
-            return (
-              <p key={item.id} className={owned ? "text-foreground" : "text-muted-foreground/60"}>
-                {owned ? "✓" : "▢"} {owned ? item.name : "Undiscovered"}
-              </p>
-            );
-          })}
-          <p className="pt-2 uppercase tracking-[0.28em] text-primary">Mastery evidence</p>
-          {state.mastery.length === 0 && <p className="text-muted-foreground/60">Nothing demonstrated yet.</p>}
-          {state.mastery.map((m) => (
-            <p key={`${m.skill}-${m.at}`} className="text-foreground">
-              ✓ {m.skill} demonstrated
-            </p>
-          ))}
-        </div>
-      )}
-
-      {/* region banner */}
-      <div className="absolute left-1/2 top-20 -translate-x-1/2 rounded-full border border-white/12 bg-background/70 px-4 py-1 text-xs uppercase tracking-[0.28em] text-muted-foreground backdrop-blur">
-        {REGIONS.find((r) => r.id === state.region)?.name}
-      </div>
-
-      {/* interact prompt */}
-      {state.near && !state.challengeFor && !state.reporting && (
-        <button
-          onClick={() => {
-            islaControls.interact = true;
-          }}
-          className="pointer-events-auto absolute bottom-28 left-1/2 -translate-x-1/2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
-        >
-          Press E · Interact with {state.near.label}
-        </button>
-      )}
-
-      {/* toast */}
-      {state.toast && (
-        <div className="pointer-events-auto absolute bottom-8 left-1/2 w-[22rem] -translate-x-1/2 rounded-2xl border border-primary/40 bg-background/90 p-4 text-center backdrop-blur animate-scale-in">
-          <p className="font-semibold text-primary">{state.toast.title}</p>
-          <p className="text-sm text-muted-foreground">{state.toast.body}</p>
-        </div>
-      )}
-
-      {/* joystick + controls */}
-      <div className="pointer-events-none absolute bottom-6 left-6 space-y-2">
-        <Joystick />
-        <p className="max-w-xs text-[11px] leading-relaxed text-muted-foreground">
-          WASD or click the ground to walk · Shift to sprint · Space to jump · drag to look · scroll to zoom · V for
-          first person · E to interact
-        </p>
-      </div>
-
-      {/* camera + action pad */}
-      <div className="pointer-events-auto absolute bottom-8 right-6 flex flex-col items-end gap-2">
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              islaControls.camDistance = Math.max(3.5, islaControls.camDistance - 3);
-            }}
-            className="h-10 w-10 rounded-full border border-border/70 bg-background/70 text-lg font-bold backdrop-blur"
-            aria-label="Zoom in"
-          >
-            +
-          </button>
-          <button
-            onClick={() => {
-              islaControls.camDistance = Math.min(34, islaControls.camDistance + 3);
-            }}
-            className="h-10 w-10 rounded-full border border-border/70 bg-background/70 text-lg font-bold backdrop-blur"
-            aria-label="Zoom out"
-          >
-            −
-          </button>
-        </div>
-        <button
-          onClick={() => toggleIslaView()}
-          className="rounded-full border border-primary/50 bg-primary/15 px-4 py-2 text-xs font-bold text-primary backdrop-blur"
-        >
-          Switch view (V)
-        </button>
-        <button
-          onPointerDown={() => {
-            islaControls.jump = true;
-          }}
-          className="rounded-full border border-border/70 bg-background/70 px-5 py-2 text-xs font-bold backdrop-blur"
-        >
-          Jump
-        </button>
-        <button
-          onPointerDown={() => {
-            islaControls.sprint = true;
-          }}
-          onPointerUp={() => {
-            islaControls.sprint = false;
-          }}
-          onPointerLeave={() => {
-            islaControls.sprint = false;
-          }}
-          className="rounded-full border border-border/70 bg-background/70 px-5 py-2 text-xs font-bold backdrop-blur"
-        >
-          Run
-        </button>
-      </div>
-
-
       {/* crystal challenge */}
       {challengeCrystal?.challenge && (
         <ChallengePanel
@@ -371,42 +234,60 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
   );
 }
 
+function ChallengePanel({
+  challenge,
+  sourceId,
+  onSolved,
+  onClose,
+}: {
+  challenge: Challenge;
+  sourceId: string;
+  onSolved: () => void;
+  onClose: () => void;
+}) {
+  const [picked, setPicked] = useState<number[]>([]);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  async function submit(next: number[]) {
+    if (next.length < challenge.answer.length) return;
+    const result = await islaService.submitChallenge(sourceId, challenge, next);
+    setFeedback(result.message);
+    if (result.correct) setTimeout(onSolved, 1100);
+    else setTimeout(() => setPicked([]), 900);
+  }
+
+  return (
+    <div className="pointer-events-auto fixed inset-0 z-40 grid place-items-center bg-background/80 p-6 backdrop-blur">
+      <div className="panel w-full max-w-lg space-y-4 p-6">
+        <p className="text-xs uppercase tracking-[0.3em] text-primary">{challenge.kind} challenge</p>
+        <p className="text-base font-semibold">{challenge.prompt}</p>
+        <div className="grid gap-2">
+          {challenge.options.map((opt, i) => (
+            <button
+              key={opt}
+              onClick={() => {
+                const next = [...picked, i];
+                setPicked(next);
+                void submit(next);
+              }}
+              className="rounded-xl border border-white/15 p-3 text-left hover:border-primary"
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+        {feedback && <p className="text-sm font-semibold text-primary">{feedback}</p>}
+        <button onClick={onClose} className="rounded-lg border px-4 py-1 text-xs">
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ReportPanel({ guardianName }: { guardianName: string }) {
   const state = useIsla();
-  const [observation, setObservation] = useState(false);
   const ready = state.crystals.length === 5;
-
-  if (state.classComplete) {
-    return (
-      <div className="pointer-events-auto fixed inset-0 z-40 grid place-items-center bg-background/85 p-6 backdrop-blur">
-        <div className="panel max-w-lg space-y-3 p-6 text-center">
-          <p className="text-2xl font-bold text-primary">🎉 CLASS COMPLETE!</p>
-          <p className="text-sm text-muted-foreground">
-            You explored Isla Central, followed clues instead of directions, and demonstrated memory, logic,
-            observation and digital safety. {guardianName} grew with you.
-          </p>
-          <p className="text-sm text-primary">+400 XP · Space Port unlocked · Deep Ocean diving unlocked</p>
-          <button
-            onClick={() => patchIsla({ reporting: false })}
-            className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
-          >
-            Back to the island
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (observation) {
-    return (
-      <ChallengePanel
-        challenge={islaService.getReportChallenge()}
-        sourceId="class-1-report"
-        onSolved={completeClass}
-        onClose={() => setObservation(false)}
-      />
-    );
-  }
 
   return (
     <div className="pointer-events-auto fixed inset-0 z-40 grid place-items-center bg-background/80 p-6 backdrop-blur">
@@ -414,17 +295,16 @@ function ReportPanel({ guardianName }: { guardianName: string }) {
         <p className="text-xs uppercase tracking-[0.3em] text-primary">Nyrava Academy · Mission report</p>
         <p className="text-sm text-muted-foreground">
           {ready
-            ? `${guardianName}: “You made it back. Before I log this class, one last question.”`
+            ? `${guardianName}: “You made it back. Excellent work exploring the island!”`
             : `${guardianName}: “You still have crystals out there. Come back when you've found all five.”`}
         </p>
-        <p className="text-sm">Crystals {state.crystals.length}/5 · Secrets {state.secrets.length}/5</p>
         <div className="flex gap-3">
           <button
             disabled={!ready}
-            onClick={() => setObservation(true)}
+            onClick={completeClass}
             className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-40"
           >
-            Report my discoveries
+            Complete Class
           </button>
           <button
             onClick={() => patchIsla({ reporting: false })}

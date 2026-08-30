@@ -21,6 +21,10 @@ import {
 } from "@/lib/isla-store";
 import { ISLAND_RADIUS, WATER_LEVEL, WORLD_SCALE as S, isWalkable, terrainHeight, ws } from "@/lib/isla-terrain";
 
+import { audioEngine } from "@/services/audio/audio-engine";
+import { conversationalVoiceEngine } from "@/services/ai/conversational-voice-engine";
+import { CLASS_GUARDIANS } from "@/lib/class-guardians";
+
 const SPEED = 9.5;
 const SWIM_SPEED = 5.6;
 /** How far out from the island you may swim before the current pushes you back. */
@@ -742,6 +746,7 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
   const group = useRef<THREE.Group>(null);
   const [gait, setGait] = useState<"idle" | "walk" | "run" | "swim">("idle");
   const nearRef = useRef<string | null>(null);
+  const nearStationRef = useRef<string | null>(null);
   const regionRef = useRef<RegionId>("city");
   const vy = useRef(0);
   const airborne = useRef(false);
@@ -880,6 +885,28 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
     if (region !== regionRef.current) {
       regionRef.current = region;
       enterRegion(region);
+      audioEngine.setWorldZone(region === "digital_city" ? "digital-city" : "hq");
+    }
+
+    // Guardian Station Proximity Detection & Conversational Voice Trigger
+    let nearestStation: (typeof CLASS_GUARDIANS)[0] | null = null;
+    let minDist = 14;
+    for (const station of CLASS_GUARDIANS) {
+      const d = Math.hypot(player.position.x - station.x, player.position.z - station.z);
+      if (d < minDist) {
+        minDist = d;
+        nearestStation = station;
+      }
+    }
+
+    const stationKey = nearestStation ? nearestStation.id : null;
+    if (stationKey !== nearStationRef.current) {
+      if (nearestStation) {
+        conversationalVoiceEngine.triggerProximityGreeting(nearestStation.guardianId);
+      } else if (nearStationRef.current) {
+        conversationalVoiceEngine.handleWalkAway();
+      }
+      nearStationRef.current = stationKey;
     }
 
     // proximity: crystals, secrets, academy door
