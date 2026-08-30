@@ -750,7 +750,7 @@ function Player({ color, name }: { color: string; name: string }) {
   return (
     <>
       <group ref={group} visible={!firstPerson}>
-        <Character color={color} clip={gait} height={1.8} />
+        <Character color={color} clip={gait} guardianId={guardianId} height={1.7} />
         <Billboard position={[0, 2.5, 0]}>
           <Text fontSize={0.42} color="#e0f2fe" anchorX="center">
             {name}
@@ -766,9 +766,11 @@ function Player({ color, name }: { color: string; name: string }) {
 export function IslaScene({
   playerColor,
   playerName,
+  playerGuardian = "lex",
 }: {
   playerColor: string;
   playerName: string;
+  playerGuardian?: string;
 }) {
   const found = getIsla();
   const crystals = found.crystals;
