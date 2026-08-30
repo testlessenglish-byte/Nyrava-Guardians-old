@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { getZone } from "@/lib/worlds";
 
 export type ClassMessage = {
   id: string;
@@ -14,6 +15,8 @@ export type ClassState = {
   thinking: boolean;
   voiceEnabled: boolean;
   listening: boolean;
+  zone: string;
+  travelTick: number;
 };
 
 let state: ClassState = {
@@ -23,6 +26,8 @@ let state: ClassState = {
   thinking: false,
   voiceEnabled: true,
   listening: false,
+  zone: "academy",
+  travelTick: 0,
 };
 
 const listeners = new Set<() => void>();
@@ -59,4 +64,15 @@ export const controls = {
   joystick: { x: 0, y: 0 },
   cameraYaw: 0,
   player: { x: 0, y: 0, z: 6 },
+  spawn: { x: 0, z: 6 },
 };
+
+/** Travel to another world. Resets the player to the zone entrance. */
+export function travelTo(zoneId: string) {
+  if (state.zone === zoneId) return;
+  const z = getZone(zoneId).radius * 0.62;
+  controls.player.x = 0;
+  controls.player.z = z;
+  controls.spawn = { x: 0, z };
+  setClassState({ zone: zoneId, nearby: null, travelTick: state.travelTick + 1 });
+}

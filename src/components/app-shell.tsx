@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Bot,
+  Compass,
   Cpu,
   GraduationCap,
   Home,
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { to: "/home", label: "My Home", icon: Home },
   { to: "/world", label: "World", icon: Map },
+  { to: "/isla", label: "Isla Central", icon: Compass },
   { to: "/academy", label: "Academy", icon: GraduationCap },
   { to: "/classroom", label: "Live Class", icon: Users },
   { to: "/missions", label: "Missions", icon: Swords },

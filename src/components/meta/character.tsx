@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useAnimations, useGLTF } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 
 const MODEL_URL = "/models/guardian.glb";
 const FADE = 0.25;
-const MODEL_UNITS_TALL = 3.6;
+const MODEL_UNITS_TALL = 1.8;
 
 useGLTF.preload(MODEL_URL);
 
@@ -51,52 +52,55 @@ export function Character({
       if (!mesh.isMesh) return;
       mesh.castShadow = true;
       mesh.receiveShadow = true;
+      mesh.frustumCulled = false;
       const source = mesh.material as THREE.MeshStandardMaterial;
       const mat = source.clone();
-      // The CC0 rig ships baked vertex colours which would swallow the tint.
       mat.vertexColors = false;
-      const luminance = source.color.r * 0.3 + source.color.g * 0.6 + source.color.b * 0.1;
-      if (luminance > 0.3) {
-        mat.color.copy(tint);
-        mat.emissive = tint.clone().multiplyScalar(0.35);
-        mat.emissiveIntensity = 1.1;
-      } else {
-        mat.color.setRGB(0.16, 0.18, 0.24);
-        mat.emissive = new THREE.Color("#000000");
-      }
-      mat.metalness = 0.7;
-      mat.roughness = 0.28;
+      // Keep the armour texture and push the guardian's neon through it.
+      mat.color.copy(new THREE.Color("#ffffff").lerp(tint, 0.6));
+      mat.emissive = tint.clone().multiplyScalar(0.18);
+      mat.emissiveIntensity = 1;
+      mat.metalness = 0.55;
+      mat.roughness = 0.42;
       mesh.material = mat;
     });
 
-
-    // The armature is authored at 100x with bone-space geometry, so Box3 on the
-    // skinned meshes is meaningless. The rig renders ~1.8 units tall at scale 1.
+    // Mixamo rig: root node is authored at 0.01, rendering ~1.8 units tall.
     object.scale.setScalar(height / MODEL_UNITS_TALL);
 
     return object;
   }, [scene, color, height]);
 
-  const { actions, names } = useAnimations(animations, group);
-  const previous = useRef<string | null>(null);
+  const mixer = useMemo(() => new THREE.AnimationMixer(model), [model]);
+  const names = useMemo(() => animations.map((a) => a.name), [animations]);
+  const current = useRef<THREE.AnimationAction | null>(null);
 
   const clipName = useMemo(() => {
     const map: Record<typeof clip, string[]> = {
       idle: ["Idle", "Standing"],
-      walk: ["Walking", "Walk"],
-      run: ["Running", "Run"],
-      talk: ["Wave", "ThumbsUp", "Idle"],
-      wave: ["Wave", "Idle"],
+      walk: ["Walk", "Walking"],
+      run: ["Run", "Running"],
+      talk: ["Idle"],
+      wave: ["Idle"],
     };
     return pickClip(names, map[clip]);
   }, [names, clip]);
 
   useEffect(() => {
-    if (!clipName || previous.current === clipName) return;
-    if (previous.current) actions[previous.current]?.fadeOut(FADE);
-    actions[clipName]?.reset().fadeIn(FADE).play();
-    previous.current = clipName;
-  }, [actions, clipName]);
+    const source = animations.find((a) => a.name === clipName);
+    if (!source) return;
+    const next = mixer.clipAction(source);
+    next.reset().setEffectiveWeight(1).fadeIn(FADE).play();
+    const previous = current.current;
+    if (previous && previous !== next) previous.fadeOut(FADE);
+    current.current = next;
+  }, [mixer, animations, clipName]);
+
+  useEffect(() => () => {
+    mixer.stopAllAction();
+  }, [mixer]);
+
+  useFrame((_, delta) => mixer.update(delta));
 
   return (
     <group ref={group}>

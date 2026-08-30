@@ -15,6 +15,7 @@ import { Route as BuilderRouteImport } from './routes/builder'
 import { Route as ClassroomRouteImport } from './routes/classroom'
 import { Route as CoreRouteImport } from './routes/core'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as IslaRouteImport } from './routes/isla'
 import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as PersonalizeRouteImport } from './routes/personalize'
 import { Route as WorldRouteImport } from './routes/world'
@@ -49,6 +50,11 @@ const HomeRoute = HomeRouteImport.update({
   path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IslaRoute = IslaRouteImport.update({
+  id: '/isla',
+  path: '/isla',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MissionsRoute = MissionsRouteImport.update({
   id: '/missions',
   path: '/missions',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
+  '/isla': typeof IslaRoute
   '/missions': typeof MissionsRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
+  '/isla': typeof IslaRoute
   '/missions': typeof MissionsRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
+  '/isla': typeof IslaRoute
   '/missions': typeof MissionsRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/classroom'
     | '/core'
     | '/home'
+    | '/isla'
     | '/missions'
     | '/personalize'
     | '/world'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/classroom'
     | '/core'
     | '/home'
+    | '/isla'
     | '/missions'
     | '/personalize'
     | '/world'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/classroom'
     | '/core'
     | '/home'
+    | '/isla'
     | '/missions'
     | '/personalize'
     | '/world'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   ClassroomRoute: typeof ClassroomRoute
   CoreRoute: typeof CoreRoute
   HomeRoute: typeof HomeRoute
+  IslaRoute: typeof IslaRoute
   MissionsRoute: typeof MissionsRoute
   PersonalizeRoute: typeof PersonalizeRoute
   WorldRoute: typeof WorldRoute
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/isla': {
+      id: '/isla'
+      path: '/isla'
+      fullPath: '/isla'
+      preLoaderRoute: typeof IslaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/missions': {
       id: '/missions'
       path: '/missions'
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClassroomRoute: ClassroomRoute,
   CoreRoute: CoreRoute,
   HomeRoute: HomeRoute,
+  IslaRoute: IslaRoute,
   MissionsRoute: MissionsRoute,
   PersonalizeRoute: PersonalizeRoute,
   WorldRoute: WorldRoute,

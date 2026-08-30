@@ -5,11 +5,36 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import type { Plugin } from "vite";
+
+/**
+ * The devtools plugin annotates every JSX element with `data-tsd-source`.
+ * react-three-fiber treats dashed props as pierced paths and throws on
+ * three.js elements, so strip the annotation inside the 3D scene files.
+ */
+function stripDevtoolsSourceIn3D(): Plugin {
+  return {
+    name: "strip-tsd-source-in-3d",
+    enforce: "post",
+    apply: "serve",
+    transform(code, id) {
+      if (!id.includes("/components/meta/")) return null;
+      if (!code.includes("data-tsd-source")) return null;
+      return {
+        code: code.replace(/\s*"data-tsd-source":\s*"[^"]*",?/g, ""),
+        map: null,
+      };
+    },
+  };
+}
 
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+  },
+  vite: {
+    plugins: [stripDevtoolsSourceIn3D()],
   },
 });

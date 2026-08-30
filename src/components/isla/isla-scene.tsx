@@ -1,0 +1,654 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Billboard, Text } from "@react-three/drei";
+import * as THREE from "three";
+import { Character } from "@/components/meta/character";
+import {
+  ACADEMY_DOOR,
+  CRYSTALS,
+  REGIONS,
+  SECRETS,
+  type RegionId,
+} from "@/data/isla";
+import {
+  collectSecret,
+  enterRegion,
+  getIsla,
+  islaControls,
+  isRegionLocked,
+  patchIsla,
+  tryCollectCrystal,
+} from "@/lib/isla-store";
+import { ISLAND_RADIUS, isWalkable, terrainHeight } from "@/lib/isla-terrain";
+
+const SPEED = 9.5;
+const move = new THREE.Vector3();
+
+function mulberry32(seed: number) {
+  let a = seed;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function regionAt(x: number, z: number): RegionId {
+  let best: RegionId = "city";
+  let bestScore = Infinity;
+  for (const r of REGIONS) {
+    const d = Math.hypot(x - r.center[0], z - r.center[1]) - r.radius;
+    if (d < bestScore) {
+      bestScore = d;
+      best = r.id;
+    }
+  }
+  return best;
+}
+
+/* ------------------------------------------------------------------ terrain */
+
+function Terrain() {
+  const geometry = useMemo(() => {
+    const size = ISLAND_RADIUS * 2.6;
+    const seg = 200;
+    const geo = new THREE.PlaneGeometry(size, size, seg, seg);
+    geo.rotateX(-Math.PI / 2);
+    const pos = geo.attributes['position'] as THREE.BufferAttribute;
+    const colors = new Float32Array(pos.count * 3);
+    const c = new THREE.Color();
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const z = pos.getZ(i);
+      const h = terrainHeight(x, z);
+      pos.setY(i, h);
+      const region = regionAt(x, z);
+      if (h < 0.6) c.set("#e8d9a8");
+      else if (region === "desert") c.set("#d9a441");
+      else if (region === "beach") c.set("#f0e2b6");
+      else if (region === "mountains") c.set(h > 18 ? "#e7ecff" : h > 10 ? "#7b8399" : "#4c5a52");
+      else if (region === "forest") c.set("#1f6b3f");
+      else if (region === "valley") c.set("#8a7a4e");
+      else if (region === "spaceport") c.set("#3a4763");
+      else c.set("#2f7d52");
+      c.offsetHSL(0, 0, (Math.sin(x * 0.7) + Math.cos(z * 0.6)) * 0.012);
+      colors[i * 3] = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+    }
+    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    geo.computeVertexNormals();
+    return geo;
+  }, []);
+
+  return (
+    <mesh geometry={geometry} receiveShadow>
+      <meshStandardMaterial vertexColors roughness={0.96} metalness={0.02} />
+    </mesh>
+  );
+}
+
+function Ocean() {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(({ clock }) => {
+    if (ref.current) ref.current.position.y = Math.sin(clock.elapsedTime * 0.5) * 0.12 - 0.1;
+  });
+  return (
+    <mesh ref={ref} rotation-x={-Math.PI / 2} position-y={-0.1}>
+      <circleGeometry args={[420, 64]} />
+      <meshStandardMaterial
+        color="#0e7490"
+        transparent
+        opacity={0.86}
+        roughness={0.15}
+        metalness={0.4}
+        emissive="#0b3f57"
+        emissiveIntensity={0.35}
+      />
+    </mesh>
+  );
+}
+
+/* -------------------------------------------------------------------- props */
+
+type Instance = { p: [number, number, number]; s: number; r: number };
+
+function useScatter(
+  seed: number,
+  count: number,
+  center: [number, number],
+  radius: number,
+  minHeight = 0.8,
+) {
+  return useMemo<Instance[]>(() => {
+    const rand = mulberry32(seed);
+    const out: Instance[] = [];
+    let guard = 0;
+    while (out.length < count && guard++ < count * 30) {
+      const a = rand() * Math.PI * 2;
+      const d = Math.sqrt(rand()) * radius;
+      const x = center[0] + Math.cos(a) * d;
+      const z = center[1] + Math.sin(a) * d;
+      const y = terrainHeight(x, z);
+      if (y < minHeight || !isWalkable(x, z)) continue;
+      out.push({ p: [x, y, z], s: 0.7 + rand() * 0.9, r: rand() * Math.PI * 2 });
+    }
+    return out;
+  }, [seed, count, center, radius, minHeight]);
+}
+
+function Instanced({
+  items,
+  color,
+  children,
+  yOffset = 0,
+  emissive,
+}: {
+  items: Instance[];
+  color: string;
+  children: React.ReactNode;
+  yOffset?: number;
+  emissive?: string;
+}) {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  useEffect(() => {
+    const mesh = ref.current;
+    if (!mesh) return;
+    const dummy = new THREE.Object3D();
+    items.forEach((item, i) => {
+      dummy.position.set(item.p[0], item.p[1] + yOffset * item.s, item.p[2]);
+      dummy.rotation.y = item.r;
+      dummy.scale.setScalar(item.s);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+  }, [items, yOffset]);
+
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, Math.max(items.length, 1)]} castShadow receiveShadow>
+      {children}
+      <meshStandardMaterial
+        color={color}
+        roughness={0.8}
+        emissive={emissive ?? "#000000"}
+        emissiveIntensity={emissive ? 0.5 : 0}
+      />
+    </instancedMesh>
+  );
+}
+
+function Forest() {
+  const trees = useScatter(11, 130, [-44, -40], 32, 1.2);
+  return (
+    <>
+      <Instanced items={trees} color="#5b3a22" yOffset={1.6}>
+        <cylinderGeometry args={[0.28, 0.42, 3.4, 6]} />
+      </Instanced>
+      <Instanced items={trees} color="#1f8a4c" yOffset={5}>
+        <coneGeometry args={[2.1, 5.2, 7]} />
+      </Instanced>
+      <Waterfall />
+    </>
+  );
+}
+
+function Waterfall() {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(({ clock }) => {
+    if (ref.current) {
+      const m = ref.current.material as THREE.MeshStandardMaterial;
+      m.opacity = 0.65 + Math.sin(clock.elapsedTime * 3) * 0.1;
+    }
+  });
+  const x = -47;
+  const z = -47;
+  return (
+    <group position={[x, terrainHeight(x, z), z]}>
+      <mesh ref={ref} position={[0, 3.4, 0]}>
+        <planeGeometry args={[4.6, 7]} />
+        <meshStandardMaterial color="#9be8ff" transparent opacity={0.7} emissive="#38bdf8" emissiveIntensity={0.6} />
+      </mesh>
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.06, 2.4]}>
+        <circleGeometry args={[4, 24]} />
+        <meshStandardMaterial color="#38bdf8" transparent opacity={0.75} />
+      </mesh>
+    </group>
+  );
+}
+
+function Mountains() {
+  const rocks = useScatter(21, 70, [44, -46], 32, 3);
+  const peaks = useMemo<Instance[]>(() => {
+    const rand = mulberry32(7);
+    return Array.from({ length: 9 }, () => {
+      const a = rand() * Math.PI * 2;
+      const d = rand() * 22;
+      const x = 44 + Math.cos(a) * d;
+      const z = -46 + Math.sin(a) * d;
+      return { p: [x, terrainHeight(x, z), z] as [number, number, number], s: 1.4 + rand() * 2.2, r: rand() * 3 };
+    });
+  }, []);
+  return (
+    <>
+      <Instanced items={rocks} color="#6b7280" yOffset={0.6}>
+        <icosahedronGeometry args={[1.2, 0]} />
+      </Instanced>
+      <Instanced items={peaks} color="#94a3b8" yOffset={3.2}>
+        <coneGeometry args={[3.4, 8, 6]} />
+      </Instanced>
+      {/* Summit observation temple */}
+      <group position={[46, terrainHeight(46, -52), -52]}>
+        {[0, 1, 2, 3].map((i) => (
+          <mesh key={i} position={[Math.cos((i / 4) * Math.PI * 2) * 3.4, 2.2, Math.sin((i / 4) * Math.PI * 2) * 3.4]} castShadow>
+            <cylinderGeometry args={[0.4, 0.5, 4.4, 8]} />
+            <meshStandardMaterial color="#cbd5f5" roughness={0.6} />
+          </mesh>
+        ))}
+        <mesh position={[0, 4.7, 0]} castShadow>
+          <boxGeometry args={[9, 0.6, 9]} />
+          <meshStandardMaterial color="#a5b4fc" emissive="#4338ca" emissiveIntensity={0.25} />
+        </mesh>
+      </group>
+    </>
+  );
+}
+
+function Valley() {
+  const stones = useScatter(31, 46, [-26, 48], 22, 0.7);
+  return (
+    <>
+      <Instanced items={stones} color="#c9b489" yOffset={1.4}>
+        <cylinderGeometry args={[0.5, 0.6, 3.2, 8]} />
+      </Instanced>
+      <group position={[-26, terrainHeight(-26, 48), 48]}>
+        <mesh rotation-x={-Math.PI / 2} position={[0, 0.07, 0]} receiveShadow>
+          <ringGeometry args={[6, 12, 32]} />
+          <meshStandardMaterial color="#e7d4a3" />
+        </mesh>
+        <mesh position={[0, 3, 0]} castShadow>
+          <boxGeometry args={[2.4, 6, 2.4]} />
+          <meshStandardMaterial color="#d6c396" emissive="#fbbf24" emissiveIntensity={0.15} />
+        </mesh>
+      </group>
+    </>
+  );
+}
+
+function Desert() {
+  const ruins = useScatter(41, 34, [-58, 16], 26, 0.8);
+  return (
+    <Instanced items={ruins} color="#b98b3d" yOffset={1.2}>
+      <boxGeometry args={[1.6, 2.6, 1.6]} />
+    </Instanced>
+  );
+}
+
+function Beach() {
+  const palms = useScatter(51, 34, [30, 52], 24, 0.7);
+  return (
+    <>
+      <Instanced items={palms} color="#8a5a2b" yOffset={2.2}>
+        <cylinderGeometry args={[0.2, 0.3, 4.4, 6]} />
+      </Instanced>
+      <Instanced items={palms} color="#22c55e" yOffset={4.6}>
+        <sphereGeometry args={[1.7, 8, 6]} />
+      </Instanced>
+      {/* docks + boats */}
+      {[0, 1, 2].map((i) => (
+        <group key={i} position={[34 + i * 5, 0.4, 62 + i * 2]}>
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[2.2, 0.3, 14]} />
+            <meshStandardMaterial color="#8b5e3c" />
+          </mesh>
+          <mesh position={[2.6, 0.3, 5]} castShadow>
+            <boxGeometry args={[2.2, 0.9, 4.4]} />
+            <meshStandardMaterial color="#f8fafc" />
+          </mesh>
+        </group>
+      ))}
+    </>
+  );
+}
+
+function SpacePort({ locked }: { locked: boolean }) {
+  const ring = useRef<THREE.Mesh>(null);
+  useFrame((_, d) => {
+    if (ring.current) ring.current.rotation.z += d * 0.4;
+  });
+  const y = terrainHeight(62, 8);
+  return (
+    <group position={[62, y, 8]}>
+      <mesh position={[0, 9, 0]} castShadow>
+        <cylinderGeometry args={[1.6, 2.6, 18, 12]} />
+        <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.3} />
+      </mesh>
+      <mesh position={[0, 19.4, 0]} castShadow>
+        <coneGeometry args={[1.6, 4, 12]} />
+        <meshStandardMaterial color="#c084fc" emissive="#7c3aed" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh ref={ring} position={[0, 6, 0]} rotation-x={Math.PI / 2}>
+        <torusGeometry args={[9, 0.3, 8, 48]} />
+        <meshStandardMaterial color="#c084fc" emissive="#a855f7" emissiveIntensity={0.9} />
+      </mesh>
+      {locked && (
+        <Text position={[0, 3, 10]} fontSize={1.5} color="#fca5a5" anchorX="center">
+          🔒 LAUNCH GATE LOCKED
+        </Text>
+      )}
+    </group>
+  );
+}
+
+function CentralCity() {
+  const towers = useMemo<Instance[]>(() => {
+    const rand = mulberry32(99);
+    const out: Instance[] = [];
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2 + rand() * 0.2;
+      const d = 17 + rand() * 7;
+      const x = Math.cos(a) * d;
+      const z = Math.sin(a) * d;
+      out.push({ p: [x, terrainHeight(x, z), z], s: 0.8 + rand() * 1.6, r: rand() * 3 });
+    }
+    return out;
+  }, []);
+
+  return (
+    <>
+      <Instanced items={towers} color="#dbeafe" yOffset={4} emissive="#38bdf8">
+        <boxGeometry args={[3.6, 8, 3.6]} />
+      </Instanced>
+
+      {/* Guardian Plaza */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, 2.26, 0]} receiveShadow>
+        <circleGeometry args={[14, 48]} />
+        <meshStandardMaterial color="#cbd5f5" emissive="#38bdf8" emissiveIntensity={0.12} />
+      </mesh>
+
+      {/* Nyrava Command Center — the landmark */}
+      <group position={[0, 2.2, 0]}>
+        <mesh position={[0, 11, 0]} castShadow>
+          <cylinderGeometry args={[2.4, 4.4, 22, 8]} />
+          <meshStandardMaterial color="#f1f5f9" metalness={0.4} roughness={0.35} />
+        </mesh>
+        <mesh position={[0, 23.4, 0]} castShadow>
+          <octahedronGeometry args={[3.2, 0]} />
+          <meshStandardMaterial color="#38bdf8" emissive="#0ea5e9" emissiveIntensity={1.2} />
+        </mesh>
+        <Text position={[0, 27.5, 0]} fontSize={2} color="#e0f2fe" anchorX="center">
+          NYRAVA
+        </Text>
+      </group>
+
+      {/* Academy entrance */}
+      <group position={[ACADEMY_DOOR[0], terrainHeight(ACADEMY_DOOR[0], ACADEMY_DOOR[1]), ACADEMY_DOOR[1] - 6]}>
+        <mesh position={[0, 4, 0]} castShadow receiveShadow>
+          <boxGeometry args={[18, 8, 12]} />
+          <meshStandardMaterial color="#e2e8f0" />
+        </mesh>
+        <mesh position={[0, 2.4, 6.1]}>
+          <planeGeometry args={[4, 5]} />
+          <meshStandardMaterial color="#0ea5e9" emissive="#38bdf8" emissiveIntensity={0.8} />
+        </mesh>
+        <Text position={[0, 9.4, 0]} fontSize={1.6} color="#38bdf8" anchorX="center">
+          NYRAVA ACADEMY
+        </Text>
+      </group>
+
+      {/* Mission board */}
+      <group position={[8, terrainHeight(8, 10) + 1.6, 10]}>
+        <mesh castShadow>
+          <boxGeometry args={[4, 3, 0.3]} />
+          <meshStandardMaterial color="#0f172a" emissive="#22d3ee" emissiveIntensity={0.3} />
+        </mesh>
+        <Text position={[0, 0, 0.2]} fontSize={0.42} color="#e0f2fe" maxWidth={3.4} anchorX="center">
+          CLASS 1 — DISCOVER ISLA CENTRAL
+        </Text>
+      </group>
+    </>
+  );
+}
+
+/* -------------------------------------------------------------- collectibles */
+
+function Pickup({
+  position,
+  color,
+  found,
+  shape,
+}: {
+  position: [number, number];
+  color: string;
+  found: boolean;
+  shape: "crystal" | "secret";
+}) {
+  const ref = useRef<THREE.Mesh>(null);
+  const y = terrainHeight(position[0], position[1]);
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    ref.current.rotation.y += 0.02;
+    ref.current.position.y = 1.4 + Math.sin(clock.elapsedTime * 1.6 + position[0]) * 0.25;
+  });
+  if (found) return null;
+  return (
+    <group position={[position[0], y, position[1]]}>
+      <mesh ref={ref} castShadow>
+        {shape === "crystal" ? <octahedronGeometry args={[0.75, 0]} /> : <tetrahedronGeometry args={[0.55, 0]} />}
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.4} roughness={0.1} metalness={0.3} />
+      </mesh>
+      <pointLight position={[0, 1.6, 0]} color={color} intensity={7} distance={9} />
+    </group>
+  );
+}
+
+/* -------------------------------------------------------------------- player */
+
+function Player({ color, name, guardianColor }: { color: string; name: string; guardianColor: string }) {
+  const group = useRef<THREE.Group>(null);
+  const companion = useRef<THREE.Group>(null);
+  const [moving, setMoving] = useState(false);
+  const [companionMoving, setCompanionMoving] = useState(false);
+  const nearRef = useRef<string | null>(null);
+  const regionRef = useRef<RegionId>("city");
+
+  useEffect(() => {
+    if (group.current) {
+      group.current.position.set(0, terrainHeight(0, 12), 12);
+      islaControls.player.x = 0;
+      islaControls.player.z = 12;
+    }
+  }, []);
+
+  useFrame(({ camera }, rawDelta) => {
+    const delta = Math.min(rawDelta, 0.05);
+    const player = group.current;
+    if (!player) return;
+    const snapshot = getIsla();
+
+    const keys = islaControls.keys;
+    let ix = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0);
+    let iz = (keys.has("s") ? 1 : 0) - (keys.has("w") ? 1 : 0);
+    ix += islaControls.joystick.x;
+    iz += islaControls.joystick.y;
+
+    const len = Math.hypot(ix, iz);
+    const isMoving = len > 0.08 && !snapshot.challengeFor && !snapshot.reporting;
+    if (isMoving) {
+      ix /= len;
+      iz /= len;
+      const yaw = islaControls.cameraYaw;
+      move.set(ix * Math.cos(yaw) - iz * Math.sin(yaw), 0, ix * Math.sin(yaw) + iz * Math.cos(yaw));
+      const step = SPEED * delta;
+      const nx = player.position.x + move.x * step;
+      const nz = player.position.z + move.z * step;
+      const targetRegion = regionAt(nx, nz);
+      const blocked = !isWalkable(nx, nz) || isRegionLocked(targetRegion);
+      if (!blocked) {
+        player.position.x = nx;
+        player.position.z = nz;
+      } else if (isWalkable(player.position.x, nz) && !isRegionLocked(regionAt(player.position.x, nz))) {
+        player.position.z = nz;
+      } else if (isWalkable(nx, player.position.z) && !isRegionLocked(regionAt(nx, player.position.z))) {
+        player.position.x = nx;
+      }
+
+      const targetRot = Math.atan2(move.x, move.z);
+      let diff = targetRot - player.rotation.y;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      player.rotation.y += diff * (1 - Math.exp(-12 * delta));
+    }
+    if (isMoving !== moving) setMoving(isMoving);
+
+    player.position.y = terrainHeight(player.position.x, player.position.z);
+    islaControls.player.x = player.position.x;
+    islaControls.player.z = player.position.z;
+    islaControls.player.y = player.position.y;
+
+    // region tracking
+    const region = regionAt(player.position.x, player.position.z);
+    if (region !== regionRef.current) {
+      regionRef.current = region;
+      enterRegion(region);
+    }
+
+    // proximity: crystals, secrets, academy door
+    let near: ReturnType<typeof getIsla>["near"] = null;
+    let best = 4.2;
+    for (const c of CRYSTALS) {
+      if (snapshot.crystals.includes(c.id)) continue;
+      const d = Math.hypot(player.position.x - c.position[0], player.position.z - c.position[1]);
+      if (d < best) {
+        best = d;
+        near = { kind: "crystal", id: c.id, label: "a glowing Knowledge Crystal" };
+      }
+    }
+    for (const s of SECRETS) {
+      if (snapshot.secrets.includes(s.id)) continue;
+      const d = Math.hypot(player.position.x - s.position[0], player.position.z - s.position[1]);
+      if (d < best) {
+        best = d;
+        near = { kind: "secret", id: s.id, label: s.name };
+      }
+    }
+    const dAcademy = Math.hypot(player.position.x - ACADEMY_DOOR[0], player.position.z - ACADEMY_DOOR[1]);
+    if (dAcademy < 6 && dAcademy < best) {
+      near = { kind: "academy", id: "academy", label: "the Nyrava Academy doors" };
+    }
+    const nearKey = near ? `${near.kind}:${near.id}` : null;
+    if (nearKey !== nearRef.current) {
+      nearRef.current = nearKey;
+      patchIsla({ near });
+    }
+
+    if (islaControls.interact) {
+      islaControls.interact = false;
+      if (near?.kind === "crystal") tryCollectCrystal(near.id);
+      if (near?.kind === "secret") {
+        const secret = SECRETS.find((s) => s.id === near.id);
+        if (secret) collectSecret(secret.id, secret.name, secret.note);
+      }
+      if (near?.kind === "academy") patchIsla({ reporting: true });
+    }
+
+    // companion guardian trails the child
+    const buddy = companion.current;
+    if (buddy) {
+      const target = new THREE.Vector3(
+        player.position.x - Math.sin(player.rotation.y) * 2.6 + 1.6,
+        0,
+        player.position.z - Math.cos(player.rotation.y) * 2.6,
+      );
+      const dist = buddy.position.distanceTo(target);
+      buddy.position.lerp(target, 1 - Math.exp(-4 * delta));
+      buddy.position.y = terrainHeight(buddy.position.x, buddy.position.z);
+      const walking = dist > 1.4;
+      if (walking !== companionMoving) setCompanionMoving(walking);
+      buddy.lookAt(player.position.x, buddy.position.y, player.position.z);
+    }
+
+    // third-person camera with terrain-aware height
+    const yaw = islaControls.cameraYaw;
+    const camTarget = new THREE.Vector3(
+      player.position.x + Math.sin(yaw) * 9,
+      player.position.y + 6.2,
+      player.position.z + Math.cos(yaw) * 9,
+    );
+    const ground = terrainHeight(camTarget.x, camTarget.z) + 2.6;
+    camTarget.y = Math.max(camTarget.y, ground);
+    camera.position.lerp(camTarget, 1 - Math.exp(-6 * delta));
+    camera.lookAt(player.position.x, player.position.y + 1.7, player.position.z);
+  });
+
+  return (
+    <>
+      <group ref={group}>
+        <Character color={color} clip={moving ? "run" : "idle"} height={1.8} />
+        <Billboard position={[0, 2.5, 0]}>
+          <Text fontSize={0.42} color="#e0f2fe" anchorX="center">
+            {name}
+          </Text>
+        </Billboard>
+      </group>
+      <group ref={companion}>
+        <Character color={guardianColor} clip={companionMoving ? "run" : "idle"} height={1.7} />
+      </group>
+    </>
+  );
+}
+
+/* --------------------------------------------------------------------- scene */
+
+export function IslaScene({
+  playerColor,
+  playerName,
+  guardianColor,
+}: {
+  playerColor: string;
+  playerName: string;
+  guardianColor: string;
+}) {
+  const found = getIsla();
+  const crystals = found.crystals;
+  const secrets = found.secrets;
+
+  return (
+    <>
+      <color attach="background" args={["#8ec8ea"]} />
+      <fog attach="fog" args={["#9fd4ef", 90, 240]} />
+      <hemisphereLight args={["#cfe9ff", "#3b4a3f", 0.85]} />
+      <directionalLight
+        position={[60, 90, 40]}
+        intensity={2.1}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-left={-120}
+        shadow-camera-right={120}
+        shadow-camera-top={120}
+        shadow-camera-bottom={-120}
+        shadow-camera-far={300}
+      />
+      <Terrain />
+      <Ocean />
+      <CentralCity />
+      <Forest />
+      <Mountains />
+      <Valley />
+      <Desert />
+      <Beach />
+      <SpacePort locked={isRegionLocked("spaceport")} />
+
+      {CRYSTALS.map((c) => (
+        <Pickup key={c.id} position={c.position} color="#38bdf8" found={crystals.includes(c.id)} shape="crystal" />
+      ))}
+      {SECRETS.map((s) => (
+        <Pickup key={s.id} position={s.position} color="#fbbf24" found={secrets.includes(s.id)} shape="secret" />
+      ))}
+
+      <Player color={playerColor} name={playerName} guardianColor={guardianColor} />
+    </>
+  );
+}
