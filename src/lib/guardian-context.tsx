@@ -8,16 +8,21 @@ import {
 } from "react";
 import type { GuardianId } from "@/types";
 import { loadGuardianCloud, saveGuardianCloud } from "@/lib/cloud-save";
+import { type LocaleId } from "@/data/bilingual-dictionary";
+import { conversationalVoiceEngine } from "@/services/ai/conversational-voice-engine";
 
 interface GuardianState {
   guardianId: GuardianId | null;
   guardianName: string;
+  locale: LocaleId;
   cosmetics: Record<string, string>;
   homeDecor: Record<string, string>;
   xp: number;
   completedMissions: string[];
   selectGuardian: (id: GuardianId) => void;
   setGuardianName: (name: string) => void;
+  setLocale: (locale: LocaleId) => void;
+  toggleLocale: () => void;
   setCosmetic: (slot: string, option: string) => void;
   setHomeDecor: (slot: string, option: string) => void;
   addXp: (amount: number) => void;
@@ -32,6 +37,7 @@ const STORAGE_KEY = "nyrava-guardian-state-v1";
 interface Persisted {
   guardianId: GuardianId | null;
   guardianName: string;
+  locale: LocaleId;
   cosmetics: Record<string, string>;
   homeDecor: Record<string, string>;
   xp: number;
@@ -41,6 +47,7 @@ interface Persisted {
 const DEFAULTS: Persisted = {
   guardianId: null,
   guardianName: "Alex",
+  locale: "en-US",
   cosmetics: {},
   homeDecor: {},
   xp: 2450,
@@ -65,8 +72,9 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const local = loadPersisted();
     setState(local);
+    conversationalVoiceEngine.setLocale(local.locale);
     setHydrated(true);
-    // Cloud record wins when the signed-in account has more progress.
+    
     void loadGuardianCloud().then((cloud) => {
       if (!cloud) return;
       if ((cloud.xp ?? 0) < local.xp) return;
@@ -81,9 +89,10 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
     try {
+      window.localStorage.getItem(STORAGE_KEY);
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
-      // storage unavailable — demo state simply won't persist
+      // storage fallback
     }
     saveGuardianCloud(state);
   }, [state, hydrated]);
@@ -93,6 +102,15 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
       ...state,
       selectGuardian: (id) => setState((s) => ({ ...s, guardianId: id })),
       setGuardianName: (name) => setState((s) => ({ ...s, guardianName: name })),
+      setLocale: (newLocale) => {
+        conversationalVoiceEngine.setLocale(newLocale);
+        setState((s) => ({ ...s, locale: newLocale }));
+      },
+      toggleLocale: () => {
+        const nextLocale = state.locale === "en-US" ? "es-MX" : "en-US";
+        conversationalVoiceEngine.setLocale(nextLocale);
+        setState((s) => ({ ...s, locale: nextLocale }));
+      },
       setCosmetic: (slot, option) =>
         setState((s) => ({ ...s, cosmetics: { ...s.cosmetics, [slot]: option } })),
       setHomeDecor: (slot, option) =>
@@ -112,8 +130,10 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
   return <GuardianContext.Provider value={value}>{children}</GuardianContext.Provider>;
 }
 
-export function useGuardian() {
-  const ctx = useContext(GuardianContext);
-  if (!ctx) throw new Error("useGuardian must be used inside GuardianProvider");
-  return ctx;
+export function useGuardian(): GuardianState {
+  const context = useContext(GuardianContext);
+  if (!context) {
+    throw new Error("useGuardian must be used within GuardianProvider");
+  }
+  return context;
 }
