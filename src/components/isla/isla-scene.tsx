@@ -204,7 +204,88 @@ function Instanced({
   );
 }
 
+/** Island-wide dressing: grass tufts, wildflowers, bushes and boulders. */
+function GroundCover() {
+  const r = ISLAND_RADIUS * 0.92;
+  const grass = useScatter(101, 1400, [0, 0], r, 0.9);
+  const flowers = useScatter(103, 380, [0, 0], r * 0.8, 1.2);
+  const bushes = useScatter(107, 320, [0, 0], r * 0.85, 1.1);
+  const boulders = useScatter(109, 180, [0, 0], r * 0.9, 1.4);
+  return (
+    <>
+      <Instanced items={grass} color="#4f9e4a" yOffset={0.42}>
+        <coneGeometry args={[0.22, 0.95, 4]} />
+      </Instanced>
+      <Instanced items={flowers} color="#f7b1d8" yOffset={0.75} emissive="#f7b1d8">
+        <icosahedronGeometry args={[0.16, 0]} />
+      </Instanced>
+      <Instanced items={bushes} color="#2f6f42" yOffset={0.4}>
+        <dodecahedronGeometry args={[0.75, 0]} />
+      </Instanced>
+      <Instanced items={boulders} color="#8b8d92" yOffset={0.25}>
+        <icosahedronGeometry args={[0.85, 0]} />
+      </Instanced>
+    </>
+  );
+}
+
+/** Drifting cloud banks + a lazy flock, so the sky is not a flat gradient. */
+function Sky() {
+  const clouds = useRef<THREE.Group>(null);
+  const birds = useRef<THREE.Group>(null);
+  const puffs = useMemo(() => {
+    const rand = mulberry32(211);
+    return Array.from({ length: 22 }, () => {
+      const a = rand() * Math.PI * 2;
+      const d = 120 + rand() * ISLAND_RADIUS * 1.1;
+      return {
+        p: [Math.cos(a) * d, 95 + rand() * 70, Math.sin(a) * d] as [number, number, number],
+        s: 14 + rand() * 26,
+      };
+    });
+  }, []);
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    if (clouds.current) clouds.current.rotation.y = t * 0.004;
+    if (birds.current) {
+      birds.current.rotation.y = t * 0.05;
+      birds.current.position.y = 46 + Math.sin(t * 0.4) * 4;
+    }
+  });
+
+  return (
+    <>
+      <group ref={clouds}>
+        {puffs.map((c, i) => (
+          <group key={i} position={c.p}>
+            {[0, 1, 2].map((k) => (
+              <mesh key={k} position={[k * c.s * 0.5 - c.s * 0.5, (k % 2) * c.s * 0.14, (k % 2) * c.s * 0.3]}>
+                <sphereGeometry args={[c.s * (0.5 + (k % 2) * 0.18), 10, 8]} />
+                <meshStandardMaterial color="#ffffff" roughness={1} transparent opacity={0.82} />
+              </mesh>
+            ))}
+          </group>
+        ))}
+      </group>
+      <group ref={birds} position={[0, 46, 0]}>
+        {Array.from({ length: 9 }, (_, i) => {
+          const a = (i / 9) * Math.PI * 2;
+          const d = 150 + (i % 3) * 40;
+          return (
+            <mesh key={i} position={[Math.cos(a) * d, (i % 4) * 5, Math.sin(a) * d]} rotation-y={-a}>
+              <coneGeometry args={[0.5, 2.4, 3]} />
+              <meshStandardMaterial color="#1f2937" />
+            </mesh>
+          );
+        })}
+      </group>
+    </>
+  );
+}
+
 function Forest() {
+
   const trees = useScatter(11, 420, ws([-44, -40]), 32 * S, 1.2);
   return (
     <>
@@ -281,12 +362,29 @@ function Mountains() {
 }
 
 function Valley() {
-  const stones = useScatter(31, 150, ws([-26, 48]), 22 * S, 0.7);
+  // Large weathered ruins instead of a forest of thin posts: broad broken
+  // columns on stepped plinths, heavy capitals and toppled blocks.
+  const columns = useScatter(31, 34, ws([-26, 48]), 22 * S, 0.7);
+  const rubble = useScatter(37, 46, ws([-26, 48]), 24 * S, 0.7);
   return (
     <>
-      <Instanced items={stones} color="#c9b489" yOffset={1.4}>
-        <cylinderGeometry args={[0.5, 0.6, 3.2, 8]} />
+      {/* stepped plinths */}
+      <Instanced items={columns} color="#b9a077" yOffset={0.6}>
+        <boxGeometry args={[5.2, 1.2, 5.2]} />
       </Instanced>
+      {/* massive fluted column shafts */}
+      <Instanced items={columns} color="#d3c1a0" yOffset={5.4}>
+        <cylinderGeometry args={[1.5, 1.9, 9.6, 12]} />
+      </Instanced>
+      {/* broken capitals crowning the shafts */}
+      <Instanced items={columns} color="#c9b489" yOffset={10.6}>
+        <boxGeometry args={[4.2, 1.4, 4.2]} />
+      </Instanced>
+      {/* toppled blocks and shattered drums scattered between them */}
+      <Instanced items={rubble} color="#bfae8c" yOffset={0.8}>
+        <boxGeometry args={[3.4, 1.6, 2.2]} />
+      </Instanced>
+
       <group position={[-26 * S, terrainHeight(-26 * S, 48 * S), 48 * S]}>
         <mesh rotation-x={-Math.PI / 2} position={[0, 0.07, 0]} receiveShadow>
           <ringGeometry args={[6, 12, 32]} />
@@ -366,8 +464,90 @@ function SpacePort({ locked }: { locked: boolean }) {
   );
 }
 
-/** A tropical palapa hut: timber posts, sand-plaster walls, thatched roof. */
+/** Simple furniture kit used to dress every hut interior. */
+function HutInterior() {
+  return (
+    <group>
+      {/* woven floor rug */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.72, 0]} receiveShadow>
+        <circleGeometry args={[2.2, 24]} />
+        <meshStandardMaterial color="#b45309" roughness={1} />
+      </mesh>
+      {/* bed */}
+      <group position={[-1.5, 0.7, -1.1]} rotation-y={0.5}>
+        <mesh position={[0, 0.28, 0]} castShadow receiveShadow>
+          <boxGeometry args={[1.1, 0.4, 2]} />
+          <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
+        </mesh>
+        <mesh position={[0, 0.56, 0.1]} castShadow>
+          <boxGeometry args={[1.05, 0.18, 1.7]} />
+          <meshStandardMaterial color="#e0f2fe" roughness={0.95} />
+        </mesh>
+        <mesh position={[0, 0.68, -0.75]} castShadow>
+          <boxGeometry args={[0.7, 0.16, 0.35]} />
+          <meshStandardMaterial color="#f8fafc" roughness={1} />
+        </mesh>
+      </group>
+      {/* table + two stools */}
+      <group position={[1.4, 0.7, 0.4]}>
+        <mesh position={[0, 0.72, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[0.75, 0.75, 0.1, 12]} />
+          <meshStandardMaterial color="#a16207" roughness={0.85} />
+        </mesh>
+        <mesh position={[0, 0.35, 0]} castShadow>
+          <cylinderGeometry args={[0.12, 0.16, 0.72, 8]} />
+          <meshStandardMaterial color="#6f4a2c" roughness={1} />
+        </mesh>
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 1.15, 0.28, s * 0.3]} castShadow>
+            <cylinderGeometry args={[0.3, 0.32, 0.55, 10]} />
+            <meshStandardMaterial color="#7c5a3a" roughness={1} />
+          </mesh>
+        ))}
+        {/* fruit bowl */}
+        <mesh position={[0, 0.86, 0]} castShadow>
+          <sphereGeometry args={[0.2, 12, 10]} />
+          <meshStandardMaterial color="#f97316" roughness={0.7} />
+        </mesh>
+      </group>
+      {/* shelf with books */}
+      <group position={[0.2, 0.7, -2.1]}>
+        <mesh position={[0, 1.1, 0]} castShadow>
+          <boxGeometry args={[1.8, 0.1, 0.5]} />
+          <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
+        </mesh>
+        {[-0.6, -0.3, 0, 0.35, 0.65].map((x, i) => (
+          <mesh key={x} position={[x, 1.32, 0]} castShadow>
+            <boxGeometry args={[0.16, 0.36, 0.3]} />
+            <meshStandardMaterial color={(["#38bdf8", "#f472b6", "#facc15", "#4ade80", "#c084fc"] as const)[i]!} roughness={0.8} />
+          </mesh>
+        ))}
+      </group>
+      {/* hanging lantern */}
+      <mesh position={[0, 2.9, 0]}>
+        <sphereGeometry args={[0.28, 14, 12]} />
+        <meshStandardMaterial color="#fde68a" emissive="#f59e0b" emissiveIntensity={2.4} toneMapped={false} />
+      </mesh>
+      <pointLight position={[0, 2.7, 0]} color="#ffb457" intensity={9} distance={9} castShadow={false} />
+    </group>
+  );
+}
+
+/**
+ * A tropical palapa hut you can actually walk into: the cane wall is built
+ * from segments with a doorway gap at the front, and the inside is furnished.
+ */
 function Palapa({ position, scale = 1, rotation = 0 }: { position: [number, number, number]; scale?: number; rotation?: number }) {
+  // 8 wall panels around the octagon, skipping the front one for the doorway.
+  const panels = useMemo(() => {
+    const out: { a: number; skip: boolean }[] = [];
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      out.push({ a, skip: i === 2 });
+    }
+    return out;
+  }, []);
+
   return (
     <group position={position} rotation-y={rotation} scale={scale}>
       {/* raised deck */}
@@ -375,11 +555,45 @@ function Palapa({ position, scale = 1, rotation = 0 }: { position: [number, numb
         <cylinderGeometry args={[3.4, 3.6, 0.7, 8]} />
         <meshStandardMaterial color="#a9805a" roughness={0.95} />
       </mesh>
-      {/* walls of woven cane */}
-      <mesh position={[0, 2.1, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[2.8, 3, 3.1, 8]} />
-        <meshStandardMaterial color="#d9bd8c" roughness={1} />
-      </mesh>
+      {/* walls of woven cane, doorway left open */}
+      {panels.map(({ a, skip }, i) =>
+        skip ? null : (
+          <mesh
+            key={i}
+            position={[Math.cos(a) * 2.85, 2.1, Math.sin(a) * 2.85]}
+            rotation-y={-a}
+            castShadow
+            receiveShadow
+          >
+            <boxGeometry args={[0.18, 3.1, 2.3]} />
+            <meshStandardMaterial color="#d9bd8c" roughness={1} side={THREE.DoubleSide} />
+          </mesh>
+        ),
+      )}
+      {/* door frame + swung-open door leaf */}
+      <group position={[Math.cos(Math.PI / 2) * 2.85, 0.7, Math.sin(Math.PI / 2) * 2.85]}>
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 1.1, 1.4, 0]} castShadow>
+            <boxGeometry args={[0.22, 2.8, 0.3]} />
+            <meshStandardMaterial color="#6f4a2c" roughness={1} />
+          </mesh>
+        ))}
+        <mesh position={[0, 2.9, 0]} castShadow>
+          <boxGeometry args={[2.5, 0.25, 0.32]} />
+          <meshStandardMaterial color="#6f4a2c" roughness={1} />
+        </mesh>
+        <mesh position={[1.55, 1.35, 0.5]} rotation-y={-1.1} castShadow>
+          <boxGeometry args={[1.9, 2.6, 0.12]} />
+          <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
+        </mesh>
+      </group>
+      {/* window openings glow warm at dusk */}
+      {[0, Math.PI].map((a, i) => (
+        <mesh key={i} position={[Math.cos(a) * 2.78, 2.3, Math.sin(a) * 2.78]} rotation-y={-a}>
+          <planeGeometry args={[1.1, 0.9]} />
+          <meshStandardMaterial color="#3b2a18" emissive="#f59e0b" emissiveIntensity={0.9} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
       {/* corner posts */}
       {[0, 1, 2, 3].map((i) => (
         <mesh
@@ -391,23 +605,27 @@ function Palapa({ position, scale = 1, rotation = 0 }: { position: [number, numb
           <meshStandardMaterial color="#6f4a2c" roughness={1} />
         </mesh>
       ))}
-      {/* thatch roof — two stacked palm layers */}
+      {/* thatch roof — two stacked palm layers, open underneath */}
       <mesh position={[0, 4.5, 0]} castShadow>
-        <coneGeometry args={[4.6, 2.6, 8]} />
-        <meshStandardMaterial color="#b98b46" roughness={1} />
+        <coneGeometry args={[4.6, 2.6, 8, 1, true]} />
+        <meshStandardMaterial color="#b98b46" roughness={1} side={THREE.DoubleSide} />
       </mesh>
       <mesh position={[0, 5.6, 0]} castShadow>
         <coneGeometry args={[3.1, 2.1, 8]} />
         <meshStandardMaterial color="#9c7134" roughness={1} />
       </mesh>
-      {/* warm lantern in the doorway */}
-      <mesh position={[0, 1.9, 3.02]}>
-        <planeGeometry args={[1.3, 2]} />
-        <meshStandardMaterial color="#3b2a18" emissive="#f59e0b" emissiveIntensity={0.5} />
-      </mesh>
+      {/* entry steps up to the deck */}
+      {[0, 1].map((i) => (
+        <mesh key={i} position={[0, 0.18 + i * 0.24, 3.6 + (1 - i) * 0.55]} castShadow receiveShadow>
+          <boxGeometry args={[1.9, 0.24, 0.7]} />
+          <meshStandardMaterial color="#8b6b47" roughness={1} />
+        </mesh>
+      ))}
+      <HutInterior />
     </group>
   );
 }
+
 
 function CentralCity() {
   const towers = useMemo<Instance[]>(() => {
@@ -535,7 +753,7 @@ function Pickup({
 
 /* -------------------------------------------------------------------- player */
 
-function Player({ color, name }: { color: string; name: string }) {
+function Player({ color, name, guardianId }: { color: string; name: string; guardianId: string }) {
   const group = useRef<THREE.Group>(null);
   const [gait, setGait] = useState<"idle" | "walk" | "run" | "swim">("idle");
   const nearRef = useRef<string | null>(null);
@@ -750,9 +968,9 @@ function Player({ color, name }: { color: string; name: string }) {
   return (
     <>
       <group ref={group} visible={!firstPerson}>
-        <Character color={color} clip={gait} height={1.8} />
-        <Billboard position={[0, 2.5, 0]}>
-          <Text fontSize={0.42} color="#e0f2fe" anchorX="center">
+        <Character color={color} clip={gait} guardianId={guardianId} height={1.7} />
+        <Billboard position={[0, 2.35, 0]}>
+          <Text fontSize={0.2} color="#e0f2fe" anchorX="center">
             {name}
           </Text>
         </Billboard>
@@ -766,9 +984,11 @@ function Player({ color, name }: { color: string; name: string }) {
 export function IslaScene({
   playerColor,
   playerName,
+  playerGuardian = "lex",
 }: {
   playerColor: string;
   playerName: string;
+  playerGuardian?: string;
 }) {
   const found = getIsla();
   const crystals = found.crystals;
@@ -793,6 +1013,8 @@ export function IslaScene({
       />
       <Terrain />
       <Ocean />
+      <Sky />
+      <GroundCover />
       <CentralCity />
       <Forest />
       <Mountains />
@@ -808,7 +1030,7 @@ export function IslaScene({
         <Pickup key={s.id} position={s.position} color="#fbbf24" found={secrets.includes(s.id)} shape="secret" />
       ))}
 
-      <Player color={playerColor} name={playerName} />
+      <Player color={playerColor} name={playerName} guardianId={playerGuardian} />
     </>
   );
 }

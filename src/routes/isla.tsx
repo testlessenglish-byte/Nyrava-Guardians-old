@@ -127,6 +127,7 @@ function IslaCentral() {
           <IslaScene
             playerColor={guardian.color}
             playerName={guardianName || "Guardian"}
+            playerGuardian={guardian.id}
           />
         </Suspense>
       </Canvas>
