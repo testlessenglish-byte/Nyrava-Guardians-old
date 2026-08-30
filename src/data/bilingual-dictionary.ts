@@ -175,6 +175,7 @@ export const GUARDIAN_DIALOGUES: Record<string, Record<LocaleId, GuardianDialogu
 
 export const UI_STRINGS: Record<LocaleId, Record<string, string>> = {
   "en-US": {
+    idle: "READY",
     listening: "LISTENING",
     thinking: "THINKING",
     speaking: "SPEAKING",
@@ -194,6 +195,7 @@ export const UI_STRINGS: Record<LocaleId, Record<string, string>> = {
     new: "New",
   },
   "es-MX": {
+    idle: "LISTO",
     listening: "ESCUCHANDO",
     thinking: "PENSANDO",
     speaking: "HABLANDO",
