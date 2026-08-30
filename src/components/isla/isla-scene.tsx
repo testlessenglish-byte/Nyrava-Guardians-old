@@ -84,7 +84,15 @@ function Terrain() {
   }, []);
 
   return (
-    <mesh geometry={geometry} receiveShadow>
+    <mesh
+      geometry={geometry}
+      receiveShadow
+      onPointerUp={(e) => {
+        if (islaControls.dragged) return;
+        e.stopPropagation();
+        islaControls.moveTarget = { x: e.point.x, z: e.point.z };
+      }}
+    >
       <meshStandardMaterial vertexColors roughness={0.96} metalness={0.02} />
     </mesh>
   );
@@ -456,6 +464,13 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
   const vy = useRef(0);
   const airborne = useRef(false);
   const camPos = useRef(new THREE.Vector3());
+  const [firstPerson, setFirstPerson] = useState(islaControls.view === "first");
+
+  useEffect(() => {
+    const onView = () => setFirstPerson(islaControls.view === "first");
+    window.addEventListener("isla-view", onView);
+    return () => window.removeEventListener("isla-view", onView);
+  }, []);
 
   useEffect(() => {
     if (group.current) {
@@ -648,11 +663,9 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
     }
   });
 
-  const hidden = islaControls.view === "first";
-
   return (
     <>
-      <group ref={group} visible={!hidden}>
+      <group ref={group} visible={!firstPerson}>
         <Character color={color} clip={gait} height={1.8} />
         <Billboard position={[0, 2.5, 0]}>
           <Text fontSize={0.42} color="#e0f2fe" anchorX="center">

@@ -228,4 +228,14 @@ export const islaControls = {
   sprint: false,
   /** Click-to-walk destination in world space, cleared on arrival. */
   moveTarget: null as { x: number; z: number } | null,
+  /** Set while the pointer is being dragged so a look-around isn't read as a click. */
+  dragged: false,
 };
+
+/** Toggle between third-person and the avatar's own eyes. */
+export function toggleIslaView() {
+  islaControls.view = islaControls.view === "third" ? "first" : "third";
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("isla-view", { detail: islaControls.view }));
+  }
+}
