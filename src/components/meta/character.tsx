@@ -99,14 +99,14 @@ export function Character({
         mat.map.anisotropy = 8;
         mat.map.needsUpdate = true;
       }
-      // Keep the hand-painted texture at full strength, add a soft guardian
-      // wash and a neon emissive rim so each kid reads in their own colour.
-      mat.color.setRGB(1, 1, 1).lerp(tint, 0.12);
-      mat.emissive = tint.clone().multiplyScalar(0.1);
-      mat.emissiveIntensity = 0.55;
-      mat.metalness = 0.22;
-      mat.roughness = 0.55;
-      mat.envMapIntensity = 1.6;
+      // Keep the hand-painted texture dominant; the guardian colour is only a
+      // whisper of tint plus a faint emissive so armour reads as real metal.
+      mat.color.setRGB(1, 1, 1).lerp(tint, 0.05);
+      mat.emissive = tint.clone().multiplyScalar(0.05);
+      mat.emissiveIntensity = 0.25;
+      mat.metalness = 0.18;
+      mat.roughness = 0.6;
+      mat.envMapIntensity = 1.3;
       // Punch up saturation + contrast on the baked texture so the guardians
       // read as vivid toy-like heroes instead of muddy low-poly figures.
       mat.onBeforeCompile = (shader) => {
