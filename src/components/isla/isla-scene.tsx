@@ -19,10 +19,16 @@ import {
   patchIsla,
   tryCollectCrystal,
 } from "@/lib/isla-store";
-import { ISLAND_RADIUS, WORLD_SCALE as S, isWalkable, terrainHeight, ws } from "@/lib/isla-terrain";
+import { ISLAND_RADIUS, WATER_LEVEL, WORLD_SCALE as S, isWalkable, terrainHeight, ws } from "@/lib/isla-terrain";
 
 const SPEED = 9.5;
+const SWIM_SPEED = 5.6;
+/** How far out from the island you may swim before the current pushes you back. */
+const SWIM_LIMIT = ISLAND_RADIUS + 70;
+/** Water surface the swimmer floats at (the ocean plane bobs around y = -0.1). */
+const SWIM_Y = WATER_LEVEL - 0.55;
 const move = new THREE.Vector3();
+
 
 function mulberry32(seed: number) {
   let a = seed;
@@ -262,7 +268,7 @@ function Mountains() {
         {[0, 1, 2, 3].map((i) => (
           <mesh key={i} position={[Math.cos((i / 4) * Math.PI * 2) * 3.4, 2.2, Math.sin((i / 4) * Math.PI * 2) * 3.4]} castShadow>
             <cylinderGeometry args={[0.4, 0.5, 4.4, 8]} />
-            <meshStandardMaterial color="#cbd5f5" roughness={0.6} />
+            <meshStandardMaterial color="#c2a373" roughness={0.9} />
           </mesh>
         ))}
         <mesh position={[0, 4.7, 0]} castShadow>
@@ -323,7 +329,7 @@ function Beach() {
           </mesh>
           <mesh position={[2.6, 0.3, 5]} castShadow>
             <boxGeometry args={[2.2, 0.9, 4.4]} />
-            <meshStandardMaterial color="#f8fafc" />
+            <meshStandardMaterial color="#a9805a" roughness={0.95} />
           </mesh>
         </group>
       ))}
@@ -341,7 +347,7 @@ function SpacePort({ locked }: { locked: boolean }) {
     <group position={[62 * S, y, 8 * S]}>
       <mesh position={[0, 9, 0]} castShadow>
         <cylinderGeometry args={[1.6, 2.6, 18, 12]} />
-        <meshStandardMaterial color="#e2e8f0" metalness={0.6} roughness={0.3} />
+        <meshStandardMaterial color="#cbb79a" metalness={0.35} roughness={0.55} />
       </mesh>
       <mesh position={[0, 19.4, 0]} castShadow>
         <coneGeometry args={[1.6, 4, 12]} />
@@ -356,6 +362,49 @@ function SpacePort({ locked }: { locked: boolean }) {
           🔒 LAUNCH GATE LOCKED
         </Text>
       )}
+    </group>
+  );
+}
+
+/** A tropical palapa hut: timber posts, sand-plaster walls, thatched roof. */
+function Palapa({ position, scale = 1, rotation = 0 }: { position: [number, number, number]; scale?: number; rotation?: number }) {
+  return (
+    <group position={position} rotation-y={rotation} scale={scale}>
+      {/* raised deck */}
+      <mesh position={[0, 0.35, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[3.4, 3.6, 0.7, 8]} />
+        <meshStandardMaterial color="#a9805a" roughness={0.95} />
+      </mesh>
+      {/* walls of woven cane */}
+      <mesh position={[0, 2.1, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[2.8, 3, 3.1, 8]} />
+        <meshStandardMaterial color="#d9bd8c" roughness={1} />
+      </mesh>
+      {/* corner posts */}
+      {[0, 1, 2, 3].map((i) => (
+        <mesh
+          key={i}
+          position={[Math.cos((i / 4) * Math.PI * 2) * 3.1, 2.2, Math.sin((i / 4) * Math.PI * 2) * 3.1]}
+          castShadow
+        >
+          <cylinderGeometry args={[0.16, 0.2, 4, 6]} />
+          <meshStandardMaterial color="#6f4a2c" roughness={1} />
+        </mesh>
+      ))}
+      {/* thatch roof — two stacked palm layers */}
+      <mesh position={[0, 4.5, 0]} castShadow>
+        <coneGeometry args={[4.6, 2.6, 8]} />
+        <meshStandardMaterial color="#b98b46" roughness={1} />
+      </mesh>
+      <mesh position={[0, 5.6, 0]} castShadow>
+        <coneGeometry args={[3.1, 2.1, 8]} />
+        <meshStandardMaterial color="#9c7134" roughness={1} />
+      </mesh>
+      {/* warm lantern in the doorway */}
+      <mesh position={[0, 1.9, 3.02]}>
+        <planeGeometry args={[1.3, 2]} />
+        <meshStandardMaterial color="#3b2a18" emissive="#f59e0b" emissiveIntensity={0.5} />
+      </mesh>
     </group>
   );
 }
@@ -376,9 +425,11 @@ function CentralCity() {
 
   return (
     <>
-      <Instanced items={towers} color="#dbeafe" yOffset={4} emissive="#38bdf8">
-        <boxGeometry args={[3.6, 8, 3.6]} />
-      </Instanced>
+      {/* Island village: palapa huts instead of glass slabs */}
+      {towers.map((hut, i) => (
+        <Palapa key={i} position={hut.p} scale={0.75 + (hut.s % 1) * 0.5} rotation={hut.r} />
+      ))}
+
 
       {/* Guardian Plaza */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 2.26 * S * 0.8, 0]} receiveShadow>
@@ -398,7 +449,7 @@ function CentralCity() {
       <group position={[0, 2.26 * S * 0.8, 0]}>
         <mesh position={[0, 11, 0]} castShadow>
           <cylinderGeometry args={[2.4, 4.4, 22, 8]} />
-          <meshStandardMaterial color="#f1f5f9" metalness={0.4} roughness={0.35} />
+          <meshStandardMaterial color="#c9ae86" metalness={0.25} roughness={0.6} />
         </mesh>
         <mesh position={[0, 23.4, 0]} castShadow>
           <octahedronGeometry args={[3.2, 0]} />
@@ -413,8 +464,20 @@ function CentralCity() {
       <group position={[ACADEMY_DOOR[0], terrainHeight(ACADEMY_DOOR[0], ACADEMY_DOOR[1]), ACADEMY_DOOR[1] - 12]}>
         <mesh position={[0, 4, 0]} castShadow receiveShadow>
           <boxGeometry args={[18, 8, 12]} />
-          <meshStandardMaterial color="#e2e8f0" />
+          <meshStandardMaterial color="#d9bd8c" roughness={0.95} />
         </mesh>
+        {/* thatched hip roof so the academy reads as island architecture */}
+        <mesh position={[0, 9.4, 0]} rotation-y={Math.PI / 4} castShadow>
+          <coneGeometry args={[14, 5, 4]} />
+          <meshStandardMaterial color="#b98b46" roughness={1} />
+        </mesh>
+        {[-8, 8].map((x) => (
+          <mesh key={x} position={[x, 4, 6]} castShadow>
+            <cylinderGeometry args={[0.3, 0.36, 8, 8]} />
+            <meshStandardMaterial color="#6f4a2c" roughness={1} />
+          </mesh>
+        ))}
+
         <mesh position={[0, 2.4, 6.1]}>
           <planeGeometry args={[4, 5]} />
           <meshStandardMaterial color="#0ea5e9" emissive="#38bdf8" emissiveIntensity={0.8} />
@@ -474,11 +537,12 @@ function Pickup({
 
 function Player({ color, name }: { color: string; name: string }) {
   const group = useRef<THREE.Group>(null);
-  const [gait, setGait] = useState<"idle" | "walk" | "run">("idle");
+  const [gait, setGait] = useState<"idle" | "walk" | "run" | "swim">("idle");
   const nearRef = useRef<string | null>(null);
   const regionRef = useRef<RegionId>("city");
   const vy = useRef(0);
   const airborne = useRef(false);
+  const swimming = useRef(false);
   const camPos = useRef(new THREE.Vector3());
   const [firstPerson, setFirstPerson] = useState(islaControls.view === "first");
 
@@ -538,18 +602,27 @@ function Player({ color, name }: { color: string; name: string }) {
 
     const sprinting = islaControls.sprint || keys.has("shift");
     const isMoving = len > 0.08 && !busy;
+
+    // You can enter the ocean: anything below the waterline is swimmable as long
+    // as you stay within the reef ring around Isla Central.
+    const canEnter = (x: number, z: number) => {
+      if (isRegionLocked(regionAt(x, z))) return false;
+      if (isWalkable(x, z)) return true;
+      return Math.hypot(x, z) < SWIM_LIMIT;
+    };
+
+    const wasSwimming = swimming.current;
     if (isMoving) {
-      const step = (sprinting ? SPEED * 1.85 : SPEED) * delta;
+      const base = wasSwimming ? SWIM_SPEED : sprinting ? SPEED * 1.85 : SPEED;
+      const step = base * delta;
       const nx = player.position.x + move.x * step;
       const nz = player.position.z + move.z * step;
-      const targetRegion = regionAt(nx, nz);
-      const blocked = !isWalkable(nx, nz) || isRegionLocked(targetRegion);
-      if (!blocked) {
+      if (canEnter(nx, nz)) {
         player.position.x = nx;
         player.position.z = nz;
-      } else if (isWalkable(player.position.x, nz) && !isRegionLocked(regionAt(player.position.x, nz))) {
+      } else if (canEnter(player.position.x, nz)) {
         player.position.z = nz;
-      } else if (isWalkable(nx, player.position.z) && !isRegionLocked(regionAt(nx, player.position.z))) {
+      } else if (canEnter(nx, player.position.z)) {
         player.position.x = nx;
       } else {
         islaControls.moveTarget = null;
@@ -560,19 +633,26 @@ function Player({ color, name }: { color: string; name: string }) {
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       player.rotation.y += diff * (1 - Math.exp(-12 * delta));
     }
-    const nextGait = !isMoving ? "idle" : sprinting ? "run" : "walk";
-    if (nextGait !== gait) setGait(nextGait);
 
-    // jump + gravity
+    // jump + gravity + buoyancy
     const ground = terrainHeight(player.position.x, player.position.z);
+    const inWater = ground < WATER_LEVEL - 0.5;
+    swimming.current = inWater;
+
     if (islaControls.jump) {
       islaControls.jump = false;
-      if (!airborne.current && !busy) {
+      if (!airborne.current && !busy && !inWater) {
         vy.current = 9.5;
         airborne.current = true;
       }
     }
-    if (airborne.current) {
+    if (inWater) {
+      // float to the surface and bob with the swell
+      airborne.current = false;
+      vy.current = 0;
+      const bob = Math.sin(performance.now() * 0.0016) * 0.12;
+      player.position.y += (SWIM_Y + bob - player.position.y) * (1 - Math.exp(-6 * delta));
+    } else if (airborne.current) {
       vy.current -= 24 * delta;
       player.position.y += vy.current * delta;
       if (player.position.y <= ground) {
@@ -583,6 +663,10 @@ function Player({ color, name }: { color: string; name: string }) {
     } else {
       player.position.y += (ground - player.position.y) * (1 - Math.exp(-18 * delta));
     }
+
+    const nextGait = inWater ? "swim" : !isMoving ? "idle" : sprinting ? "run" : "walk";
+    if (nextGait !== gait) setGait(nextGait);
+
 
     islaControls.player.x = player.position.x;
     islaControls.player.z = player.position.z;

@@ -52,3 +52,8 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [ ] Moderated text and voice communication with reporting, blocking, audit events, and guardian controls
 - [ ] Safety-first matching algorithm with no unrestricted adult/minor or cross-age direct messaging
 - [ ] Realtime avatar movement and room state synchronization
+
+## Isla Central polish (Aug 30)
+- [x] Swimming: enter the ocean, float, swim gait, reach offshore crystals
+- [x] Avatar textures show through (no flat tint wash)
+- [x] Replace white block buildings with tropical palapa huts / island architecture
