@@ -39,7 +39,16 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [x] Fix avatar walking backwards (camera-relative input)
 - [x] Camera modes: third-person / first-person (eyes), wheel zoom
 - [x] Click-to-walk to a spot, jump (Space), sprint (Shift)
-- [x] Avatar faces the way it walks (rig flip) + labelled guide so it is not mistaken for the player
+- [x] Avatar faces the way it walks using the rig's actual +Z forward axis
+- [x] Remove the duplicate guide avatar from Isla Central
 - [x] Restore armour textures on avatars (light neon wash instead of flat paint)
 - [x] Fix props (trees/rocks) vanishing when the player walks up to them
 - [ ] Next art pass: distinct per-guardian kid models
+
+## Safe shared metaverse rooms
+- [ ] Subscriber accounts and child-safe profiles with verified age bands and interests
+- [ ] Live room presence so eligible Guardians appear together in the same classroom/world
+- [ ] Age-banded, interest-aware room matching with strict capacity and separation rules
+- [ ] Moderated text and voice communication with reporting, blocking, audit events, and guardian controls
+- [ ] Safety-first matching algorithm with no unrestricted adult/minor or cross-age direct messaging
+- [ ] Realtime avatar movement and room state synchronization
