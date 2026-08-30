@@ -15,6 +15,8 @@ import {
 import { ISLAND_RADIUS } from "@/lib/isla-terrain";
 import { useGuardian } from "@/lib/guardian-context";
 import { conversationalVoiceEngine, type ConversationState } from "@/services/ai/conversational-voice-engine";
+import { CLASS_GUARDIANS } from "@/lib/class-guardians";
+import { MessageCircle } from "lucide-react";
 import { UI_STRINGS } from "@/data/bilingual-dictionary";
 import { Globe, Mic, MicOff, Volume2, Sparkles, X } from "lucide-react";
 
@@ -88,6 +90,17 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
   }, []);
 
   const ui = UI_STRINGS[locale] ?? UI_STRINGS["en-US"];
+
+  const nearGuardian = state.nearGuardian
+    ? CLASS_GUARDIANS.find((g) => g.id === state.nearGuardian)
+    : null;
+
+  // Clear the conversation bubble shortly after leaving the guardian.
+  useEffect(() => {
+    if (state.nearGuardian) return;
+    const t = setTimeout(() => setGuardianMessage(null), 2600);
+    return () => clearTimeout(t);
+  }, [state.nearGuardian]);
 
   const mission = useMemo(
     () => ({
