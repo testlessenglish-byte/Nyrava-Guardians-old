@@ -36,7 +36,7 @@ export function Character({
   height = 1.75,
 }: {
   color: string;
-  clip: "idle" | "walk" | "run" | "talk" | "wave";
+  clip: "idle" | "walk" | "run" | "talk" | "wave" | "swim";
   height?: number;
 }) {
   const group = useRef<THREE.Group>(null);
@@ -56,15 +56,20 @@ export function Character({
       const source = mesh.material as THREE.MeshStandardMaterial;
       const mat = source.clone();
       mat.vertexColors = false;
-      if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace;
-      // Keep the baked armour texture readable; the guardian neon is a light wash
-      // plus an emissive rim rather than a flat paint-over.
-      mat.color.copy(new THREE.Color("#ffffff").lerp(tint, 0.3));
-      mat.emissive = tint.clone().multiplyScalar(0.1);
-      mat.emissiveIntensity = 1;
-      mat.metalness = 0.65;
-      mat.roughness = 0.35;
-      mat.envMapIntensity = 1.2;
+      if (mat.map) {
+        mat.map.colorSpace = THREE.SRGBColorSpace;
+        mat.map.anisotropy = 8;
+        mat.map.needsUpdate = true;
+      }
+      // Show the baked armour texture at full strength. The guardian identity
+      // comes from an emissive neon rim, not from painting over the diffuse.
+      mat.color.setRGB(1, 1, 1);
+      mat.emissive = tint.clone().multiplyScalar(0.22);
+      mat.emissiveIntensity = 1.1;
+      mat.metalness = mat.metalnessMap ? 1 : 0.18;
+      mat.roughness = mat.roughnessMap ? 1 : 0.62;
+      mat.envMapIntensity = 1.4;
+      mat.needsUpdate = true;
       mesh.material = mat;
     });
 
@@ -73,6 +78,7 @@ export function Character({
 
     return object;
   }, [scene, color, height]);
+
 
   const mixer = useMemo(() => new THREE.AnimationMixer(model), [model]);
   const names = useMemo(() => animations.map((a) => a.name), [animations]);
