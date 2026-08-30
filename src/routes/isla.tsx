@@ -1,6 +1,40 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Canvas } from "@react-three/fiber";
-import { Suspense, useEffect, useRef } from "react";
+import { createFileRoute } from '@tanstack/react-router'
+import { Component, Suspense, useEffect, useRef, type ReactNode } from "react";
+
+class IslaErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error("3D World Scene render error:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex h-full w-full flex-col items-center justify-center bg-slate-950 p-6 text-center text-white">
+          <h2 className="text-2xl font-black text-cyan-400">Loading Isla Central...</h2>
+          <p className="mt-2 max-w-md text-sm text-slate-300">
+            Initializing 3D graphics engine. If rendering takes longer than expected, please refresh your browser.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 rounded-xl bg-cyan-500 px-6 py-2.5 font-bold text-slate-950 transition hover:bg-cyan-400"
+          >
+            Reload Island
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import { IslaScene } from "@/components/isla/isla-scene";
 import { IslaHud } from "@/components/isla/isla-hud";
 import { hydrateIsla, islaControls, toggleIslaView } from "@/lib/isla-store";
@@ -122,15 +156,17 @@ function IslaCentral() {
         );
       }}
     >
-      <Canvas shadows camera={{ position: [0, 26, 52], fov: 58, near: 0.1, far: 5000 }} dpr={[1, 1.6]}>
-        <Suspense fallback={null}>
-          <IslaScene
-            playerColor={guardian.color}
-            playerName={guardianName || "Guardian"}
-            playerGuardian={guardian.id}
-          />
-        </Suspense>
-      </Canvas>
+      <IslaErrorBoundary>
+        <Canvas shadows camera={{ position: [0, 26, 52], fov: 58, near: 0.1, far: 5000 }} dpr={[1, 1.6]}>
+          <Suspense fallback={null}>
+            <IslaScene
+              playerColor={guardian.color}
+              playerName={guardianName || "Guardian"}
+              playerGuardian={guardian.id}
+            />
+          </Suspense>
+        </Canvas>
+      </IslaErrorBoundary>
       <IslaHud guardianName={guardian.name} />
     </div>
   );
