@@ -601,18 +601,27 @@ function Player({ color, name }: { color: string; name: string }) {
 
     const sprinting = islaControls.sprint || keys.has("shift");
     const isMoving = len > 0.08 && !busy;
+
+    // You can enter the ocean: anything below the waterline is swimmable as long
+    // as you stay within the reef ring around Isla Central.
+    const canEnter = (x: number, z: number) => {
+      if (isRegionLocked(regionAt(x, z))) return false;
+      if (isWalkable(x, z)) return true;
+      return Math.hypot(x, z) < SWIM_LIMIT;
+    };
+
+    const wasSwimming = swimming.current;
     if (isMoving) {
-      const step = (sprinting ? SPEED * 1.85 : SPEED) * delta;
+      const base = wasSwimming ? SWIM_SPEED : sprinting ? SPEED * 1.85 : SPEED;
+      const step = base * delta;
       const nx = player.position.x + move.x * step;
       const nz = player.position.z + move.z * step;
-      const targetRegion = regionAt(nx, nz);
-      const blocked = !isWalkable(nx, nz) || isRegionLocked(targetRegion);
-      if (!blocked) {
+      if (canEnter(nx, nz)) {
         player.position.x = nx;
         player.position.z = nz;
-      } else if (isWalkable(player.position.x, nz) && !isRegionLocked(regionAt(player.position.x, nz))) {
+      } else if (canEnter(player.position.x, nz)) {
         player.position.z = nz;
-      } else if (isWalkable(nx, player.position.z) && !isRegionLocked(regionAt(nx, player.position.z))) {
+      } else if (canEnter(nx, player.position.z)) {
         player.position.x = nx;
       } else {
         islaControls.moveTarget = null;
@@ -623,19 +632,26 @@ function Player({ color, name }: { color: string; name: string }) {
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       player.rotation.y += diff * (1 - Math.exp(-12 * delta));
     }
-    const nextGait = !isMoving ? "idle" : sprinting ? "run" : "walk";
-    if (nextGait !== gait) setGait(nextGait);
 
-    // jump + gravity
+    // jump + gravity + buoyancy
     const ground = terrainHeight(player.position.x, player.position.z);
+    const inWater = ground < WATER_LEVEL - 0.5;
+    swimming.current = inWater;
+
     if (islaControls.jump) {
       islaControls.jump = false;
-      if (!airborne.current && !busy) {
+      if (!airborne.current && !busy && !inWater) {
         vy.current = 9.5;
         airborne.current = true;
       }
     }
-    if (airborne.current) {
+    if (inWater) {
+      // float to the surface and bob with the swell
+      airborne.current = false;
+      vy.current = 0;
+      const bob = Math.sin(performance.now() * 0.0016) * 0.12;
+      player.position.y += (SWIM_Y + bob - player.position.y) * (1 - Math.exp(-6 * delta));
+    } else if (airborne.current) {
       vy.current -= 24 * delta;
       player.position.y += vy.current * delta;
       if (player.position.y <= ground) {
@@ -646,6 +662,10 @@ function Player({ color, name }: { color: string; name: string }) {
     } else {
       player.position.y += (ground - player.position.y) * (1 - Math.exp(-18 * delta));
     }
+
+    const nextGait = inWater ? "swim" : !isMoving ? "idle" : sprinting ? "run" : "walk";
+    if (nextGait !== gait) setGait(nextGait);
+
 
     islaControls.player.x = player.position.x;
     islaControls.player.z = player.position.z;
