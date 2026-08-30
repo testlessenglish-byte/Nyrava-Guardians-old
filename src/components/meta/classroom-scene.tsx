@@ -48,19 +48,24 @@ function Furniture({
 }
 
 function Room() {
-  const [map, normalMap, roughnessMap] = useLoader(THREE.TextureLoader, [
+  const textures = useLoader(THREE.TextureLoader, [
     "/textures/floor_diff.jpg",
     "/textures/floor_nor_gl.jpg",
     "/textures/floor_rough.jpg",
-  ]);
+  ]) as THREE.Texture[];
+  const [map, normalMap, roughnessMap] = textures as [
+    THREE.Texture,
+    THREE.Texture,
+    THREE.Texture,
+  ];
 
   useMemo(() => {
-    [map, normalMap, roughnessMap].forEach((t) => {
+    textures.forEach((t) => {
       t.wrapS = t.wrapT = THREE.RepeatWrapping;
       t.repeat.set(8, 8);
     });
     map.colorSpace = THREE.SRGBColorSpace;
-  }, [map, normalMap, roughnessMap]);
+  }, [textures, map]);
 
   const wall = (
     position: [number, number, number],
