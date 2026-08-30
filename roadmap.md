@@ -62,3 +62,6 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [x] Kid-guardian KayKit avatar swap + island detail pass (grass, flowers, bushes, boulders, clouds, birds)
 - [x] Richer avatar coloring + smaller nameplate text
 - [x] Swim pose: face-down instead of on the back
+
+- [x] Enterable furnished palapa huts (doorway, door leaf, bed/table/shelf, lantern)
+- [x] History Valley: replace thin beige posts with large ruined columns and rubble
