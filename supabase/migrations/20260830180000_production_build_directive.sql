@@ -1,5 +1,12 @@
 -- Production Build Directive Schema & RLS Hardening
 
+-- Ensure helper function exists for parent/guardian link checks
+CREATE OR REPLACE FUNCTION public.is_approved_guardian(_guardian uuid, _learner uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT _guardian = _learner;
+$$;
+GRANT EXECUTE ON FUNCTION public.is_approved_guardian(uuid, uuid) TO authenticated;
+
 CREATE TABLE IF NOT EXISTS public.guardian_profiles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL UNIQUE,
@@ -138,6 +145,7 @@ CREATE TABLE IF NOT EXISTS public.audit_events (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Enable Row Level Security (RLS)
 ALTER TABLE public.guardian_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.guardian_mastery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mastery_events ENABLE ROW LEVEL SECURITY;
@@ -152,6 +160,7 @@ ALTER TABLE public.ai_builder_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.safety_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_events ENABLE ROW LEVEL SECURITY;
 
+-- Grants for Authenticated & Service Roles
 GRANT SELECT, INSERT, UPDATE ON public.guardian_profiles TO authenticated;
 GRANT SELECT ON public.guardian_mastery TO authenticated;
 GRANT SELECT ON public.mastery_events TO authenticated;
@@ -168,6 +177,7 @@ GRANT SELECT ON public.audit_events TO authenticated;
 
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 
+-- RLS Policies
 CREATE POLICY guardian_profiles_self ON public.guardian_profiles FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 CREATE POLICY guardian_mastery_read ON public.guardian_mastery FOR SELECT TO authenticated USING (user_id = auth.uid() OR public.is_approved_guardian(auth.uid(), user_id));
 CREATE POLICY mastery_events_read ON public.mastery_events FOR SELECT TO authenticated USING (user_id = auth.uid() OR public.is_approved_guardian(auth.uid(), user_id));
