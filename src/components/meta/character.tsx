@@ -5,7 +5,7 @@ import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.j
 
 const MODEL_URL = "/models/guardian.glb";
 const FADE = 0.25;
-const MODEL_UNITS_TALL = 0.03;
+const MODEL_UNITS_TALL = 3.6;
 
 useGLTF.preload(MODEL_URL);
 
@@ -63,7 +63,7 @@ export function Character({
       }
       mat.metalness = 0.85;
       mat.roughness = 0.28;
-      mesh.material = new THREE.MeshBasicMaterial({ color: "#ff0000" });
+      mesh.material = mat;
     });
 
 
