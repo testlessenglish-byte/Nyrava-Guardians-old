@@ -173,10 +173,20 @@ function Instanced({
       mesh.setMatrixAt(i, dummy.matrix);
     });
     mesh.instanceMatrix.needsUpdate = true;
+    // Without this the batch keeps the single-geometry bounds and the whole
+    // clump vanishes as soon as you walk close to it.
+    mesh.computeBoundingSphere();
+    mesh.count = items.length;
   }, [items, yOffset]);
 
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, Math.max(items.length, 1)]} castShadow receiveShadow>
+    <instancedMesh
+      ref={ref}
+      args={[undefined, undefined, Math.max(items.length, 1)]}
+      frustumCulled={false}
+      castShadow
+      receiveShadow
+    >
       {children}
       <meshStandardMaterial
         color={color}
@@ -639,7 +649,10 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
       buddy.position.y = terrainHeight(buddy.position.x, buddy.position.z);
       const walking = dist > 1.4;
       if (walking !== companionMoving) setCompanionMoving(walking);
+      // lookAt aims +Z at the player; the rig is flipped inside <Character>, so
+      // spin a half turn to have the guide actually look at the child.
       buddy.lookAt(player.position.x, buddy.position.y, player.position.z);
+      buddy.rotation.y += Math.PI;
     }
 
     // ---- camera: first person (avatar's eyes) or orbiting third person
@@ -682,7 +695,12 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
         </Billboard>
       </group>
       <group ref={companion}>
-        <Character color={guardianColor} clip={companionMoving ? "run" : "idle"} height={1.7} />
+        <Character color={guardianColor} clip={companionMoving ? "run" : "idle"} height={1.55} />
+        <Billboard position={[0, 2.15, 0]}>
+          <Text fontSize={0.3} color="#94e2ff" anchorX="center">
+            guide
+          </Text>
+        </Billboard>
       </group>
     </>
   );
