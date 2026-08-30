@@ -55,5 +55,6 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 
 ## Isla Central polish (Aug 30)
 - [x] Swimming: enter the ocean, float, swim gait, reach offshore crystals
-- [x] Avatar textures show through (no flat tint wash)
+- [x] Avatar textures show through (no flat tint wash, gentle emissive rim)
 - [x] Replace white block buildings with tropical palapa huts / island architecture
+- [x] Arrow keys move the avatar alongside WASD
