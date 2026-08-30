@@ -1,47 +1,32 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - TanStack devtools (dev-only, first), tanstackStart, viteReact, tailwindcss, tsConfigPaths,
-//     nitro (build-only using cloudflare as a default target), VITE_* env injection, @ path alias,
-//     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
-import type { Plugin } from "vite";
+import { defineConfig } from "vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+import { nitro } from "nitro/vite";
+import { sites } from "@openai/sites-vite-plugin";
 
-/**
- * The devtools plugin annotates every JSX element with `data-tsd-source`.
- * react-three-fiber treats dashed props as pierced paths and throws on
- * three.js elements, so strip the annotation inside the 3D scene files.
- */
-function stripDevtoolsSourceIn3D(): Plugin {
-  return {
-    name: "strip-tsd-source-in-3d",
-    enforce: "post",
-    transform(code, id) {
-      if (!/\.(t|j)sx$/.test(id.split("?")[0] ?? "")) return null;
-      if (!code.includes("data-tsd-source")) return null;
-      // Any file that renders three.js elements must not carry the devtools
-      // annotation: R3F treats dashed props as pierced property paths.
-      const is3D =
-        id.includes("/components/meta/") ||
-        id.includes("/components/isla/") ||
-        code.includes("@react-three/fiber") ||
-        code.includes("@react-three/drei");
-      if (!is3D) return null;
-      return {
-        code: code.replace(/\s*"data-tsd-source":\s*"[^"]*",?/g, ""),
-        map: null,
-      };
-    },
-  };
-}
-
-export default defineConfig({
-  tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
+// No editor/devtools instrumentation is injected into the Three.js scene.
+export default defineConfig(({ command }) => ({
+  plugins: [
+    tsconfigPaths(),
+    tailwindcss(),
+    tanstackStart({ server: { entry: "server" } }),
+    ...(command === "build"
+      ? [
+          nitro({
+            preset: "cloudflare-module",
+            output: { dir: "dist", serverDir: "dist/server", publicDir: "dist/client" },
+            rollupConfig: { output: { entryFileNames: "index.js" } },
+            cloudflare: { nodeCompat: true },
+          }),
+        ]
+      : []),
+    react(),
+    sites(),
+  ],
+  server: { host: "127.0.0.1", port: 8080, strictPort: true },
+  resolve: {
+    dedupe: ["react", "react-dom", "@tanstack/react-query", "@tanstack/query-core"],
   },
-  vite: {
-    plugins: [stripDevtoolsSourceIn3D()],
-  },
-});
+}));

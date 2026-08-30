@@ -1,26 +1,30 @@
 # Nyrava Guardians
 
-Name it Nyrava Guardians
+Interactive digital-safety academy built with React, TanStack Start, Three.js and Supabase.
+The maintained repository is https://github.com/testlessenglish-byte/Nyrava-Guardians.
 
-This project was built with [Lovable](https://lovable.dev).
+## Local development
 
-**Live app**: https://nyrava-watchful-heart.lovable.app
+Use Node.js 22.18+ (or Node.js 24) and npm. Copy the empty variable names from
+`.env.example` into an ignored `.env` and configure the new Supabase project's
+public URL and publishable key in both `SUPABASE_*` and `VITE_SUPABASE_*` variables.
+Never put server credentials in `VITE_*` values. Public Vite values are compiled
+into the browser build; server-only values must also be configured in hosting.
 
-## Build with Lovable
+Run `npm install`, then `npm run dev`. The local URL is http://127.0.0.1:8080/.
+Run `npm run typecheck`, `npm test`, `npm run lint`, and `npm run build` separately.
+The tests currently cover public Supabase configuration, not the complete app.
+The Cloudflare-compatible deployment artifact is generated in `dist/` and Sites
+metadata is maintained in `.openai/hosting.json`.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/651e2d93-2948-4e89-9422-63b2fa234f24).
+## Preview limitations
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+This is a migration preview, not a production-ready release. Supabase is configured
+for the new project, but the app has no sign-in/onboarding UI yet. Progress remains
+on this browser without a Supabase session. Classroom AI/voice still require the
+old provider integration to be replaced, and some product screens use mock services.
 
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+See [MIGRATION_STATUS.md](MIGRATION_STATUS.md) for database verification, Auth/RLS
+blockers, environment requirements, and remaining Lovable replacement work.
+Do not change the old repository or its Supabase project. Do not reapply recorded
+migrations or rewrite shared Git history to resolve application errors.
