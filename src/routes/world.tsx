@@ -120,7 +120,7 @@ function WorldContent() {
               <div className="mt-4">
                 <ProgressBar
                   value={area.progress}
-                  barClassName={locked ? "bg-muted-foreground/40" : undefined}
+                  {...(locked ? { barClassName: "bg-muted-foreground/40" } : {})}
                 />
                 <p className="mt-1.5 text-[11px] font-bold text-muted-foreground">
                   {area.progress}% explored
