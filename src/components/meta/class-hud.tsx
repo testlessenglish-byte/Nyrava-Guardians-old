@@ -30,12 +30,8 @@ export function ClassHud() {
   const recognition = useRef<SpeechRecognitionLike | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
 
-  let learnerName = "Guardian";
-  try {
-    learnerName = useGuardian().profile?.displayName || "Guardian";
-  } catch {
-    learnerName = "Guardian";
-  }
+  const { guardianName } = useGuardian();
+  const learnerName = guardianName || "Guardian";
 
   const active = CLASS_GUARDIANS.find((g) => g.id === nearby) ?? CLASS_GUARDIANS[4];
 

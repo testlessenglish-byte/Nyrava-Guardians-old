@@ -7,6 +7,7 @@ import {
   Map,
   Sparkles,
   Swords,
+  Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import logo from "@/assets/guardians/logo.png";
@@ -18,6 +19,7 @@ const NAV = [
   { to: "/home", label: "My Home", icon: Home },
   { to: "/world", label: "World", icon: Map },
   { to: "/academy", label: "Academy", icon: GraduationCap },
+  { to: "/classroom", label: "Live Class", icon: Users },
   { to: "/missions", label: "Missions", icon: Swords },
   { to: "/builder", label: "AI Builder", icon: Bot },
   { to: "/core", label: "Core", icon: Cpu },
