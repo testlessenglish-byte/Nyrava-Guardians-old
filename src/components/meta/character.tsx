@@ -41,6 +41,13 @@ const PROP_WORDS = [
   "mug",
   "smokebomb",
   "badge",
+  "helmet",
+  "headgear",
+  "knight",
+  "visor",
+  "cape",
+  "shoulder",
+  "hat_knight",
 ];
 
 function isProp(name: string) {

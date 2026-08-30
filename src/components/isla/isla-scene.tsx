@@ -537,182 +537,167 @@ function HutInterior() {
  * A tropical palapa hut you can actually walk into: the cane wall is built
  * from segments with a doorway gap at the front, and the inside is furnished.
  */
-function Palapa({ position, scale = 1, rotation = 0 }: { position: [number, number, number]; scale?: number; rotation?: number }) {
-  // 8 wall panels around the octagon, skipping the front one for the doorway.
-  const panels = useMemo(() => {
-    const out: { a: number; skip: boolean }[] = [];
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * Math.PI * 2;
-      out.push({ a, skip: i === 2 });
-    }
-    return out;
-  }, []);
+/**
+ * Futuristic Guardian Sci-Fi Building (Eco-Tower / Tech-Dome)
+ * Replaces old primitive huts with high-tech sci-fi architecture matching World 1: Isla Central specification.
+ */
+function GuardianBuilding({ position, scale = 1, rotation = 0, variant = 0 }: { position: [number, number, number]; scale?: number; rotation?: number; variant?: number }) {
+  const accentColor = variant % 3 === 0 ? "#00f0ff" : variant % 3 === 1 ? "#a855f7" : "#22e07a";
 
   return (
     <group position={position} rotation-y={rotation} scale={scale}>
-      {/* raised deck */}
-      <mesh position={[0, 0.35, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[3.4, 3.6, 0.7, 8]} />
-        <meshStandardMaterial color="#a9805a" roughness={0.95} />
+      {/* Metallic pedestal base */}
+      <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[3.2, 3.6, 0.8, 16]} />
+        <meshStandardMaterial color="#0f172a" metalness={0.8} roughness={0.2} />
       </mesh>
-      {/* walls of woven cane, doorway left open */}
-      {panels.map(({ a, skip }, i) =>
-        skip ? null : (
-          <mesh
-            key={i}
-            position={[Math.cos(a) * 2.85, 2.1, Math.sin(a) * 2.85]}
-            rotation-y={-a}
-            castShadow
-            receiveShadow
-          >
-            <boxGeometry args={[0.18, 3.1, 2.3]} />
-            <meshStandardMaterial color="#d9bd8c" roughness={1} side={THREE.DoubleSide} />
-          </mesh>
-        ),
-      )}
-      {/* door frame + swung-open door leaf */}
-      <group position={[Math.cos(Math.PI / 2) * 2.85, 0.7, Math.sin(Math.PI / 2) * 2.85]}>
-        {[-1, 1].map((s) => (
-          <mesh key={s} position={[s * 1.1, 1.4, 0]} castShadow>
-            <boxGeometry args={[0.22, 2.8, 0.3]} />
-            <meshStandardMaterial color="#6f4a2c" roughness={1} />
-          </mesh>
-        ))}
-        <mesh position={[0, 2.9, 0]} castShadow>
-          <boxGeometry args={[2.5, 0.25, 0.32]} />
-          <meshStandardMaterial color="#6f4a2c" roughness={1} />
-        </mesh>
-        <mesh position={[1.55, 1.35, 0.5]} rotation-y={-1.1} castShadow>
-          <boxGeometry args={[1.9, 2.6, 0.12]} />
-          <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
-        </mesh>
-      </group>
-      {/* window openings glow warm at dusk */}
-      {[0, Math.PI].map((a, i) => (
-        <mesh key={i} position={[Math.cos(a) * 2.78, 2.3, Math.sin(a) * 2.78]} rotation-y={-a}>
-          <planeGeometry args={[1.1, 0.9]} />
-          <meshStandardMaterial color="#3b2a18" emissive="#f59e0b" emissiveIntensity={0.9} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-      {/* corner posts */}
-      {[0, 1, 2, 3].map((i) => (
-        <mesh
-          key={i}
-          position={[Math.cos((i / 4) * Math.PI * 2) * 3.1, 2.2, Math.sin((i / 4) * Math.PI * 2) * 3.1]}
-          castShadow
-        >
-          <cylinderGeometry args={[0.16, 0.2, 4, 6]} />
-          <meshStandardMaterial color="#6f4a2c" roughness={1} />
-        </mesh>
-      ))}
-      {/* thatch roof — two stacked palm layers, open underneath */}
-      <mesh position={[0, 4.5, 0]} castShadow>
-        <coneGeometry args={[4.6, 2.6, 8, 1, true]} />
-        <meshStandardMaterial color="#b98b46" roughness={1} side={THREE.DoubleSide} />
+      
+      {/* Glowing neon accent ring at base */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.82, 0]}>
+        <ringGeometry args={[3.0, 3.25, 32]} />
+        <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
-      <mesh position={[0, 5.6, 0]} castShadow>
-        <coneGeometry args={[3.1, 2.1, 8]} />
-        <meshStandardMaterial color="#9c7134" roughness={1} />
+
+      {/* Main sleek eco-structure body */}
+      <mesh position={[0, 3.2, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[2.4, 3.0, 4.8, 16]} />
+        <meshStandardMaterial color="#1e293b" metalness={0.6} roughness={0.3} />
       </mesh>
-      {/* entry steps up to the deck */}
-      {[0, 1].map((i) => (
-        <mesh key={i} position={[0, 0.18 + i * 0.24, 3.6 + (1 - i) * 0.55]} castShadow receiveShadow>
-          <boxGeometry args={[1.9, 0.24, 0.7]} />
-          <meshStandardMaterial color="#8b6b47" roughness={1} />
-        </mesh>
-      ))}
-      <HutInterior />
+
+      {/* Futuristic Glass Dome Roof */}
+      <mesh position={[0, 5.8, 0]} castShadow>
+        <sphereGeometry args={[2.3, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#38bdf8" transparent opacity={0.65} emissive="#0ea5e9" emissiveIntensity={0.5} roughness={0.1} />
+      </mesh>
+
+      {/* Glowing holographic window strip */}
+      <mesh position={[0, 3.5, 0]}>
+        <cylinderGeometry args={[2.42, 2.42, 1.2, 16, 1, true]} />
+        <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={1.5} transparent opacity={0.85} toneMapped={false} />
+      </mesh>
+
+      {/* Spire / Antenna */}
+      <mesh position={[0, 7.5, 0]} castShadow>
+        <cylinderGeometry args={[0.08, 0.2, 3.2, 8]} />
+        <meshStandardMaterial color="#f8fafc" metalness={0.9} roughness={0.1} />
+      </mesh>
+      <mesh position={[0, 9.2, 0]}>
+        <octahedronGeometry args={[0.45, 0]} />
+        <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={3} toneMapped={false} />
+      </mesh>
     </group>
   );
 }
-
 
 function CentralCity() {
   const towers = useMemo<Instance[]>(() => {
     const rand = mulberry32(99);
     const out: Instance[] = [];
-    for (let i = 0; i < 34; i++) {
-      const a = (i / 34) * Math.PI * 2 + rand() * 0.35;
+    for (let i = 0; i < 28; i++) {
+      const a = (i / 28) * Math.PI * 2 + rand() * 0.35;
       const d = (16 + rand() * 8) * S;
       const x = Math.cos(a) * d;
       const z = Math.sin(a) * d;
-      out.push({ p: [x, terrainHeight(x, z), z], s: 0.8 + rand() * 1.6, r: rand() * 3 });
+      out.push({ p: [x, terrainHeight(x, z), z], s: 0.85 + rand() * 1.3, r: rand() * 3 });
     }
     return out;
   }, []);
 
   return (
     <>
-      {/* Island village: palapa huts instead of glass slabs */}
-      {towers.map((hut, i) => (
-        <Palapa key={i} position={hut.p} scale={0.75 + (hut.s % 1) * 0.5} rotation={hut.r} />
+      {/* Sci-Fi Eco-City Guardian Towers */}
+      {towers.map((tower, i) => (
+        <GuardianBuilding key={i} position={tower.p} scale={0.8 + (tower.s % 1) * 0.4} rotation={tower.r} variant={i} />
       ))}
 
-
-      {/* Guardian Plaza */}
+      {/* Guardian Main Plaza */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 2.26 * S * 0.8, 0]} receiveShadow>
         <circleGeometry args={[11 * S, 64]} />
-        <meshStandardMaterial color="#33465f" roughness={0.85} emissive="#0ea5e9" emissiveIntensity={0.06} />
+        <meshStandardMaterial color="#0f172a" roughness={0.4} metalness={0.7} />
       </mesh>
 
-      {/* plaza inlay rings so the ground reads as built, not blank */}
-      {[5, 8, 10.4].map((r) => (
-        <mesh key={r} rotation-x={-Math.PI / 2} position={[0, 2.26 * S * 0.8 + 0.02, 0]}>
-          <ringGeometry args={[r * S - 0.5, r * S, 72]} />
-          <meshStandardMaterial color="#7dd3fc" emissive="#38bdf8" emissiveIntensity={0.7} />
+      {/* Plaza Glowing Neon Energy Rings */}
+      {[5, 8, 10.4].map((r, idx) => (
+        <mesh key={r} rotation-x={-Math.PI / 2} position={[0, 2.26 * S * 0.8 + 0.03, 0]}>
+          <ringGeometry args={[r * S - 0.4, r * S, 72]} />
+          <meshStandardMaterial
+            color={idx % 2 === 0 ? "#00f0ff" : "#a855f7"}
+            emissive={idx % 2 === 0 ? "#00f0ff" : "#a855f7"}
+            emissiveIntensity={2}
+            toneMapped={false}
+          />
         </mesh>
       ))}
 
-      {/* Nyrava Command Center — the landmark */}
+      {/* Nyrava Command Center — Central Sci-Fi Hyper-Tower */}
       <group position={[0, 2.26 * S * 0.8, 0]}>
-        <mesh position={[0, 11, 0]} castShadow>
-          <cylinderGeometry args={[2.4, 4.4, 22, 8]} />
-          <meshStandardMaterial color="#c9ae86" metalness={0.25} roughness={0.6} />
-        </mesh>
-        <mesh position={[0, 23.4, 0]} castShadow>
-          <octahedronGeometry args={[3.2, 0]} />
-          <meshStandardMaterial color="#38bdf8" emissive="#0ea5e9" emissiveIntensity={1.2} />
-        </mesh>
-        <Text position={[0, 27.5, 0]} fontSize={2} color="#e0f2fe" anchorX="center">
-          NYRAVA
-        </Text>
-      </group>
-
-      {/* Academy entrance */}
-      <group position={[ACADEMY_DOOR[0], terrainHeight(ACADEMY_DOOR[0], ACADEMY_DOOR[1]), ACADEMY_DOOR[1] - 12]}>
+        {/* Tier 1 Base */}
         <mesh position={[0, 4, 0]} castShadow receiveShadow>
-          <boxGeometry args={[18, 8, 12]} />
-          <meshStandardMaterial color="#d9bd8c" roughness={0.95} />
+          <cylinderGeometry args={[6, 8, 8, 16]} />
+          <meshStandardMaterial color="#0f172a" metalness={0.8} roughness={0.2} />
         </mesh>
-        {/* thatched hip roof so the academy reads as island architecture */}
-        <mesh position={[0, 9.4, 0]} rotation-y={Math.PI / 4} castShadow>
-          <coneGeometry args={[14, 5, 4]} />
-          <meshStandardMaterial color="#b98b46" roughness={1} />
-        </mesh>
-        {[-8, 8].map((x) => (
-          <mesh key={x} position={[x, 4, 6]} castShadow>
-            <cylinderGeometry args={[0.3, 0.36, 8, 8]} />
-            <meshStandardMaterial color="#6f4a2c" roughness={1} />
-          </mesh>
-        ))}
 
-        <mesh position={[0, 2.4, 6.1]}>
-          <planeGeometry args={[4, 5]} />
-          <meshStandardMaterial color="#0ea5e9" emissive="#38bdf8" emissiveIntensity={0.8} />
+        {/* Tier 2 Tower Body */}
+        <mesh position={[0, 15, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[3.2, 4.8, 16, 16]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.2} />
         </mesh>
-        <Text position={[0, 9.4, 0]} fontSize={1.6} color="#38bdf8" anchorX="center">
-          NYRAVA ACADEMY
+
+        {/* Glowing Central Energy Core */}
+        <mesh position={[0, 15, 0]}>
+          <cylinderGeometry args={[3.3, 3.3, 10, 16, 1, true]} />
+          <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={2} transparent opacity={0.65} toneMapped={false} />
+        </mesh>
+
+        {/* Floating Halo Ring */}
+        <mesh position={[0, 22, 0]} rotation-x={Math.PI / 6}>
+          <torusGeometry args={[5.5, 0.4, 16, 48]} />
+          <meshStandardMaterial color="#38bdf8" emissive="#0ea5e9" emissiveIntensity={3} toneMapped={false} />
+        </mesh>
+
+        {/* Floating Top Energy Crest ('N') */}
+        <mesh position={[0, 26, 0]} castShadow>
+          <octahedronGeometry args={[3.5, 0]} />
+          <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={3.5} toneMapped={false} />
+        </mesh>
+        
+        <Text position={[0, 31, 0]} fontSize={2.4} color="#00f0ff" anchorX="center">
+          NYRAVA CIUDAD CENTRAL
         </Text>
       </group>
 
-      {/* Mission board */}
-      <group position={[8 * S, terrainHeight(8 * S, 10 * S) + 1.6, 10 * S]}>
-        <mesh castShadow>
-          <boxGeometry args={[4, 3, 0.3]} />
-          <meshStandardMaterial color="#0f172a" emissive="#22d3ee" emissiveIntensity={0.3} />
+      {/* Academy Entrance — Sci-Fi High-Tech Portal */}
+      <group position={[ACADEMY_DOOR[0], terrainHeight(ACADEMY_DOOR[0], ACADEMY_DOOR[1]), ACADEMY_DOOR[1] - 12]}>
+        <mesh position={[0, 5, 0]} castShadow receiveShadow>
+          <boxGeometry args={[20, 10, 14]} />
+          <meshStandardMaterial color="#0f172a" metalness={0.7} roughness={0.3} />
         </mesh>
-        <Text position={[0, 0, 0.2]} fontSize={0.42} color="#e0f2fe" maxWidth={3.4} anchorX="center">
-          CLASS 1 — DISCOVER ISLA CENTRAL
+
+        {/* Glass Dome Entrance Roof */}
+        <mesh position={[0, 10.5, 0]} castShadow>
+          <sphereGeometry args={[8, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <meshStandardMaterial color="#38bdf8" transparent opacity={0.7} emissive="#0ea5e9" emissiveIntensity={1} />
+        </mesh>
+
+        {/* Holographic Door Frame */}
+        <mesh position={[0, 3.5, 7.1]}>
+          <planeGeometry args={[6, 7]} />
+          <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={2.5} toneMapped={false} />
+        </mesh>
+        
+        <Text position={[0, 12.5, 0]} fontSize={1.8} color="#00f0ff" anchorX="center">
+          AI ACADEMY
+        </Text>
+      </group>
+
+      {/* Mission Board — Futuristic Hologram Screen */}
+      <group position={[8 * S, terrainHeight(8 * S, 10 * S) + 2, 10 * S]}>
+        <mesh castShadow>
+          <boxGeometry args={[4.8, 3.2, 0.3]} />
+          <meshStandardMaterial color="#0f172a" emissive="#00f0ff" emissiveIntensity={0.8} />
+        </mesh>
+        <Text position={[0, 0, 0.2]} fontSize={0.45} color="#00f0ff" maxWidth={4.2} anchorX="center">
+          WORLD 1 — ISLA CENTRAL
         </Text>
       </group>
     </>
