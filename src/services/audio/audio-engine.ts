@@ -54,6 +54,7 @@ class AudioEngine {
   }
 
   private loadSettings() {
+    if (typeof window === "undefined" || typeof localStorage === "undefined") return;
     try {
       const saved = localStorage.getItem("nyrava_audio_settings");
       if (saved) {
@@ -66,6 +67,7 @@ class AudioEngine {
 
   public saveSettings(newSettings: Partial<AudioSettings>) {
     this.settings = { ...this.settings, ...newSettings };
+    if (typeof window === "undefined" || typeof localStorage === "undefined") return;
     try {
       localStorage.setItem("nyrava_audio_settings", JSON.stringify(this.settings));
     } catch {
@@ -79,20 +81,25 @@ class AudioEngine {
   }
 
   private initCtx() {
+    if (typeof window === "undefined") return;
     if (this.ctx) return;
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioCtx) return;
-    this.ctx = new AudioCtx();
+    try {
+      this.ctx = new AudioCtx();
 
-    this.masterGain = this.ctx.createGain();
-    this.musicGain = this.ctx.createGain();
-    this.sfxGain = this.ctx.createGain();
+      this.masterGain = this.ctx.createGain();
+      this.musicGain = this.ctx.createGain();
+      this.sfxGain = this.ctx.createGain();
 
-    this.musicGain.connect(this.masterGain);
-    this.sfxGain.connect(this.masterGain);
-    this.masterGain.connect(this.ctx.destination);
+      this.musicGain.connect(this.masterGain);
+      this.sfxGain.connect(this.masterGain);
+      this.masterGain.connect(this.ctx.destination);
 
-    this.updateGains();
+      this.updateGains();
+    } catch {
+      // Web Audio API unsupported
+    }
   }
 
   private updateGains() {
@@ -111,18 +118,18 @@ class AudioEngine {
 
   /** Starts atmospheric ambient audio loop for the specified world zone */
   public setWorldZone(zone: WorldZoneId) {
+    if (typeof window === "undefined") return;
     this.currentZone = zone;
     this.initCtx();
     if (!this.ctx || !this.musicGain || !this.settings.backgroundMusic) return;
 
     if (this.ctx.state === "suspended") {
-      this.ctx.resume();
+      void this.ctx.resume();
     }
 
     this.stopAmbientLoop();
 
     const now = this.ctx.currentTime;
-    // Synthesize atmospheric ambient harmony based on zone identity
     const freqs = this.getZoneFrequencies(zone);
 
     freqs.forEach((freq) => {
@@ -133,7 +140,6 @@ class AudioEngine {
       osc.type = zone === "cyber-defense" || zone === "builder-district" ? "sawtooth" : "sine";
       osc.frequency.setValueAtTime(freq, now);
 
-      // Low pass filter for warm futuristic ambience
       const filter = this.ctx.createBiquadFilter();
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(zone === "digital-city" ? 800 : 400, now);
@@ -152,23 +158,23 @@ class AudioEngine {
   private getZoneFrequencies(zone: WorldZoneId): number[] {
     switch (zone) {
       case "hq":
-        return [220, 277.18, 329.63, 440]; // A major warm ambient chord
+        return [220, 277.18, 329.63, 440];
       case "digital-city":
-        return [196, 246.94, 293.66, 392]; // G major adventure chord
+        return [196, 246.94, 293.66, 392];
       case "academy":
-        return [261.63, 329.63, 392, 523.25]; // C major curious chord
+        return [261.63, 329.63, 392, 523.25];
       case "cyber-defense":
-        return [146.83, 174.61, 220, 293.66]; // D minor mystery pulse
+        return [146.83, 174.61, 220, 293.66];
       case "mystery-network":
-        return [130.81, 164.81, 196, 261.63]; // C minor detective theme
+        return [130.81, 164.81, 196, 261.63];
       case "builder-district":
-        return [220, 277.18, 349.23, 440]; // Creative synth chord
+        return [220, 277.18, 349.23, 440];
       case "communication-realm":
-        return [293.66, 369.99, 440, 587.33]; // Friendly D major
+        return [293.66, 369.99, 440, 587.33];
       case "future-lab":
-        return [174.61, 220, 261.63, 349.23]; // Futuristic F major
+        return [174.61, 220, 261.63, 349.23];
       case "boss":
-        return [110, 130.81, 164.81, 220]; // Deep rhythmic orchestral-electronic
+        return [110, 130.81, 164.81, 220];
       default:
         return [220, 277.18, 329.63];
     }
@@ -186,25 +192,23 @@ class AudioEngine {
     this.activeOscillators = [];
   }
 
-  /** Smoothly ducks background music when a Guardian speaks */
   public startDucking() {
     this.isDucked = true;
     this.updateGains();
   }
 
-  /** Smoothly restores background music after speech ends */
   public stopDucking() {
     this.isDucked = false;
     this.updateGains();
   }
 
-  /** Play subtle interaction or discovery sound effect */
   public playSfx(type: "greet" | "click" | "success" | "walk-away") {
+    if (typeof window === "undefined") return;
     this.initCtx();
     if (!this.ctx || !this.sfxGain || !this.settings.soundEffects) return;
 
     if (this.ctx.state === "suspended") {
-      this.ctx.resume();
+      void this.ctx.resume();
     }
 
     const now = this.ctx.currentTime;
