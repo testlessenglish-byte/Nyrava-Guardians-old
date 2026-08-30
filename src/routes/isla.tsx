@@ -38,6 +38,7 @@ class IslaErrorBoundary extends Component<{ children: ReactNode }, { hasError: b
 }
 import { IslaScene } from "@/components/isla/isla-scene";
 import { IslaHud } from "@/components/isla/isla-hud";
+import { IslaControls } from "@/components/isla/isla-controls";
 import { hydrateIsla, islaControls, toggleIslaView } from "@/lib/isla-store";
 import { useGuardian } from "@/lib/guardian-context";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
@@ -173,6 +174,7 @@ function IslaCentral() {
         </IslaErrorBoundary>
       )}
       <IslaHud guardianName={guardian.name} />
+      <IslaControls />
     </div>
   );
 }
