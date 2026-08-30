@@ -1,12 +1,13 @@
 -- Production Build Directive Schema & RLS Hardening
 
--- Ensure helper function exists for parent/guardian link checks
+-- Helper function for parent/guardian authorization checks
 CREATE OR REPLACE FUNCTION public.is_approved_guardian(_guardian uuid, _learner uuid)
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT _guardian = _learner;
 $$;
 GRANT EXECUTE ON FUNCTION public.is_approved_guardian(uuid, uuid) TO authenticated;
 
+-- Entities
 CREATE TABLE IF NOT EXISTS public.guardian_profiles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL UNIQUE,
@@ -160,7 +161,7 @@ ALTER TABLE public.ai_builder_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.safety_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_events ENABLE ROW LEVEL SECURITY;
 
--- Grants for Authenticated & Service Roles
+-- Grants
 GRANT SELECT, INSERT, UPDATE ON public.guardian_profiles TO authenticated;
 GRANT SELECT ON public.guardian_mastery TO authenticated;
 GRANT SELECT ON public.mastery_events TO authenticated;
@@ -177,11 +178,24 @@ GRANT SELECT ON public.audit_events TO authenticated;
 
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 
--- RLS Policies
+-- RLS Policies (Idempotent: Drop if exists then Create)
+DROP POLICY IF EXISTS guardian_profiles_self ON public.guardian_profiles;
 CREATE POLICY guardian_profiles_self ON public.guardian_profiles FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS guardian_mastery_read ON public.guardian_mastery;
 CREATE POLICY guardian_mastery_read ON public.guardian_mastery FOR SELECT TO authenticated USING (user_id = auth.uid() OR public.is_approved_guardian(auth.uid(), user_id));
+
+DROP POLICY IF EXISTS mastery_events_read ON public.mastery_events;
 CREATE POLICY mastery_events_read ON public.mastery_events FOR SELECT TO authenticated USING (user_id = auth.uid() OR public.is_approved_guardian(auth.uid(), user_id));
+
+DROP POLICY IF EXISTS worlds_self ON public.worlds;
 CREATE POLICY worlds_self ON public.worlds FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS world_versions_read ON public.world_versions;
 CREATE POLICY world_versions_read ON public.world_versions FOR SELECT TO authenticated USING (created_by = auth.uid());
+
+DROP POLICY IF EXISTS mission_attempts_self ON public.mission_attempts;
 CREATE POLICY mission_attempts_self ON public.mission_attempts FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS ai_builder_requests_self ON public.ai_builder_requests;
 CREATE POLICY ai_builder_requests_self ON public.ai_builder_requests FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());

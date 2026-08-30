@@ -37,7 +37,7 @@ export class IntelligenceCoreService {
       if (!skills[ev.skillId]) {
         skills[ev.skillId] = { score: 0, evidenceCount: 0, lastUpdated: ev.timestamp };
       }
-      const s = skills[ev.skillId];
+      const s = skills[ev.skillId]!;
       s.evidenceCount += 1;
       // Weighted moving average based on validated score
       s.score = Math.round((s.score * (s.evidenceCount - 1) + ev.score) / s.evidenceCount);
@@ -47,7 +47,7 @@ export class IntelligenceCoreService {
     const skillKeys = Object.keys(skills);
     skillCount = skillKeys.length;
     for (const key of skillKeys) {
-      totalScoreSum += skills[key].score;
+      totalScoreSum += skills[key]!.score;
     }
 
     const averageMastery = skillCount > 0 ? totalScoreSum / skillCount : 0;

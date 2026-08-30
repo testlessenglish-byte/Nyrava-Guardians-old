@@ -1,5 +1,4 @@
-import { useMemo } from "react";
-import { Billboard } from "@react-three/drei";
+import { Billboard, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { GUARDIAN_IMAGES } from "@/data/guardians";
 
@@ -7,7 +6,7 @@ export type CharacterClip = "idle" | "walk" | "run" | "talk" | "wave" | "swim";
 
 /**
  * 3D Guardian Hero Avatar Component
- * Renders the exact high-definition Guardian hero avatar (matching the front of site cards)
+ * Renders the exact high-definition Guardian hero avatar (matching the front of site cards 100%)
  * in the 3D world with 3D ground shadow, glowing chest energy core, and aura lighting.
  */
 export function Character({
@@ -21,33 +20,27 @@ export function Character({
   guardianId?: string;
   height?: number;
 }) {
-  const avatarImgUrl = GUARDIAN_IMAGES[guardianId] ?? GUARDIAN_IMAGES["lex"]!;
-  
-  const texture = useMemo(() => {
-    const loader = new THREE.TextureLoader();
-    const tex = loader.load(avatarImgUrl);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }, [avatarImgUrl]);
+  const avatarImgUrl =
+    GUARDIAN_IMAGES[guardianId] ??
+    GUARDIAN_IMAGES[guardianId.toLowerCase()] ??
+    GUARDIAN_IMAGES["lex"]!;
+  const texture = useTexture(avatarImgUrl);
+  texture.colorSpace = THREE.SRGBColorSpace;
 
   const swimming = clip === "swim";
 
   return (
     <group>
       <group rotation-x={swimming ? Math.PI / 2.35 : 0} position-y={swimming ? 0.5 : 0}>
-        {/* High-Resolution Guardian Hero Avatar matching the front of site */}
+        {/* High-Resolution Guardian Hero Avatar matching front of site 100% */}
         <Billboard position={[0, height * 0.6, 0]}>
           <mesh>
             <planeGeometry args={[height * 0.85, height * 1.2]} />
-            <meshStandardMaterial
+            <meshBasicMaterial
               map={texture}
               transparent
-              roughness={0.2}
-              metalness={0.1}
-              emissive={color}
-              emissiveIntensity={0.15}
               side={THREE.DoubleSide}
-              alphaTest={0.05}
+              alphaTest={0.1}
             />
           </mesh>
         </Billboard>

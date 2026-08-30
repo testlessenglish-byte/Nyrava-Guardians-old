@@ -21,60 +21,63 @@ class ConversationalVoiceEngine {
   private activeGuardian: string = "lex";
   private locale: LocaleId = "en-US";
   private isMuted = false;
-  private recognition: SpeechRecognition | null = null;
-  private synth: SpeechSynthesis | null = typeof window !== "undefined" ? window.speechSynthesis : null;
+  private recognition: any = null;
 
   constructor() {
-    this.initRecognition();
+    if (typeof window !== "undefined") {
+      this.initRecognition();
+    }
   }
 
   private initRecognition() {
     if (typeof window === "undefined") return;
-    const SpeechRecognition =
-      (window as unknown as { SpeechRecognition: typeof window.SpeechRecognition }).SpeechRecognition ||
-      (window as unknown as { webkitSpeechRecognition: typeof window.SpeechRecognition }).webkitSpeechRecognition;
+    const w = window as unknown as Record<string, any>;
+    const SpeechRecognition = w['SpeechRecognition'] || w['webkitSpeechRecognition'];
 
     if (SpeechRecognition) {
-      this.recognition = new SpeechRecognition();
-      this.recognition.continuous = true;
-      this.recognition.interimResults = true;
-      this.recognition.lang = this.locale;
+      try {
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = true;
+        this.recognition.lang = this.locale;
 
-      this.recognition.onresult = (event) => {
-        let finalTranscript = "";
-        let interimTranscript = "";
+        this.recognition.onresult = (event: any) => {
+          let finalTranscript = "";
+          let interimTranscript = "";
 
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const result = event.results[i];
-          if (result && result[0]) {
-            if (result.isFinal) {
-              finalTranscript += result[0].transcript;
-            } else {
-              interimTranscript += result[0].transcript;
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const result = event.results[i];
+            if (result && result[0]) {
+              if (result.isFinal) {
+                finalTranscript += result[0].transcript;
+              } else {
+                interimTranscript += result[0].transcript;
+              }
             }
           }
-        }
 
-        const text = finalTranscript || interimTranscript;
-        if (text) {
-          // Natural language interruption: stop TTS if speaking
-          if (this.state === "SPEAKING") {
-            this.stopSpeaking();
+          const text = finalTranscript || interimTranscript;
+          if (text) {
+            if (this.state === "SPEAKING") {
+              this.stopSpeaking();
+            }
+
+            this.notifyTranscript(text, Boolean(finalTranscript));
+
+            if (finalTranscript) {
+              this.handleChildUtterance(finalTranscript);
+            }
           }
+        };
 
-          this.notifyTranscript(text, Boolean(finalTranscript));
-
-          if (finalTranscript) {
-            this.handleChildUtterance(finalTranscript);
+        this.recognition.onerror = () => {
+          if (this.state === "LISTENING") {
+            this.setState("IDLE");
           }
-        }
-      };
-
-      this.recognition.onerror = () => {
-        if (this.state === "LISTENING") {
-          this.setState("IDLE");
-        }
-      };
+        };
+      } catch {
+        // SpeechRecognition not supported in environment
+      }
     }
   }
 
@@ -126,13 +129,12 @@ class ConversationalVoiceEngine {
   }
 
   public startListening() {
-    if (this.isMuted) return;
+    if (typeof window === "undefined" || this.isMuted) return;
     if (this.recognition) {
       try {
         this.recognition.start();
         this.setState("LISTENING");
       } catch {
-        // Recognition already active
         this.setState("LISTENING");
       }
     } else {
@@ -141,51 +143,59 @@ class ConversationalVoiceEngine {
   }
 
   public stopListening() {
+    if (typeof window === "undefined") return;
     if (this.recognition) {
       try {
         this.recognition.stop();
       } catch {
-        // Recognition already stopped
+        // already stopped
       }
     }
   }
 
-  /** Guardian speaks text response with TTS & dynamic audio ducking */
+  /** Guardian speaks text response with SpeechSynthesis & dynamic audio ducking */
   public speakGuardianResponse(text: string) {
     this.notifyGuardianResponse(text);
-    if (!this.synth) {
+    if (typeof window === "undefined" || typeof SpeechSynthesisUtterance === "undefined" || !window.speechSynthesis) {
       this.setState("IDLE");
       return;
     }
 
-    this.stopSpeaking();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = this.locale;
-    utterance.rate = 0.95; // Friendly child-appropriate cadence
+    try {
+      this.stopSpeaking();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = this.locale;
+      utterance.rate = 0.95;
 
-    utterance.onstart = () => {
-      this.setState("SPEAKING");
-    };
+      utterance.onstart = () => {
+        this.setState("SPEAKING");
+      };
 
-    utterance.onend = () => {
+      utterance.onend = () => {
+        this.setState("IDLE");
+        this.startListening();
+      };
+
+      utterance.onerror = () => {
+        this.setState("IDLE");
+      };
+
+      window.speechSynthesis.speak(utterance);
+    } catch {
       this.setState("IDLE");
-      this.startListening();
-    };
-
-    utterance.onerror = () => {
-      this.setState("IDLE");
-    };
-
-    this.synth.speak(utterance);
-  }
-
-  public stopSpeaking() {
-    if (this.synth) {
-      this.synth.cancel();
     }
   }
 
-  /** Trigger automatic proximity greeting from nearby Guardian */
+  public stopSpeaking() {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch {
+        // Speech synthesis cancel fallback
+      }
+    }
+  }
+
   public triggerProximityGreeting(guardianId: string) {
     this.activeGuardian = guardianId;
     const dialogue = GUARDIAN_DIALOGUES[guardianId]?.[this.locale] ?? GUARDIAN_DIALOGUES["lex"]![this.locale];
@@ -194,7 +204,6 @@ class ConversationalVoiceEngine {
     this.speakGuardianResponse(greetingText);
   }
 
-  /** Process child natural language input */
   private handleChildUtterance(text: string) {
     this.setState("THINKING");
     const lower = text.toLowerCase();
@@ -214,13 +223,11 @@ class ConversationalVoiceEngine {
       } else if (lower.includes("learn") || lower.includes("what") || lower.includes("qué")) {
         this.speakGuardianResponse(dialogue.explainMore);
       } else {
-        // Natural conversational echo & reassurance
         this.speakGuardianResponse(`${dialogue.explainMore} ${dialogue.askPermission}`);
       }
     }, 600);
   }
 
-  /** Walk-away behavior: graceful exit when player moves away */
   public handleWalkAway() {
     const dialogue = GUARDIAN_DIALOGUES[this.activeGuardian]?.[this.locale] ?? GUARDIAN_DIALOGUES["lex"]![this.locale];
     audioEngine.playSfx("walk-away");

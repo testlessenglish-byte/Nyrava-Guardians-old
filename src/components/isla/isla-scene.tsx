@@ -885,14 +885,14 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
     if (region !== regionRef.current) {
       regionRef.current = region;
       enterRegion(region);
-      audioEngine.setWorldZone(region === "digital_city" ? "digital-city" : "hq");
+      audioEngine.setWorldZone(region === "city" ? "digital-city" : "hq");
     }
 
     // Guardian Station Proximity Detection & Conversational Voice Trigger
     let nearestStation: (typeof CLASS_GUARDIANS)[0] | null = null;
     let minDist = 14;
     for (const station of CLASS_GUARDIANS) {
-      const d = Math.hypot(player.position.x - station.x, player.position.z - station.z);
+      const d = Math.hypot(player.position.x - station.position[0], player.position.z - station.position[2]);
       if (d < minDist) {
         minDist = d;
         nearestStation = station;
@@ -902,7 +902,7 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
     const stationKey = nearestStation ? nearestStation.id : null;
     if (stationKey !== nearStationRef.current) {
       if (nearestStation) {
-        conversationalVoiceEngine.triggerProximityGreeting(nearestStation.guardianId);
+        conversationalVoiceEngine.triggerProximityGreeting(nearestStation.id);
       } else if (nearStationRef.current) {
         conversationalVoiceEngine.handleWalkAway();
       }

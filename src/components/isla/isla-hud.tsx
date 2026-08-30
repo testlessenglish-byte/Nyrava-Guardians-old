@@ -22,7 +22,7 @@ const MAP = 200;
 
 function MiniMap() {
   const state = useIsla();
-  const pos = state.pos;
+  const pos = islaControls.player;
 
   function toMap(val: number) {
     return ((val + ISLAND_RADIUS) / (ISLAND_RADIUS * 2)) * MAP;
@@ -32,8 +32,8 @@ function MiniMap() {
     <svg className="h-44 w-44 rounded-3xl border border-white/20 bg-background/80 p-2 shadow-2xl backdrop-blur">
       <circle cx={MAP / 2} cy={MAP / 2} r={MAP / 2 - 8} fill="#090d16" stroke="#38bdf8" strokeWidth={1} />
       {REGIONS.map((r) => {
-        const discovered = state.discoveredRegions.includes(r.id);
-        const locked = (r.requiredCrystals ?? 0) > state.crystals.length;
+        const discovered = state.visited.includes(r.id);
+        const locked = (r.lock?.requires ?? 0) > state.crystals.length;
         return (
           <g key={r.id}>
             <circle
@@ -82,7 +82,9 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
       onTranscript: (text) => setChildTranscript(text),
       onGuardianResponse: (text) => setGuardianMessage(text),
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const ui = UI_STRINGS[locale] ?? UI_STRINGS["en-US"];
@@ -144,7 +146,7 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
           }`}
         >
           {isMuted ? <MicOff className="h-3.5 w-3.5 text-red-400" /> : <Mic className="h-3.5 w-3.5 text-emerald-400" />}
-          <span>{isMuted ? ui.unmuteMic : ui.muteMic}</span>
+          <span>{isMuted ? ui['unmuteMic'] : ui['muteMic']}</span>
         </button>
       </div>
 
@@ -218,6 +220,11 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
       {/* map */}
       {mapOpen && <div className="pointer-events-auto absolute right-4 top-24">{<MiniMap />}</div>}
 
+      {/* Touch Controls for Mobile/Tablet */}
+      <div className="pointer-events-auto absolute bottom-4 left-0 right-0 md:hidden">
+        <TouchControls />
+      </div>
+
       {/* crystal challenge */}
       {challengeCrystal?.challenge && (
         <ChallengePanel
@@ -230,6 +237,92 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
 
       {/* academy report */}
       {state.reporting && <ReportPanel guardianName={guardianName} />}
+    </div>
+  );
+}
+
+function TouchControls() {
+  const [active, setActive] = useState(false);
+  const [knobPos, setKnobPos] = useState({ x: 0, y: 0 });
+  const centerRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    centerRef.current = { x: cx, y: cy };
+    setActive(true);
+    updateJoystick(touch.clientX, touch.clientY, cx, cy, rect.width / 2);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!active || !centerRef.current) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    updateJoystick(touch.clientX, touch.clientY, centerRef.current.x, centerRef.current.y, rect.width / 2);
+  };
+
+  const handleTouchEnd = () => {
+    setActive(false);
+    setKnobPos({ x: 0, y: 0 });
+    islaControls.joystick = { x: 0, y: 0 };
+  };
+
+  const updateJoystick = (clientX: number, clientY: number, cx: number, cy: number, maxRadius: number) => {
+    const dx = clientX - cx;
+    const dy = clientY - cy;
+    const dist = Math.hypot(dx, dy);
+    const clampRadius = Math.min(dist, maxRadius);
+    const angle = Math.atan2(dy, dx);
+    const kx = Math.cos(angle) * clampRadius;
+    const ky = Math.sin(angle) * clampRadius;
+    setKnobPos({ x: kx, y: ky });
+
+    const normX = kx / maxRadius;
+    const normY = ky / maxRadius;
+    islaControls.joystick = { x: normX, y: normY };
+  };
+
+  return (
+    <div className="pointer-events-auto flex items-center justify-between px-6 pb-6 w-full max-w-full">
+      {/* Movement Joystick */}
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        className="relative flex h-32 w-32 items-center justify-center rounded-full border-2 border-cyan-400/50 bg-slate-950/70 shadow-2xl backdrop-blur-md touch-none"
+      >
+        <div
+          className="h-14 w-14 rounded-full bg-cyan-400/80 shadow-lg shadow-cyan-500/50 transition-transform duration-75"
+          style={{ transform: `translate(${knobPos.x}px, ${knobPos.y}px)` }}
+        />
+      </div>
+
+      {/* Touch Action Buttons */}
+      <div className="flex items-center gap-3">
+        <button
+          onTouchStart={() => {
+            islaControls.sprint = !islaControls.sprint;
+          }}
+          className={`flex h-14 w-14 items-center justify-center rounded-2xl border-2 font-black text-xs shadow-xl transition active:scale-95 ${
+            islaControls.sprint ? "border-amber-400 bg-amber-500/80 text-slate-950" : "border-cyan-400/50 bg-slate-950/80 text-cyan-200"
+          }`}
+        >
+          RUN
+        </button>
+        <button
+          onTouchStart={() => {
+            islaControls.jump = true;
+          }}
+          className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-emerald-400/60 bg-emerald-950/80 font-black text-sm text-emerald-200 shadow-2xl active:scale-95"
+        >
+          JUMP
+        </button>
+      </div>
     </div>
   );
 }

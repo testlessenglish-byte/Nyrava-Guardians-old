@@ -16,7 +16,6 @@ function stripDevtoolsSourceIn3D(): Plugin {
   return {
     name: "strip-tsd-source-in-3d",
     enforce: "post",
-    apply: "serve",
     transform(code, id) {
       if (!/\.(t|j)sx$/.test(id.split("?")[0] ?? "")) return null;
       if (!code.includes("data-tsd-source")) return null;
