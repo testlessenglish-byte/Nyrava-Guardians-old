@@ -535,7 +535,7 @@ function Pickup({
 
 /* -------------------------------------------------------------------- player */
 
-function Player({ color, name }: { color: string; name: string }) {
+function Player({ color, name, guardianId }: { color: string; name: string; guardianId: string }) {
   const group = useRef<THREE.Group>(null);
   const [gait, setGait] = useState<"idle" | "walk" | "run" | "swim">("idle");
   const nearRef = useRef<string | null>(null);
@@ -810,7 +810,7 @@ export function IslaScene({
         <Pickup key={s.id} position={s.position} color="#fbbf24" found={secrets.includes(s.id)} shape="secret" />
       ))}
 
-      <Player color={playerColor} name={playerName} />
+      <Player color={playerColor} name={playerName} guardianId={playerGuardian} />
     </>
   );
 }

@@ -209,7 +209,7 @@ function Npc({
   return (
     <group position={position} rotation-y={rotation}>
       <group ref={group}>
-        <Character color={guardian.color} clip={isSpeaking ? "talk" : "idle"} />
+        <Character color={guardian.color} clip={isSpeaking ? "talk" : "idle"} guardianId={guardian.id} />
       </group>
 
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
