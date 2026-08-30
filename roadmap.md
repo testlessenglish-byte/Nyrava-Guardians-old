@@ -39,4 +39,6 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [x] Fix avatar walking backwards (camera-relative input)
 - [x] Camera modes: third-person / first-person (eyes), wheel zoom
 - [x] Click-to-walk to a spot, jump (Space), sprint (Shift)
-- [ ] Next art pass: real textures + CC0 kid-guardian models instead of soldier rig
+- [x] Avatar faces the way it walks (rig flip) + labelled guide so it is not mistaken for the player
+- [x] Restore armour textures on avatars (light neon wash instead of flat paint)
+- [ ] Next art pass: distinct per-guardian kid models

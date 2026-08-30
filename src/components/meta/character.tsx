@@ -56,12 +56,15 @@ export function Character({
       const source = mesh.material as THREE.MeshStandardMaterial;
       const mat = source.clone();
       mat.vertexColors = false;
-      // Keep the armour texture and push the guardian's neon through it.
-      mat.color.copy(new THREE.Color("#ffffff").lerp(tint, 0.6));
-      mat.emissive = tint.clone().multiplyScalar(0.18);
-      mat.emissiveIntensity = 1;
-      mat.metalness = 0.55;
-      mat.roughness = 0.42;
+      if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace;
+      // Keep the baked armour texture readable; the guardian neon is a light wash
+      // plus an emissive rim rather than a flat paint-over.
+      mat.color.copy(new THREE.Color("#ffffff").lerp(tint, 0.22));
+      mat.emissive = tint.clone().multiplyScalar(0.32);
+      mat.emissiveIntensity = 0.9;
+      mat.metalness = 0.65;
+      mat.roughness = 0.35;
+      mat.envMapIntensity = 1.2;
       mesh.material = mat;
     });
 
@@ -104,7 +107,11 @@ export function Character({
 
   return (
     <group ref={group}>
-      <primitive object={model} />
+      {/* The Mixamo rig is authored facing +Z away from the camera; flip it so the
+          avatar walks face-first in the direction it is steering. */}
+      <group rotation-y={Math.PI}>
+        <primitive object={model} />
+      </group>
     </group>
   );
 }

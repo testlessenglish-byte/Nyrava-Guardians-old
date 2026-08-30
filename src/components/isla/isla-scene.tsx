@@ -682,7 +682,12 @@ function Player({ color, name, guardianColor }: { color: string; name: string; g
         </Billboard>
       </group>
       <group ref={companion}>
-        <Character color={guardianColor} clip={companionMoving ? "run" : "idle"} height={1.7} />
+        <Character color={guardianColor} clip={companionMoving ? "run" : "idle"} height={1.55} />
+        <Billboard position={[0, 2.15, 0]}>
+          <Text fontSize={0.3} color="#94e2ff" anchorX="center">
+            guide
+          </Text>
+        </Billboard>
       </group>
     </>
   );
