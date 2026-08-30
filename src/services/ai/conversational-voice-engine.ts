@@ -20,7 +20,9 @@ class ConversationalVoiceEngine {
   private listeners: Set<VoiceEngineListener> = new Set();
   private activeGuardian: string = "lex";
   private locale: LocaleId = "en-US";
-  private isMuted = false;
+  private isMuted = true;
+  /** Voice only runs after the child explicitly turns it on. */
+  private enabled = false;
   private recognition: any = null;
 
   constructor() {
@@ -116,7 +118,29 @@ class ConversationalVoiceEngine {
     this.activeGuardian = guardianId;
   }
 
+  public isEnabled() {
+    return this.enabled;
+  }
+
+  /** Explicit user gesture required before any mic or speech starts. */
+  public enableVoice() {
+    this.enabled = true;
+    this.isMuted = false;
+    this.startListening();
+    return this.isMuted;
+  }
+
+  public disableVoice() {
+    this.enabled = false;
+    this.isMuted = true;
+    this.stopListening();
+    this.stopSpeaking();
+    this.setState("IDLE");
+    return this.isMuted;
+  }
+
   public toggleMute() {
+    if (!this.enabled) return this.enableVoice();
     this.isMuted = !this.isMuted;
     if (this.isMuted) {
       this.stopListening();
@@ -129,7 +153,7 @@ class ConversationalVoiceEngine {
   }
 
   public startListening() {
-    if (typeof window === "undefined" || this.isMuted) return;
+    if (typeof window === "undefined" || this.isMuted || !this.enabled) return;
     if (this.recognition) {
       try {
         this.recognition.start();
@@ -156,6 +180,10 @@ class ConversationalVoiceEngine {
   /** Guardian speaks text response with SpeechSynthesis & dynamic audio ducking */
   public speakGuardianResponse(text: string) {
     this.notifyGuardianResponse(text);
+    if (!this.enabled) {
+      this.setState("IDLE");
+      return;
+    }
     if (typeof window === "undefined" || typeof SpeechSynthesisUtterance === "undefined" || !window.speechSynthesis) {
       this.setState("IDLE");
       return;
@@ -200,6 +228,10 @@ class ConversationalVoiceEngine {
     this.activeGuardian = guardianId;
     const dialogue = GUARDIAN_DIALOGUES[guardianId]?.[this.locale] ?? GUARDIAN_DIALOGUES["lex"]![this.locale];
     const greetingText = `${dialogue.greeting} ${dialogue.intro} ${dialogue.askPermission}`;
+    if (!this.enabled) {
+      this.notifyGuardianResponse(greetingText);
+      return;
+    }
     audioEngine.playSfx("greet");
     this.speakGuardianResponse(greetingText);
   }
