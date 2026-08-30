@@ -4,9 +4,18 @@
  * to walk on it. Keep this file pure so both sides always agree.
  */
 
-export const ISLAND_RADIUS = 96;
-export const SHORE_RADIUS = 78;
+/** Everything on Isla Central is authored in "design units" then blown up by
+ * this factor so the island reads as a real, large world next to a 1.8m child. */
+export const WORLD_SCALE = 2.2;
+
+export const ISLAND_RADIUS = 96 * WORLD_SCALE;
+export const SHORE_RADIUS = 78 * WORLD_SCALE;
 export const WATER_LEVEL = 0;
+
+/** Scale a design-unit coordinate pair into world space. */
+export function ws(p: [number, number]): [number, number] {
+  return [p[0] * WORLD_SCALE, p[1] * WORLD_SCALE];
+}
 
 function smoothstep(edge0: number, edge1: number, x: number) {
   const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
@@ -19,9 +28,11 @@ function bump(x: number, z: number, cx: number, cz: number, radius: number) {
 }
 
 /** Ground height in world units. Anything below WATER_LEVEL is ocean. */
-export function terrainHeight(x: number, z: number): number {
+export function terrainHeight(worldX: number, worldZ: number): number {
+  const x = worldX / WORLD_SCALE;
+  const z = worldZ / WORLD_SCALE;
   const r = Math.hypot(x, z);
-  const land = smoothstep(ISLAND_RADIUS, SHORE_RADIUS - 12, r);
+  const land = smoothstep(96, 78 - 12, r);
 
   let h = 1.6 * land - (1 - land) * 9;
 
@@ -56,7 +67,7 @@ export function terrainHeight(x: number, z: number): number {
   // Micro relief everywhere except the plaza.
   h += (1 - plaza) * land * Math.sin(x * 0.31) * Math.cos(z * 0.27) * 0.35;
 
-  return h;
+  return h * WORLD_SCALE * 0.8;
 }
 
 /** Walkable = above the waterline and not a cliff-side wall. */

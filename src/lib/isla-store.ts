@@ -220,4 +220,12 @@ export const islaControls = {
   cameraYaw: 0,
   player: { x: 0, y: 0, z: 12 },
   interact: false,
+  /** Camera distance behind the avatar; 0 = first person (avatar's eyes). */
+  camDistance: 11,
+  view: "third" as "third" | "first",
+  cameraPitch: 0.24,
+  jump: false,
+  sprint: false,
+  /** Click-to-walk destination in world space, cleared on arrival. */
+  moveTarget: null as { x: number; z: number } | null,
 };
