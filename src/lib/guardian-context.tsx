@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import type { GuardianId } from "@/types";
+import { loadGuardianCloud, saveGuardianCloud } from "@/lib/cloud-save";
 
 interface GuardianState {
   guardianId: GuardianId | null;
@@ -62,8 +63,19 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setState(loadPersisted());
+    const local = loadPersisted();
+    setState(local);
     setHydrated(true);
+    // Cloud record wins when the signed-in account has more progress.
+    void loadGuardianCloud().then((cloud) => {
+      if (!cloud) return;
+      if ((cloud.xp ?? 0) < local.xp) return;
+      setState((s) => ({
+        ...s,
+        ...cloud,
+        guardianId: (cloud.guardianId as GuardianId | null) ?? s.guardianId,
+      }));
+    });
   }, []);
 
   useEffect(() => {
@@ -73,6 +85,7 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
     } catch {
       // storage unavailable — demo state simply won't persist
     }
+    saveGuardianCloud(state);
   }, [state, hydrated]);
 
   const value = useMemo<GuardianState>(
