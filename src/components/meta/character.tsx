@@ -5,7 +5,7 @@ import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.j
 
 const MODEL_URL = "/models/guardian.glb";
 const FADE = 0.25;
-const MODEL_UNITS_TALL = 1.8;
+const MODEL_UNITS_TALL = 0.03;
 
 useGLTF.preload(MODEL_URL);
 
