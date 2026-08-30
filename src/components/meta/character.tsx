@@ -65,9 +65,6 @@ export function Character({
       mesh.material = mat;
     });
 
-    const box = new THREE.Box3().setFromObject(object);
-    const size = box.getSize(new THREE.Vector3());
-    object.scale.setScalar(height / (size.y || 1));
 
     // The armature is authored at 100x with bone-space geometry, so Box3 on the
     // skinned meshes is meaningless. The rig renders ~1.8 units tall at scale 1.
