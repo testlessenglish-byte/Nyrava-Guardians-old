@@ -58,3 +58,6 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [x] Avatar textures show through (no flat tint wash, gentle emissive rim)
 - [x] Replace white block buildings with tropical palapa huts / island architecture
 - [x] Arrow keys move the avatar alongside WASD
+
+- [x] Kid-guardian KayKit avatar swap + island detail pass (grass, flowers, bushes, boulders, clouds, birds)
+- [x] Richer avatar coloring + smaller nameplate text

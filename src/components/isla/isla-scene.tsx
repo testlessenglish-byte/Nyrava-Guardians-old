@@ -832,8 +832,8 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
     <>
       <group ref={group} visible={!firstPerson}>
         <Character color={color} clip={gait} guardianId={guardianId} height={1.7} />
-        <Billboard position={[0, 2.5, 0]}>
-          <Text fontSize={0.42} color="#e0f2fe" anchorX="center">
+        <Billboard position={[0, 2.35, 0]}>
+          <Text fontSize={0.2} color="#e0f2fe" anchorX="center">
             {name}
           </Text>
         </Billboard>
