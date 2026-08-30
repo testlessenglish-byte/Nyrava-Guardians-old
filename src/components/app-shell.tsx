@@ -56,8 +56,26 @@ function GuardianChip() {
   );
 }
 
+const IMMERSIVE = ["/isla", "/classroom"];
+
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // 3D worlds take the whole screen: no header, sidebar or bottom bar over the canvas.
+  if (IMMERSIVE.some((route) => pathname.startsWith(route))) {
+    return (
+      <div className="fixed inset-0 overflow-hidden bg-background">
+        {children}
+        <Link
+          to="/home"
+          className="fixed left-1/2 top-3 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 text-xs font-bold backdrop-blur transition hover:bg-background"
+        >
+          <img src={logo} alt="Nyrava Guardians" className="h-4 w-4" />
+          Leave world
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col">

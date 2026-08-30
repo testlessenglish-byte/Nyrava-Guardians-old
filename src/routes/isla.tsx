@@ -110,7 +110,7 @@ function IslaCentral() {
         );
       }}
     >
-      <Canvas shadows camera={{ position: [0, 12, 24], fov: 58 }} dpr={[1, 1.6]}>
+      <Canvas shadows camera={{ position: [0, 26, 52], fov: 58, near: 0.1, far: 5000 }} dpr={[1, 1.6]}>
         <Suspense fallback={null}>
           <IslaScene
             playerColor={guardian.color}

@@ -105,7 +105,7 @@ function Ocean() {
   });
   return (
     <mesh ref={ref} rotation-x={-Math.PI / 2} position-y={-0.1}>
-      <circleGeometry args={[420, 64]} />
+      <circleGeometry args={[1400, 72]} />
       <meshStandardMaterial
         color="#0e7490"
         transparent
@@ -698,19 +698,19 @@ export function IslaScene({
   return (
     <>
       <color attach="background" args={["#8ec8ea"]} />
-      <fog attach="fog" args={["#9fd4ef", 90, 240]} />
+      <fog attach="fog" args={["#9fd4ef", 200, 620]} />
       <hemisphereLight args={["#cfe9ff", "#3b4a3f", 0.85]} />
       <directionalLight
-        position={[60, 90, 40]}
+        position={[140, 210, 90]}
         intensity={2.1}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-left={-120}
-        shadow-camera-right={120}
-        shadow-camera-top={120}
-        shadow-camera-bottom={-120}
-        shadow-camera-far={300}
+        shadow-camera-left={-240}
+        shadow-camera-right={240}
+        shadow-camera-top={240}
+        shadow-camera-bottom={-240}
+        shadow-camera-far={700}
       />
       <Terrain />
       <Ocean />
