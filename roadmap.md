@@ -32,3 +32,10 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [ ] Class completion requires return to Academy + report
 - [ ] Mastery evidence feeds Intelligence Core
 - [ ] Keep service-boundary architecture (world data / mission data / progress / AI / mastery separated)
+
+## Isla Central polish pass (Aug 30)
+- [ ] Bigger island world (scale terrain + regions), denser props
+- [ ] Immersive fullscreen layout for 3D routes (no site chrome overlap)
+- [ ] Fix avatar walking backwards (camera-relative input)
+- [ ] Camera modes: third-person / first-person (eyes), wheel zoom
+- [ ] Click-to-walk to a spot, jump (Space), sprint (Shift)
