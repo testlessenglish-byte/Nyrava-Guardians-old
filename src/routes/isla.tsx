@@ -1,4 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
+import { Canvas } from "@react-three/fiber";
 import { Component, Suspense, useEffect, useRef, type ReactNode } from "react";
 
 class IslaErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
