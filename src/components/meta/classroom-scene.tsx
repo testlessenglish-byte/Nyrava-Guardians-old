@@ -78,7 +78,13 @@ function Room() {
     <group>
       <mesh rotation-x={-Math.PI / 2} receiveShadow>
         <planeGeometry args={[ROOM * 2 + 4, ROOM * 2 + 4]} />
-        <meshStandardMaterial map={map} normalMap={normalMap} roughnessMap={roughnessMap} metalness={0.2} />
+        <meshStandardMaterial
+          map={map}
+          normalMap={normalMap}
+          roughnessMap={roughnessMap}
+          color="#5b6474"
+          metalness={0.25}
+        />
       </mesh>
 
       {wall([0, 3, -ROOM - 1], 0, ROOM * 2 + 4, "n")}
