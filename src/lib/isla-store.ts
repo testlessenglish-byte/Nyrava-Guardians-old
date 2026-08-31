@@ -18,6 +18,7 @@ export type MasteryEvidence = {
 export type NearTarget =
   | { kind: "crystal" | "secret"; id: string; label: string }
   | { kind: "academy"; id: "academy"; label: string }
+  | { kind: "journey"; id: "journey-board"; label: string }
   | null;
 
 export type IslaState = {

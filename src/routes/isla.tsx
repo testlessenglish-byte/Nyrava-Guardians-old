@@ -13,6 +13,7 @@ import { QUALITY, useQuality } from "@/services/game/quality";
 import { useAppActive } from "@/services/platform/lifecycle";
 import { isTypingTarget } from "@/services/game/input";
 import { resetIslaControls } from "@/lib/isla-store";
+import { GuardianJourney } from "@/components/progression/guardian-journey";
 
 export const Route = createFileRoute("/isla")({
   ssr: false,
@@ -165,6 +166,7 @@ function IslaCentral() {
       )}
       <IslaHud guardianName={guardian.name} />
       <IslaControls />
+      <GuardianJourney />
       <WorldLoading />
       <GameSettings />
     </div>

@@ -19,7 +19,7 @@ import {
   type ConversationState,
 } from "@/services/ai/conversational-voice-engine";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Shield } from "lucide-react";
 import { UI_STRINGS } from "@/data/bilingual-dictionary";
 import { Globe, Mic, MicOff, Volume2, Sparkles, X } from "lucide-react";
 import { recognitionConstructor } from "@/services/platform/device";
@@ -210,6 +210,22 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
       </details>
 
       {/* Talk prompt — the class/conversation starts ONLY when the student clicks this box (or presses E) */}
+      {state.near?.kind === "journey" && (
+        <div className="isla-talk-prompt pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2">
+          <button
+            onClick={() => {
+              islaControls.interact = true;
+            }}
+            className="flex items-center gap-2 rounded-2xl border-2 border-amber-400/70 bg-slate-950/95 px-5 py-3 text-sm font-extrabold text-amber-200 shadow-2xl backdrop-blur-xl"
+          >
+            <Shield className="h-4 w-4" />{" "}
+            {locale.startsWith("es") ? "Abrir Viaje Guardián" : "Open Guardian Journey"}
+            <span className="keyboard-hint rounded-md border border-amber-400/40 px-1.5 py-0.5 text-[10px]">
+              E
+            </span>
+          </button>
+        </div>
+      )}
       {nearGuardian && !guardianMessage && (
         <div className="isla-talk-prompt pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2">
           <button

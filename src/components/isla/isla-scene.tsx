@@ -36,6 +36,7 @@ const SWIM_LIMIT = ISLAND_RADIUS + 70;
 /** Water surface the swimmer floats at (the ocean plane bobs around y = -0.1). */
 const SWIM_Y = WATER_LEVEL - 0.55;
 const move = new THREE.Vector3();
+const JOURNEY_BOARD: [number, number] = [7, 20];
 
 function mulberry32(seed: number) {
   let a = seed;
@@ -893,6 +894,68 @@ function Pickup({
   );
 }
 
+/** A real world-space interaction point. Detailed UI opens only after approach/click. */
+function JourneyBoard() {
+  const y = terrainHeight(JOURNEY_BOARD[0], JOURNEY_BOARD[1]);
+  const glow = useRef<THREE.PointLight>(null);
+  useFrame(({ clock }) => {
+    if (glow.current) glow.current.intensity = 5 + Math.sin(clock.elapsedTime * 2) * 1.5;
+  });
+  return (
+    <group
+      position={[JOURNEY_BOARD[0], y, JOURNEY_BOARD[1]]}
+      rotation-y={-0.25}
+      onPointerUp={(event) => {
+        event.stopPropagation();
+        window.dispatchEvent(new Event("nyrava-open-journey"));
+      }}
+    >
+      <mesh position={[-2.25, 1.6, 0]} castShadow>
+        <cylinderGeometry args={[0.18, 0.28, 3.2, 8]} />
+        <meshStandardMaterial color="#a86c25" />
+      </mesh>
+      <mesh position={[2.25, 1.6, 0]} castShadow>
+        <cylinderGeometry args={[0.18, 0.28, 3.2, 8]} />
+        <meshStandardMaterial color="#a86c25" />
+      </mesh>
+      <mesh position={[0, 2.8, 0]} castShadow>
+        <boxGeometry args={[5, 2.7, 0.28]} />
+        <meshStandardMaterial
+          color="#071426"
+          emissive="#063c56"
+          emissiveIntensity={0.8}
+          metalness={0.55}
+          roughness={0.35}
+        />
+      </mesh>
+      <mesh position={[0, 2.8, 0.18]}>
+        <ringGeometry args={[0.62, 0.78, 6]} />
+        <meshStandardMaterial color="#fbbf24" emissive="#fbbf24" emissiveIntensity={1.2} />
+      </mesh>
+      <Text
+        font={worldFont}
+        position={[0, 2.8, 0.22]}
+        fontSize={0.72}
+        color="#fbbf24"
+        anchorX="center"
+        anchorY="middle"
+      >
+        N
+      </Text>
+      <Text
+        font={worldFont}
+        position={[0, 4.65, 0]}
+        fontSize={0.38}
+        color="#e0f2fe"
+        anchorX="center"
+      >
+        GUARDIAN JOURNEY
+      </Text>
+      <pointLight ref={glow} position={[0, 3, 1]} color="#22d3ee" distance={12} />
+    </group>
+  );
+}
+
 /* -------------------------------------------------------------------- player */
 
 function Player({ color, name, guardianId }: { color: string; name: string; guardianId: string }) {
@@ -1066,9 +1129,17 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
       patchIsla({ nearGuardian: stationKey });
     }
 
-    // proximity: crystals, secrets, academy door
+    // proximity: journey board, crystals, secrets, academy door
     let near: ReturnType<typeof getIsla>["near"] = null;
     let best = 6;
+    const journeyDistance = Math.hypot(
+      player.position.x - JOURNEY_BOARD[0],
+      player.position.z - JOURNEY_BOARD[1],
+    );
+    if (journeyDistance < best) {
+      best = journeyDistance;
+      near = { kind: "journey", id: "journey-board", label: "Guardian Journey Board" };
+    }
     for (const c of CRYSTALS) {
       if (snapshot.crystals.includes(c.id)) continue;
       const d = Math.hypot(player.position.x - c.position[0], player.position.z - c.position[1]);
@@ -1114,6 +1185,7 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
         if (secret) collectSecret(secret.id, secret.name, secret.note);
       }
       if (near?.kind === "academy") patchIsla({ reporting: true });
+      if (near?.kind === "journey") window.dispatchEvent(new Event("nyrava-open-journey"));
     }
 
     // ---- camera: first person (avatar's eyes) or orbiting third person
@@ -1203,6 +1275,7 @@ export function IslaScene({
       <Desert />
       <Beach />
       <SpacePort locked={isRegionLocked("spaceport")} />
+      <JourneyBoard />
 
       {CRYSTALS.map((c) => (
         <Pickup
