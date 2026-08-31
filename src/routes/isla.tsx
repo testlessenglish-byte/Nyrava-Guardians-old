@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
 import { Component, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { IslaScene } from "@/components/isla/isla-scene";
@@ -153,6 +154,15 @@ function IslaCentral() {
             shadows={quality.shadows}
             camera={{ position: [0, 26, 52], fov: 58, near: 0.1, far: 5000 }}
             dpr={quality.dpr}
+            gl={{
+              antialias: quality.dpr > 1,
+              powerPreference: "high-performance",
+            }}
+            onCreated={({ gl }) => {
+              gl.outputColorSpace = THREE.SRGBColorSpace;
+              gl.toneMapping = THREE.ACESFilmicToneMapping;
+              gl.toneMappingExposure = 1.08;
+            }}
           >
             <Suspense fallback={null}>
               <IslaScene
