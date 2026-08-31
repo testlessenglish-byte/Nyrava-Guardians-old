@@ -2,6 +2,8 @@ import { Component, useState, type ReactNode } from "react";
 import { useProgress } from "@react-three/drei";
 import { QUALITY, setQuality, useQuality, type Quality } from "@/services/game/quality";
 import { audioEngine } from "@/services/audio/audio-engine";
+import { Settings2 } from "lucide-react";
+import { toggleGamePanel } from "@/services/game/panels";
 
 export function WorldLoading() {
   const { active, progress } = useProgress();
@@ -56,9 +58,17 @@ export function GameSettings() {
     setAudio(audioEngine.getSettings());
   };
   return (
-    <details className="game-settings" onPointerDown={(e) => e.stopPropagation()}>
-      <summary>Game settings</summary>
-      <div>
+    <details
+      className="game-settings game-panel"
+      name="game-panels"
+      onToggle={(e) => toggleGamePanel(e.currentTarget)}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <summary aria-label="Game settings">
+        <Settings2 size={18} />
+        <span>Settings</span>
+      </summary>
+      <div className="game-panel-content">
         <label>
           Graphics{" "}
           <select

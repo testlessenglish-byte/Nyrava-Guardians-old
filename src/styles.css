@@ -458,3 +458,224 @@ body.gameplay-active a[href="/home"] {
     display: block;
   }
 }
+
+/* HUD drawers share one header row; information never floats over the thumb pads. */
+.isla-voice-menu {
+  position: absolute;
+  top: calc(var(--safe-top) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  color: #e0f2fe;
+}
+.game-panel > summary {
+  min-height: 44px;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #020617e8;
+  font-size: 12px;
+  font-weight: 800;
+}
+.game-settings > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.isla-voice-bar {
+  flex-wrap: wrap;
+  width: 300px;
+  max-width: calc(100vw - 24px);
+}
+.game-panel-content {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+.game-modal {
+  padding: max(8px, var(--safe-top)) max(8px, var(--safe-right)) max(8px, var(--safe-bottom))
+    max(8px, var(--safe-left));
+}
+.game-modal > .panel {
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 16px);
+  overflow-y: auto;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+@media (pointer: coarse), (max-width: 767px) {
+  .game-viewport {
+    --thumb-size: clamp(88px, 22vw, 108px);
+    --control-bottom: calc(var(--safe-bottom) + 12px);
+    --control-top: calc(var(--control-bottom) + var(--thumb-size) + 56px);
+  }
+  .mobile-game-controls {
+    height: 100dvh;
+  }
+  .leave-world {
+    left: calc(var(--safe-left) + 8px);
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  .leave-world > span {
+    display: none;
+  }
+  .isla-mission,
+  .isla-voice-menu,
+  .game-settings {
+    top: calc(var(--safe-top) + 8px);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    transform: none;
+    max-height: none;
+    overflow: visible;
+  }
+  .isla-mission {
+    left: calc(var(--safe-left) + 60px);
+    width: calc(100% - var(--safe-left) - var(--safe-right) - 188px);
+    max-width: 200px;
+  }
+  .isla-voice-menu {
+    left: auto;
+    right: calc(var(--safe-right) + 64px);
+    width: 48px;
+  }
+  .game-settings {
+    right: calc(var(--safe-right) + 8px);
+    width: 48px;
+  }
+  .game-panel > summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 4px;
+    white-space: nowrap;
+    list-style: none;
+    border: 1px solid #67e8f94d;
+  }
+  .game-panel > summary::-webkit-details-marker {
+    display: none;
+  }
+  .game-panel[open] > summary {
+    background: #164e63;
+    border-color: #67e8f9;
+  }
+  .game-settings > summary > span {
+    display: none;
+  }
+  .game-panel > .game-panel-content {
+    position: fixed;
+    top: calc(var(--safe-top) + 60px);
+    right: calc(var(--safe-right) + 8px);
+    left: calc(var(--safe-left) + 8px);
+    width: auto;
+    max-width: none;
+    max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 76px);
+    overflow-y: auto;
+    padding: 14px;
+    margin: 0;
+    border: 1px solid #67e8f94d;
+    border-radius: 14px;
+    background: #020617fa;
+    box-shadow: 0 12px 30px #0008;
+    transform: none;
+  }
+  .game-panel-content button {
+    min-height: 44px;
+  }
+  .isla-voice-bar {
+    gap: 8px;
+  }
+  .game-settings label {
+    flex-wrap: wrap;
+    min-height: 40px;
+  }
+  .game-viewport:has(.game-panel[open]) .mobile-game-controls,
+  .game-viewport:has(.game-panel[open]) .isla-talk-prompt,
+  .game-viewport:has(.game-panel[open]) .isla-conversation {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .game-left {
+    left: calc(var(--safe-left) + 12px);
+    bottom: var(--control-bottom);
+  }
+  .game-right {
+    right: calc(var(--safe-right) + 12px);
+    bottom: var(--control-bottom);
+  }
+  .game-joystick,
+  .game-look-pad {
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    background: #02061766;
+    backdrop-filter: none;
+  }
+  .game-stick {
+    width: 40%;
+    height: 40%;
+  }
+  .game-actions {
+    right: calc(var(--safe-right) + 12px);
+    bottom: calc(var(--control-bottom) + var(--thumb-size) + 8px);
+    gap: 6px;
+  }
+  .game-actions .game-action {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  .isla-talk-prompt,
+  .isla-conversation {
+    bottom: calc(var(--control-top) + 8px);
+    left: calc(var(--safe-left) + 8px);
+    right: calc(var(--safe-right) + 8px);
+    width: auto;
+    max-width: none;
+    padding: 0;
+    transform: none;
+  }
+  .isla-talk-prompt > button {
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  .isla-conversation > div {
+    max-height: min(24dvh, 160px);
+    overflow-y: auto;
+    touch-action: pan-y;
+    padding: 10px;
+    border-radius: 14px;
+  }
+  .isla-conversation p {
+    font-size: 12px;
+  }
+  .isla-conversation button {
+    min-height: 44px;
+    min-width: 44px;
+    flex-shrink: 0;
+  }
+  .keyboard-hint {
+    display: none;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-viewport {
+    --thumb-size: 88px;
+  }
+  .isla-talk-prompt,
+  .isla-conversation {
+    left: calc(var(--safe-left) + 112px);
+    right: calc(var(--safe-right) + 174px);
+    bottom: calc(var(--safe-bottom) + 12px);
+  }
+  .isla-conversation > div {
+    max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 84px);
+  }
+}

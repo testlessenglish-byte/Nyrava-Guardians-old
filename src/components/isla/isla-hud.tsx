@@ -24,6 +24,7 @@ import { UI_STRINGS } from "@/data/bilingual-dictionary";
 import { Globe, Mic, MicOff, Volume2, Sparkles, X } from "lucide-react";
 import { recognitionConstructor } from "@/services/platform/device";
 import { toast } from "sonner";
+import { toggleGamePanel } from "@/services/game/panels";
 
 const MAP = 200;
 
@@ -36,7 +37,11 @@ function MiniMap() {
   }
 
   return (
-    <svg className="h-44 w-44 rounded-3xl border border-white/20 bg-background/80 p-2 shadow-2xl backdrop-blur">
+    <svg
+      viewBox={`0 0 ${MAP} ${MAP}`}
+      aria-label="Island map"
+      className="h-44 w-44 max-w-full rounded-3xl border border-white/20 bg-background/80 p-2 shadow-2xl backdrop-blur"
+    >
       <circle
         cx={MAP / 2}
         cy={MAP / 2}
@@ -143,63 +148,70 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
   return (
     <div className="pointer-events-none fixed inset-0 z-30 select-none">
       {/* Top Header Bar: Language Switcher, Voice Status & Mute Control */}
-      <div className="isla-voice-bar pointer-events-auto absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-3 rounded-2xl border border-cyan-500/40 bg-slate-950/85 px-4 py-2 shadow-2xl backdrop-blur-md">
-        {/* Voice State Badge */}
-        <div className="flex items-center gap-2 rounded-xl bg-slate-900/90 px-3 py-1 border border-cyan-400/30">
-          <div
-            className={`h-2.5 w-2.5 rounded-full ${
-              voiceState === "SPEAKING"
-                ? "bg-cyan-400 animate-ping"
-                : voiceState === "LISTENING"
-                  ? "bg-emerald-400 animate-pulse"
-                  : voiceState === "THINKING"
-                    ? "bg-amber-400 animate-bounce"
-                    : "bg-slate-500"
+      <details
+        className="isla-voice-menu game-panel"
+        name="game-panels"
+        onToggle={(e) => toggleGamePanel(e.currentTarget)}
+      >
+        <summary aria-label="Voice and language settings">Voice</summary>
+        <div className="isla-voice-bar game-panel-content flex items-center gap-3 rounded-2xl border border-cyan-500/40 bg-slate-950/95 px-4 py-2 shadow-2xl">
+          {/* Voice State Badge */}
+          <div className="flex items-center gap-2 rounded-xl bg-slate-900/90 px-3 py-1 border border-cyan-400/30">
+            <div
+              className={`h-2.5 w-2.5 rounded-full ${
+                voiceState === "SPEAKING"
+                  ? "bg-cyan-400 animate-ping"
+                  : voiceState === "LISTENING"
+                    ? "bg-emerald-400 animate-pulse"
+                    : voiceState === "THINKING"
+                      ? "bg-amber-400 animate-bounce"
+                      : "bg-slate-500"
+              }`}
+            />
+            <span className="text-xs font-extrabold tracking-wider text-cyan-200">
+              {ui[voiceState.toLowerCase() as keyof typeof ui] || voiceState}
+            </span>
+          </div>
+
+          {/* Language Switcher Button (EN | ES) */}
+          <button
+            onClick={toggleLocale}
+            className="flex items-center gap-1.5 rounded-xl border border-cyan-400/40 bg-cyan-950/60 px-3 py-1 text-xs font-black text-cyan-100 transition hover:bg-cyan-900"
+          >
+            <Globe className="h-3.5 w-3.5 text-cyan-400" />
+            <span>{locale === "en-US" ? "EN | ES" : "ES | EN"}</span>
+          </button>
+
+          {/* Mute Microphone Button */}
+          <button
+            onClick={() => {
+              if (!recognitionConstructor()) {
+                toast.info(
+                  "Microphone is unavailable here. Read the Guardian captions; native voice is not connected yet.",
+                );
+                return;
+              }
+              setIsMuted(conversationalVoiceEngine.toggleMute());
+            }}
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1 text-xs font-extrabold transition ${
+              isMuted
+                ? "border-red-500/50 bg-red-950/70 text-red-200"
+                : "border-emerald-500/40 bg-emerald-950/60 text-emerald-200"
             }`}
-          />
-          <span className="text-xs font-extrabold tracking-wider text-cyan-200">
-            {ui[voiceState.toLowerCase() as keyof typeof ui] || voiceState}
-          </span>
+          >
+            {isMuted ? (
+              <MicOff className="h-3.5 w-3.5 text-red-400" />
+            ) : (
+              <Mic className="h-3.5 w-3.5 text-emerald-400" />
+            )}
+            <span>{isMuted ? ui["unmuteMic"] : ui["muteMic"]}</span>
+          </button>
         </div>
-
-        {/* Language Switcher Button (EN | ES) */}
-        <button
-          onClick={toggleLocale}
-          className="flex items-center gap-1.5 rounded-xl border border-cyan-400/40 bg-cyan-950/60 px-3 py-1 text-xs font-black text-cyan-100 transition hover:bg-cyan-900"
-        >
-          <Globe className="h-3.5 w-3.5 text-cyan-400" />
-          <span>{locale === "en-US" ? "EN | ES" : "ES | EN"}</span>
-        </button>
-
-        {/* Mute Microphone Button */}
-        <button
-          onClick={() => {
-            if (!recognitionConstructor()) {
-              toast.info(
-                "Microphone is unavailable here. Read the Guardian captions; native voice is not connected yet.",
-              );
-              return;
-            }
-            setIsMuted(conversationalVoiceEngine.toggleMute());
-          }}
-          className={`flex items-center gap-1.5 rounded-xl border px-3 py-1 text-xs font-extrabold transition ${
-            isMuted
-              ? "border-red-500/50 bg-red-950/70 text-red-200"
-              : "border-emerald-500/40 bg-emerald-950/60 text-emerald-200"
-          }`}
-        >
-          {isMuted ? (
-            <MicOff className="h-3.5 w-3.5 text-red-400" />
-          ) : (
-            <Mic className="h-3.5 w-3.5 text-emerald-400" />
-          )}
-          <span>{isMuted ? ui["unmuteMic"] : ui["muteMic"]}</span>
-        </button>
-      </div>
+      </details>
 
       {/* Talk prompt — the class/conversation starts ONLY when the student clicks this box (or presses E) */}
       {nearGuardian && !guardianMessage && (
-        <div className="pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2">
+        <div className="isla-talk-prompt pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2">
           <button
             onClick={() => {
               islaControls.interact = true;
@@ -208,7 +220,7 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
           >
             <MessageCircle className="h-4 w-4 text-cyan-400" />
             Talk to {nearGuardian.name} · start class
-            <span className="rounded-md border border-cyan-400/40 px-1.5 py-0.5 text-[10px] text-cyan-300">
+            <span className="keyboard-hint rounded-md border border-cyan-400/40 px-1.5 py-0.5 text-[10px] text-cyan-300">
               E
             </span>
           </button>
@@ -217,7 +229,7 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
 
       {/* Ongoing Guardian Conversational Overlay */}
       {guardianMessage && (
-        <div className="pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2 w-full max-w-xl p-4">
+        <div className="isla-conversation pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2 w-full max-w-xl p-4">
           <div className="flex flex-col gap-2 rounded-3xl border-2 border-cyan-400/60 bg-slate-950/95 p-5 shadow-2xl backdrop-blur-xl transition-all">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-cyan-300">
@@ -225,7 +237,11 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
                 <span className="text-xs font-black uppercase tracking-widest">{guardianName}</span>
               </div>
               <button
-                onClick={() => conversationalVoiceEngine.handleWalkAway()}
+                aria-label="Close Guardian conversation"
+                onClick={() => {
+                  conversationalVoiceEngine.handleWalkAway();
+                  setGuardianMessage(null);
+                }}
                 className="rounded-full p-1 text-slate-400 hover:text-white"
               >
                 <X className="h-4 w-4" />
@@ -240,64 +256,73 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
       )}
 
       {/* mission panel */}
-      <details className="isla-mission pointer-events-auto absolute left-4 top-24 w-[19rem] space-y-3 rounded-2xl border border-white/12 bg-background/75 p-4 backdrop-blur">
-        <summary>Mission · {mission.crystals}/5 crystals</summary>
-        <p className="text-xs uppercase tracking-[0.28em] text-primary">
-          Class 1 · Discover Isla Central
-        </p>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="font-semibold text-foreground">Crystals {mission.crystals}/5</span>
-          <span className="text-muted-foreground">Challenges {mission.challenges}/3</span>
-        </div>
-        {target ? (
-          <>
-            <p className="text-sm text-muted-foreground">
-              <span className="text-foreground">{guardianName}:</span> “{target.clue}”
-            </p>
-            {hintLevel > 0 && (
-              <ul className="space-y-1 text-xs text-primary">
-                {target.hints.slice(0, hintLevel).map((h, i) => (
-                  <li key={h}>
-                    Hint {i + 1}: {h}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <button
-              disabled={hintLevel >= 3}
-              onClick={() => requestHint(target.id)}
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-xs hover:border-primary disabled:opacity-40"
-            >
-              {hintLevel >= 3
-                ? "No more hints — you've got this"
-                : `Ask ${guardianName} for a hint (${hintLevel}/3)`}
-            </button>
-          </>
-        ) : (
-          <p className="text-sm text-primary">
-            All 5 crystals found. Walk back to the Nyrava Academy doors and report to {guardianName}
-            .
+      <details
+        className="isla-mission game-panel pointer-events-auto absolute left-4 top-24 w-[19rem] rounded-2xl border border-white/12 bg-background/75 p-4"
+        name="game-panels"
+        onToggle={(e) => toggleGamePanel(e.currentTarget)}
+      >
+        <summary>Mission · {mission.crystals}/5</summary>
+        <div className="game-panel-content space-y-3">
+          <p className="text-xs uppercase tracking-[0.28em] text-primary">
+            Class 1 · Discover Isla Central
           </p>
-        )}
-        <div className="flex gap-2 text-xs">
-          <button
-            onClick={() => setMapOpen((v) => !v)}
-            className="rounded-lg border border-white/15 px-2 py-1"
-          >
-            Map
-          </button>
-          <button
-            onClick={() => setLogOpen((v) => !v)}
-            className="rounded-lg border border-white/15 px-2 py-1"
-          >
-            Discoveries ({state.crystals.length + state.secrets.length})
-          </button>
-          <span className="ml-auto self-center text-primary">{state.xp} XP</span>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="font-semibold text-foreground">Crystals {mission.crystals}/5</span>
+            <span className="text-muted-foreground">Challenges {mission.challenges}/3</span>
+          </div>
+          {target ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                <span className="text-foreground">{guardianName}:</span> “{target.clue}”
+              </p>
+              {hintLevel > 0 && (
+                <ul className="space-y-1 text-xs text-primary">
+                  {target.hints.slice(0, hintLevel).map((h, i) => (
+                    <li key={h}>
+                      Hint {i + 1}: {h}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <button
+                disabled={hintLevel >= 3}
+                onClick={() => requestHint(target.id)}
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-xs hover:border-primary disabled:opacity-40"
+              >
+                {hintLevel >= 3
+                  ? "No more hints — you've got this"
+                  : `Ask ${guardianName} for a hint (${hintLevel}/3)`}
+              </button>
+            </>
+          ) : (
+            <p className="text-sm text-primary">
+              All 5 crystals found. Walk back to the Nyrava Academy doors and report to{" "}
+              {guardianName}.
+            </p>
+          )}
+          <div className="flex gap-2 text-xs">
+            <button
+              onClick={() => setMapOpen((v) => !v)}
+              className="rounded-lg border border-white/15 px-2 py-1"
+            >
+              Map
+            </button>
+            <button
+              onClick={() => setLogOpen((v) => !v)}
+              className="rounded-lg border border-white/15 px-2 py-1"
+            >
+              Discoveries ({state.crystals.length + state.secrets.length})
+            </button>
+            <span className="ml-auto self-center text-primary">{state.xp} XP</span>
+          </div>
+          {mapOpen && <MiniMap />}
+          {logOpen && (
+            <p className="text-sm">
+              {state.crystals.length} crystals and {state.secrets.length} secrets discovered.
+            </p>
+          )}
         </div>
       </details>
-
-      {/* map */}
-      {mapOpen && <div className="pointer-events-auto absolute right-4 top-24">{<MiniMap />}</div>}
 
       {/* crystal challenge */}
       {challengeCrystal?.challenge && (
@@ -338,7 +363,7 @@ function ChallengePanel({
   }
 
   return (
-    <div className="pointer-events-auto fixed inset-0 z-40 grid place-items-center bg-background/80 p-6 backdrop-blur">
+    <div className="game-modal pointer-events-auto fixed inset-0 z-40 grid place-items-center bg-background/80 p-6 backdrop-blur">
       <div className="panel w-full max-w-lg space-y-4 p-6">
         <p className="text-xs uppercase tracking-[0.3em] text-primary">
           {challenge.kind} challenge
@@ -373,7 +398,7 @@ function ReportPanel({ guardianName }: { guardianName: string }) {
   const ready = state.crystals.length === 5;
 
   return (
-    <div className="pointer-events-auto fixed inset-0 z-40 grid place-items-center bg-background/80 p-6 backdrop-blur">
+    <div className="game-modal pointer-events-auto fixed inset-0 z-40 grid place-items-center bg-background/80 p-6 backdrop-blur">
       <div className="panel w-full max-w-lg space-y-4 p-6">
         <p className="text-xs uppercase tracking-[0.3em] text-primary">
           Nyrava Academy · Mission report

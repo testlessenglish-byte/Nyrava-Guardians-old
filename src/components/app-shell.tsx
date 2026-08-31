@@ -58,10 +58,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         {children}
         <Link
           to="/home"
+          aria-label="Leave world"
           className="leave-world fixed left-3 top-3 z-[60] flex min-h-10 items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 text-xs font-bold backdrop-blur transition hover:bg-background"
         >
           <img src={logo} alt="Nyrava Guardians" className="h-4 w-4" />
-          Leave world
+          <span>Leave world</span>
         </Link>
       </div>
     );

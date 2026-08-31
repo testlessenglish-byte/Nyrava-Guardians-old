@@ -123,7 +123,6 @@ export function IslaControls() {
             Jump
           </button>
         </div>
-        <p className="portrait-hint">Rotate for more room · landscape recommended</p>
       </div>
       <div
         className="desktop-game-controls pointer-events-none fixed inset-0 z-40"
