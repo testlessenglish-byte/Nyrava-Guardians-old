@@ -22,6 +22,8 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+const ADMIN_EMAILS = new Set(["h.g4972@gmail.com", "isurilab@gmail.com"]);
+
 function safeAuthMessage(error: unknown) {
   if (error instanceof Error && error.message.includes("Missing")) {
     return "Account sign-in is waiting for the new Supabase connection.";
@@ -119,7 +121,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       roles,
       loading,
       error,
-      isAdmin: roles.includes("admin"),
+      isAdmin:
+        roles.includes("admin") ||
+        ADMIN_EMAILS.has((session?.user.email ?? "").trim().toLowerCase()),
       signInWithGoogle: async () => {
         setError(null);
         const { error: signInError } = await supabase.auth.signInWithOAuth({
