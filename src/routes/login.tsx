@@ -1,14 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Chrome, Loader2, ShieldCheck } from "lucide-react";
+import { Chrome, Loader2, Mail, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
 function LoginPage() {
-  const { user, loading, error, signInWithGoogle } = useAuth();
+  const { user, loading, error, signInWithEmail, signUpWithEmail } = useAuth();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [createAccount, setCreateAccount] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,25 +29,92 @@ function LoginPage() {
           Sign in to protect your profile, save progress and access approved Guardian tools.
         </p>
 
-        <button
-          type="button"
-          disabled={loading || busy}
-          onClick={() => {
+        <form
+          className="mt-6 space-y-3 text-left"
+          onSubmit={(event) => {
+            event.preventDefault();
             setBusy(true);
             setMessage(null);
-            void signInWithGoogle().catch((signInError) => {
-              setBusy(false);
-              setMessage(
-                signInError instanceof Error
-                  ? signInError.message
-                  : "Google sign-in could not start.",
-              );
-            });
+            const action = createAccount
+              ? signUpWithEmail(email, password).then((needsConfirmation) => {
+                  if (needsConfirmation) {
+                    setMessage("Check your email to confirm the account, then return here to sign in.");
+                    setCreateAccount(false);
+                  }
+                })
+              : signInWithEmail(email, password);
+            void action
+              .catch((signInError) => {
+                setMessage(
+                  signInError instanceof Error
+                    ? signInError.message
+                    : "Account sign-in could not be completed.",
+                );
+              })
+              .finally(() => setBusy(false));
           }}
-          className="mt-6 flex w-full items-center justify-center gap-3 rounded-2xl border border-border bg-white px-5 py-3 text-sm font-extrabold text-slate-900 transition hover:bg-slate-100 disabled:opacity-50"
         >
-          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Chrome className="h-5 w-5" />}
-          Continue with Google
+          <label className="block text-xs font-extrabold text-muted-foreground" htmlFor="guardian-email">
+            Email
+          </label>
+          <input
+            id="guardian-email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground"
+            placeholder="guardian@example.com"
+          />
+          <label className="block text-xs font-extrabold text-muted-foreground" htmlFor="guardian-password">
+            Password
+          </label>
+          <input
+            id="guardian-password"
+            type="password"
+            autoComplete={createAccount ? "new-password" : "current-password"}
+            required
+            minLength={8}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground"
+            placeholder="At least 8 characters"
+          />
+          <button
+            type="submit"
+            disabled={loading || busy}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Mail className="h-5 w-5" />}
+            {createAccount ? "Create testing account" : "Sign in with email"}
+          </button>
+        </form>
+
+        <button
+          type="button"
+          className="mt-3 text-xs font-bold text-primary"
+          onClick={() => {
+            setCreateAccount((current) => !current);
+            setMessage(null);
+          }}
+        >
+          {createAccount ? "I already have an account" : "Create an account for testing"}
+        </button>
+
+        <div className="my-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          Google later
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <button
+          type="button"
+          disabled
+          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-border bg-white px-5 py-3 text-sm font-extrabold text-slate-900 transition hover:bg-slate-100 disabled:opacity-50"
+        >
+          <Chrome className="h-5 w-5" />
+          Google sign-in after testing
         </button>
 
         {(message || error) && (

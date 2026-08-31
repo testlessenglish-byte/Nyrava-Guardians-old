@@ -16,6 +16,8 @@ type AuthState = {
   error: string | null;
   isAdmin: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   updateProfile: (profile: Profile) => Promise<void>;
 };
@@ -134,6 +136,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
         if (signInError) throw signInError;
+      },
+      signInWithEmail: async (email, password) => {
+        setError(null);
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
+        if (signInError) throw signInError;
+      },
+      signUpWithEmail: async (email, password) => {
+        setError(null);
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: email.trim().toLowerCase(),
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/account` },
+        });
+        if (signUpError) throw signUpError;
+        return !data.session;
       },
       signOut: async () => {
         const { error: signOutError } = await supabase.auth.signOut();
