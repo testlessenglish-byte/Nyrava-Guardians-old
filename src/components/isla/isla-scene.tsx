@@ -37,6 +37,7 @@ const SWIM_LIMIT = ISLAND_RADIUS + 70;
 const SWIM_Y = WATER_LEVEL - 0.55;
 const move = new THREE.Vector3();
 const JOURNEY_BOARD: [number, number] = [7, 20];
+const PLAYER_SPAWN: [number, number] = [0, 12 * S];
 
 function mulberry32(seed: number) {
   let a = seed;
@@ -115,23 +116,33 @@ function Terrain() {
 }
 
 function Ocean() {
-  const ref = useRef<THREE.Mesh>(null);
+  const ref = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
-    if (ref.current) ref.current.position.y = Math.sin(clock.elapsedTime * 0.5) * 0.12 - 0.1;
+    if (!ref.current) return;
+    ref.current.position.y = Math.sin(clock.elapsedTime * 0.5) * 0.12 - 0.1;
+    ref.current.rotation.y = clock.elapsedTime * 0.002;
   });
   return (
-    <mesh ref={ref} rotation-x={-Math.PI / 2} position-y={-0.1}>
-      <circleGeometry args={[1400, 72]} />
-      <meshStandardMaterial
-        color="#0e7490"
-        transparent
-        opacity={0.86}
-        roughness={0.15}
-        metalness={0.4}
-        emissive="#0b3f57"
-        emissiveIntensity={0.35}
-      />
-    </mesh>
+    <group ref={ref} position-y={-0.1}>
+      <mesh rotation-x={-Math.PI / 2}>
+        <circleGeometry args={[1400, 96]} />
+        <meshStandardMaterial
+          color="#087fa2"
+          transparent
+          opacity={0.9}
+          roughness={0.16}
+          metalness={0.28}
+          emissive="#063e58"
+          emissiveIntensity={0.45}
+        />
+      </mesh>
+      {[190, 280, 390].map((radius, index) => (
+        <mesh key={radius} rotation-x={-Math.PI / 2} position-y={0.035 + index * 0.012}>
+          <ringGeometry args={[radius, radius + 1.4, 96]} />
+          <meshBasicMaterial color="#7dd3fc" transparent opacity={0.18 - index * 0.035} />
+        </mesh>
+      ))}
+    </group>
   );
 }
 
@@ -614,7 +625,13 @@ function GuardianBuilding({
       {/* Metallic pedestal base */}
       <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
         <cylinderGeometry args={[3.2, 3.6, 0.8, 16]} />
-        <meshStandardMaterial color="#0f172a" metalness={0.8} roughness={0.2} />
+        <meshStandardMaterial
+          color="#2d78a6"
+          emissive="#0c4a6e"
+          emissiveIntensity={0.16}
+          metalness={0.2}
+          roughness={0.3}
+        />
       </mesh>
 
       {/* Glowing neon accent ring at base */}
@@ -631,7 +648,13 @@ function GuardianBuilding({
       {/* Main sleek eco-structure body */}
       <mesh position={[0, 3.2, 0]} castShadow receiveShadow>
         <cylinderGeometry args={[2.4, 3.0, 4.8, 16]} />
-        <meshStandardMaterial color="#1e293b" metalness={0.6} roughness={0.3} />
+        <meshStandardMaterial
+          color="#4b9bc0"
+          emissive="#075985"
+          emissiveIntensity={0.14}
+          metalness={0.16}
+          roughness={0.32}
+        />
       </mesh>
 
       {/* Futuristic Glass Dome Roof */}
@@ -660,6 +683,41 @@ function GuardianBuilding({
         />
       </mesh>
 
+      {/* Layered balconies and luminous ribs make the skyline readable from a distance. */}
+      {[1.7, 4.65].map((height, band) => (
+        <mesh key={height} position={[0, height, 0]} rotation-x={Math.PI / 2}>
+          <torusGeometry args={[2.7 - band * 0.18, 0.13, 8, 32]} />
+          <meshStandardMaterial
+            color={band === 0 ? "#f8fafc" : accentColor}
+            emissive={accentColor}
+            emissiveIntensity={band === 0 ? 0.45 : 1.25}
+            metalness={0.7}
+            roughness={0.18}
+          />
+        </mesh>
+      ))}
+      {Array.from({ length: 6 }, (_, index) => {
+        const angle = (index / 6) * Math.PI * 2;
+        return (
+          <mesh
+            key={angle}
+            position={[Math.sin(angle) * 2.72, 3.1, Math.cos(angle) * 2.72]}
+            rotation-y={angle}
+          >
+            <boxGeometry args={[0.14, 3.7, 0.16]} />
+            <meshBasicMaterial color={accentColor} toneMapped={false} />
+          </mesh>
+        );
+      })}
+
+      {/* Roof gardens connect the tech towers to the lush reference world. */}
+      {[-1, 0, 1].map((offset) => (
+        <mesh key={offset} position={[offset * 0.85, 5.8, 0.2]} castShadow>
+          <icosahedronGeometry args={[0.48 + (offset === 0 ? 0.12 : 0), 1]} />
+          <meshStandardMaterial color="#34d399" roughness={0.82} />
+        </mesh>
+      ))}
+
       {/* Spire / Antenna */}
       <mesh position={[0, 7.5, 0]} castShadow>
         <cylinderGeometry args={[0.08, 0.2, 3.2, 8]} />
@@ -678,19 +736,98 @@ function GuardianBuilding({
   );
 }
 
+function CityTransit() {
+  const shuttles = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => {
+    if (shuttles.current) shuttles.current.rotation.y = clock.elapsedTime * 0.1;
+  });
+  const radius = 14.2 * S;
+  const railHeight = 9;
+  return (
+    <group position-y={2.26 * S * 0.8}>
+      <mesh rotation-x={Math.PI / 2} position-y={railHeight}>
+        <torusGeometry args={[radius, 0.12, 6, 96]} />
+        <meshStandardMaterial
+          color="#67e8f9"
+          emissive="#06b6d4"
+          emissiveIntensity={1.1}
+          transparent
+          opacity={0.72}
+          toneMapped={false}
+        />
+      </mesh>
+      <mesh rotation-x={Math.PI / 2} position-y={railHeight + 0.04}>
+        <torusGeometry args={[radius + 0.34, 0.055, 5, 96]} />
+        <meshBasicMaterial color="#fde68a" transparent opacity={0.8} toneMapped={false} />
+      </mesh>
+      <group ref={shuttles} position-y={railHeight}>
+        {[0, 1, 2].map((index) => {
+          const angle = (index / 3) * Math.PI * 2;
+          return (
+            <group
+              key={index}
+              position={[Math.sin(angle) * radius, 0, Math.cos(angle) * radius]}
+              rotation-y={angle}
+            >
+              <mesh castShadow>
+                <capsuleGeometry args={[0.6, 2.4, 6, 12]} />
+                <meshStandardMaterial
+                  color="#e0f2fe"
+                  emissive="#0ea5e9"
+                  emissiveIntensity={0.5}
+                  metalness={0.48}
+                  roughness={0.18}
+                />
+              </mesh>
+              <pointLight color="#22d3ee" intensity={2.5} distance={7} />
+            </group>
+          );
+        })}
+      </group>
+    </group>
+  );
+}
+
+function CityGardens() {
+  const trees = useMemo<Instance[]>(() => {
+    const result: Instance[] = [];
+    for (let index = 0; index < 44; index++) {
+      const angle = (index / 44) * Math.PI * 2;
+      const radius = (11.6 + (index % 2) * 1.55) * S;
+      const x = Math.sin(angle) * radius;
+      const z = Math.cos(angle) * radius;
+      if (z > 0 && Math.abs(x) < 4.5) continue;
+      result.push({ p: [x, 2.26 * S * 0.8, z], s: 0.7 + (index % 4) * 0.08, r: angle });
+    }
+    return result;
+  }, []);
+  return (
+    <>
+      <Instanced items={trees} color="#7c4a22" yOffset={1.15}>
+        <cylinderGeometry args={[0.15, 0.24, 2.3, 6]} />
+      </Instanced>
+      <Instanced items={trees} color="#22c55e" yOffset={2.45}>
+        <icosahedronGeometry args={[1.05, 1]} />
+      </Instanced>
+    </>
+  );
+}
+
 function CentralCity() {
+  const { scatter } = QUALITY[useQuality()];
   const towers = useMemo<Instance[]>(() => {
     const rand = mulberry32(99);
     const out: Instance[] = [];
-    for (let i = 0; i < 28; i++) {
-      const a = (i / 28) * Math.PI * 2 + rand() * 0.35;
+    const total = Math.round(18 + scatter * 10);
+    for (let i = 0; i < total; i++) {
+      const a = (i / total) * Math.PI * 2 + rand() * 0.35;
       const d = (16 + rand() * 8) * S;
       const x = Math.cos(a) * d;
       const z = Math.sin(a) * d;
       out.push({ p: [x, terrainHeight(x, z), z], s: 0.85 + rand() * 1.3, r: rand() * 3 });
     }
     return out;
-  }, []);
+  }, [scatter]);
 
   return (
     <>
@@ -704,12 +841,37 @@ function CentralCity() {
           variant={i}
         />
       ))}
+      <CityTransit />
+      <CityGardens />
 
       {/* Guardian Main Plaza */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 2.26 * S * 0.8, 0]} receiveShadow>
         <circleGeometry args={[11 * S, 64]} />
-        <meshStandardMaterial color="#0f172a" roughness={0.4} metalness={0.7} />
+        <meshStandardMaterial
+          color="#0b4f6c"
+          emissive="#082f49"
+          emissiveIntensity={0.14}
+          roughness={0.42}
+          metalness={0.12}
+        />
       </mesh>
+
+      {/* Radial pedestrian avenues break up the plaza and guide the player visually. */}
+      {Array.from({ length: 8 }, (_, index) => {
+        const angle = (index / 8) * Math.PI * 2;
+        return (
+          <group key={angle} rotation-y={angle} position-y={2.26 * S * 0.8 + 0.04}>
+            <mesh position={[0, 0, 16]} rotation-x={-Math.PI / 2} receiveShadow>
+              <planeGeometry args={[3.4, 32]} />
+              <meshStandardMaterial color="#d6e5ec" roughness={0.46} metalness={0.18} />
+            </mesh>
+            <mesh position={[0, 0.035, 16]} rotation-x={-Math.PI / 2}>
+              <planeGeometry args={[0.13, 31]} />
+              <meshBasicMaterial color="#22d3ee" toneMapped={false} />
+            </mesh>
+          </group>
+        );
+      })}
 
       {/* Plaza Glowing Neon Energy Rings */}
       {[5, 8, 10.4].map((r, idx) => (
@@ -724,18 +886,65 @@ function CentralCity() {
         </mesh>
       ))}
 
+      {/* Living terraces soften the central command tower. */}
+      {[3.2, 6.8].map((radius, index) => (
+        <group key={radius} position-y={2.26 * S * 0.8 + 0.16 + index * 0.08}>
+          <mesh rotation-x={-Math.PI / 2} receiveShadow>
+            <ringGeometry args={[radius * S - 1.25, radius * S, 64]} />
+            <meshStandardMaterial color={index ? "#2f855a" : "#3aa76d"} roughness={0.86} />
+          </mesh>
+          <mesh rotation-x={-Math.PI / 2} position-y={0.035}>
+            <ringGeometry args={[radius * S - 0.12, radius * S + 0.05, 64]} />
+            <meshBasicMaterial color="#a7f3d0" transparent opacity={0.75} />
+          </mesh>
+        </group>
+      ))}
+
       {/* Nyrava Command Center — Central Sci-Fi Hyper-Tower */}
       <group position={[0, 2.26 * S * 0.8, 0]}>
         {/* Tier 1 Base */}
-        <mesh position={[0, 4, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[6, 8, 8, 16]} />
-          <meshStandardMaterial color="#0f172a" metalness={0.8} roughness={0.2} />
+        <mesh position={[0, 3.5, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[5.2, 6.8, 7, 16]} />
+          <meshStandardMaterial
+            color="#256f9d"
+            emissive="#0c4a6e"
+            emissiveIntensity={0.2}
+            metalness={0.18}
+            roughness={0.3}
+          />
         </mesh>
+
+        {/* The shield portal gives the city an unmistakable Nyrava front door. */}
+        <mesh position={[0, 3.6, 6.45]}>
+          <torusGeometry args={[2.15, 0.2, 10, 48]} />
+          <meshStandardMaterial
+            color="#fbbf24"
+            emissive="#f59e0b"
+            emissiveIntensity={1.2}
+            toneMapped={false}
+          />
+        </mesh>
+        <Text
+          font={worldFont}
+          position={[0, 3.6, 6.7]}
+          fontSize={2.7}
+          color="#fde68a"
+          anchorX="center"
+          anchorY="middle"
+        >
+          N
+        </Text>
 
         {/* Tier 2 Tower Body */}
         <mesh position={[0, 15, 0]} castShadow receiveShadow>
           <cylinderGeometry args={[3.2, 4.8, 16, 16]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.2} />
+          <meshStandardMaterial
+            color="#4b9fc4"
+            emissive="#075985"
+            emissiveIntensity={0.18}
+            metalness={0.14}
+            roughness={0.28}
+          />
         </mesh>
 
         {/* Glowing Central Energy Core */}
@@ -761,6 +970,27 @@ function CentralCity() {
             toneMapped={false}
           />
         </mesh>
+
+        {[0, 1, 2, 3].map((index) => {
+          const angle = (index / 4) * Math.PI * 2;
+          return (
+            <mesh
+              key={index}
+              position={[Math.sin(angle) * 4.45, 14, Math.cos(angle) * 4.45]}
+              rotation-y={angle}
+              castShadow
+            >
+              <boxGeometry args={[1.15, 13, 0.32]} />
+              <meshStandardMaterial
+                color="#dbeafe"
+                emissive="#38bdf8"
+                emissiveIntensity={0.4}
+                metalness={0.7}
+                roughness={0.2}
+              />
+            </mesh>
+          );
+        })}
 
         {/* Floating Top Energy Crest ('N') */}
         <mesh position={[0, 26, 0]} castShadow>
@@ -979,8 +1209,7 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
 
   useEffect(() => {
     if (group.current) {
-      const sx = 0;
-      const sz = 12 * S;
+      const [sx, sz] = PLAYER_SPAWN;
       group.current.position.set(sx, terrainHeight(sx, sz), sz);
       islaControls.player.x = sx;
       islaControls.player.z = sz;
@@ -1254,6 +1483,7 @@ export function IslaScene({
       <hemisphereLight args={["#cfe9ff", "#3b4a3f", 0.85]} />
       <directionalLight
         position={[140, 210, 90]}
+        color="#fff5d6"
         intensity={2.1}
         castShadow
         shadow-mapSize-width={quality.shadowSize}
@@ -1264,6 +1494,8 @@ export function IslaScene({
         shadow-camera-bottom={-240}
         shadow-camera-far={700}
       />
+      <directionalLight position={[-120, 85, -90]} color="#67e8f9" intensity={0.38} />
+      <pointLight position={[0, 36, 0]} color="#38bdf8" intensity={7} distance={82} />
       <Terrain />
       <Ocean />
       <Sky />
