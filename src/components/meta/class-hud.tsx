@@ -88,11 +88,11 @@ export function ClassHud() {
       setClassState({ thinking: false, speaking: active.id });
 
       if (voiceEnabled) {
-        const { audio: base64 } = await speak({
+        const { audio: base64, mimeType } = await speak({
           data: { text: reply.slice(0, 600), voice: active.voice },
         });
         if (requestSession !== session.current) return;
-        await audioEngine.playSpeech(base64, () => setClassState({ speaking: null }));
+        await audioEngine.playSpeech(base64, () => setClassState({ speaking: null }), mimeType);
       } else {
         setTimeout(() => setClassState({ speaking: null }), 3500);
       }
@@ -186,7 +186,11 @@ export function ClassHud() {
             size="icon"
             variant="ghost"
             aria-label={voiceEnabled ? "Mute guardian voice" : "Unmute guardian voice"}
-            onClick={() => setClassState({ voiceEnabled: !voiceEnabled })}
+            onClick={() => {
+              const nextVoiceEnabled = !voiceEnabled;
+              if (!nextVoiceEnabled) audioEngine.stopSpeech();
+              setClassState({ voiceEnabled: nextVoiceEnabled, speaking: null });
+            }}
           >
             {voiceEnabled ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
           </Button>

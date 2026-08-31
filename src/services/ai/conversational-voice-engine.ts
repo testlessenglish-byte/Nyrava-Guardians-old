@@ -131,10 +131,14 @@ class ConversationalVoiceEngine {
 
   /** Explicit user gesture required before any mic or speech starts. */
   public enableVoice() {
-    if (!this.recognition || !confirmVoicePurpose()) return true;
+    // Voice playback must still work on browsers (including many Android WebViews)
+    // that do not expose SpeechRecognition. Microphone consent is only needed when
+    // recognition is actually available.
+    if (this.recognition && !confirmVoicePurpose()) return this.isMuted;
     this.enabled = true;
     this.isMuted = false;
-    this.startListening();
+    if (this.recognition) this.startListening();
+    else this.setState("IDLE");
     return this.isMuted;
   }
 
@@ -236,6 +240,7 @@ class ConversationalVoiceEngine {
   }
 
   public stopSpeaking() {
+    audioEngine.stopSpeech();
     if (typeof window !== "undefined" && window.speechSynthesis) {
       try {
         window.speechSynthesis.cancel();

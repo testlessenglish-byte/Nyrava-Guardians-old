@@ -182,16 +182,19 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
             <span>{locale === "en-US" ? "EN | ES" : "ES | EN"}</span>
           </button>
 
-          {/* Mute Microphone Button */}
+          {/* Guardian voice mute. Microphone support is optional. */}
           <button
+            type="button"
+            aria-label={isMuted ? "Turn Guardian voice on" : "Mute Guardian voice"}
+            aria-pressed={isMuted}
             onClick={() => {
-              if (!recognitionConstructor()) {
+              const muted = conversationalVoiceEngine.toggleMute();
+              setIsMuted(muted);
+              if (!muted && !recognitionConstructor()) {
                 toast.info(
-                  "Microphone is unavailable here. Read the Guardian captions; native voice is not connected yet.",
+                  "Guardian voice is on. Microphone input is unavailable on this device, so you can use captions and text.",
                 );
-                return;
               }
-              setIsMuted(conversationalVoiceEngine.toggleMute());
             }}
             className={`flex items-center gap-1.5 rounded-xl border px-3 py-1 text-xs font-extrabold transition ${
               isMuted
@@ -204,7 +207,7 @@ export function IslaHud({ guardianName }: { guardianName: string }) {
             ) : (
               <Mic className="h-3.5 w-3.5 text-emerald-400" />
             )}
-            <span>{isMuted ? ui["unmuteMic"] : ui["muteMic"]}</span>
+            <span>{isMuted ? "Voice on" : "Mute voice"}</span>
           </button>
         </div>
       </details>

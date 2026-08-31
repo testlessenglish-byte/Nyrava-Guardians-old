@@ -208,10 +208,10 @@ class AudioEngine {
     this.setWorldZone(this.currentZone);
   }
 
-  public async playSpeech(base64: string, onEnded: () => void) {
+  public async playSpeech(base64: string, onEnded: () => void, mimeType = "audio/mpeg") {
     if (this.paused) return;
     this.stopSpeech();
-    const player = new Audio(`data:audio/mpeg;base64,${base64}`);
+    const player = new Audio(`data:${mimeType};base64,${base64}`);
     this.speechAudio = player;
     player.volume = this.settings.masterVolume * this.settings.voiceVolume;
     this.startDucking();
