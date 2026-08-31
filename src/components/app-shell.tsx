@@ -5,6 +5,7 @@ import logo from "@/assets/guardians/logo.png";
 import { useGuardian } from "@/lib/guardian-context";
 import { GUARDIAN_IMAGES, GUARDIANS } from "@/data/guardians";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth-context";
 
 const NAV = [
   { to: "/home", label: "My Home", icon: Home },
@@ -19,6 +20,28 @@ const NAV = [
 
 function GuardianChip() {
   const { guardianId, xp } = useGuardian();
+  const { user, profile, loading } = useAuth();
+  if (!loading && !user) {
+    return (
+      <Link
+        to="/login"
+        className="flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary/20"
+      >
+        <Users className="h-3.5 w-3.5" /> Sign in
+      </Link>
+    );
+  }
+  if (user) {
+    return (
+      <Link
+        to="/account"
+        className="flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1.5 text-xs font-bold transition hover:border-primary"
+      >
+        <Users className="h-3.5 w-3.5 text-primary" />{" "}
+        {profile?.display_name || user.email?.split("@")[0] || "Account"}
+      </Link>
+    );
+  }
   if (!guardianId) {
     return (
       <Link

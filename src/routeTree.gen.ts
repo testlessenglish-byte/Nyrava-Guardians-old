@@ -11,11 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AcademyRouteImport } from './routes/academy'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as BuilderRouteImport } from './routes/builder'
 import { Route as ClassroomRouteImport } from './routes/classroom'
 import { Route as CoreRouteImport } from './routes/core'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as IslaRouteImport } from './routes/isla'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as PersonalizeRouteImport } from './routes/personalize'
 import { Route as WorldRouteImport } from './routes/world'
@@ -28,6 +31,16 @@ const IndexRoute = IndexRouteImport.update({
 const AcademyRoute = AcademyRouteImport.update({
   id: '/academy',
   path: '/academy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BuilderRoute = BuilderRouteImport.update({
@@ -55,6 +68,11 @@ const IslaRoute = IslaRouteImport.update({
   path: '/isla',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MissionsRoute = MissionsRouteImport.update({
   id: '/missions',
   path: '/missions',
@@ -74,11 +92,14 @@ const WorldRoute = WorldRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
+  '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/builder': typeof BuilderRoute
   '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/isla': typeof IslaRoute
+  '/login': typeof LoginRoute
   '/missions': typeof MissionsRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
@@ -86,11 +107,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
+  '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/builder': typeof BuilderRoute
   '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/isla': typeof IslaRoute
+  '/login': typeof LoginRoute
   '/missions': typeof MissionsRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
@@ -99,11 +123,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/academy': typeof AcademyRoute
+  '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/builder': typeof BuilderRoute
   '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
   '/isla': typeof IslaRoute
+  '/login': typeof LoginRoute
   '/missions': typeof MissionsRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
@@ -113,11 +140,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/academy'
+    | '/account'
+    | '/admin'
     | '/builder'
     | '/classroom'
     | '/core'
     | '/home'
     | '/isla'
+    | '/login'
     | '/missions'
     | '/personalize'
     | '/world'
@@ -125,11 +155,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/academy'
+    | '/account'
+    | '/admin'
     | '/builder'
     | '/classroom'
     | '/core'
     | '/home'
     | '/isla'
+    | '/login'
     | '/missions'
     | '/personalize'
     | '/world'
@@ -137,11 +170,14 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/academy'
+    | '/account'
+    | '/admin'
     | '/builder'
     | '/classroom'
     | '/core'
     | '/home'
     | '/isla'
+    | '/login'
     | '/missions'
     | '/personalize'
     | '/world'
@@ -150,11 +186,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcademyRoute: typeof AcademyRoute
+  AccountRoute: typeof AccountRoute
+  AdminRoute: typeof AdminRoute
   BuilderRoute: typeof BuilderRoute
   ClassroomRoute: typeof ClassroomRoute
   CoreRoute: typeof CoreRoute
   HomeRoute: typeof HomeRoute
   IslaRoute: typeof IslaRoute
+  LoginRoute: typeof LoginRoute
   MissionsRoute: typeof MissionsRoute
   PersonalizeRoute: typeof PersonalizeRoute
   WorldRoute: typeof WorldRoute
@@ -174,6 +213,20 @@ declare module '@tanstack/react-router' {
       path: '/academy'
       fullPath: '/academy'
       preLoaderRoute: typeof AcademyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/builder': {
@@ -211,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IslaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/missions': {
       id: '/missions'
       path: '/missions'
@@ -238,11 +298,14 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcademyRoute: AcademyRoute,
+  AccountRoute: AccountRoute,
+  AdminRoute: AdminRoute,
   BuilderRoute: BuilderRoute,
   ClassroomRoute: ClassroomRoute,
   CoreRoute: CoreRoute,
   HomeRoute: HomeRoute,
   IslaRoute: IslaRoute,
+  LoginRoute: LoginRoute,
   MissionsRoute: MissionsRoute,
   PersonalizeRoute: PersonalizeRoute,
   WorldRoute: WorldRoute,

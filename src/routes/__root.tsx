@@ -22,6 +22,7 @@ import { GuardianProvider } from "@/lib/guardian-context";
 import { AppShell } from "@/components/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 import { PlatformRuntime } from "@/components/game/platform-runtime";
+import { AuthProvider } from "@/lib/auth-context";
 
 function NotFoundComponent() {
   return (
@@ -136,13 +137,15 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <PlatformRuntime />
-      <GuardianProvider>
-        <AppShell>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-        </AppShell>
-        <Toaster />
-      </GuardianProvider>
+      <AuthProvider>
+        <GuardianProvider>
+          <AppShell>
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+          </AppShell>
+          <Toaster />
+        </GuardianProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
