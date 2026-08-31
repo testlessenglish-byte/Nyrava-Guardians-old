@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 import { brokeredPreviewStorage } from "./previewAuthStorage";
 import { publicSupabaseConfig } from "./config";
+import { Capacitor } from "@capacitor/core";
 
 function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
@@ -47,7 +48,8 @@ function createSupabaseClient() {
     },
     auth: {
       storage: brokeredPreviewStorage(),
-      persistSession: true,
+      // Native durable auth awaits a reviewed Keychain/Keystore adapter.
+      persistSession: !Capacitor.isNativePlatform(),
       autoRefreshToken: true,
     },
   });

@@ -10,17 +10,13 @@ import { guardianChat, guardianSpeak } from "@/lib/classroom.functions";
 import { useGuardian } from "@/lib/guardian-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-type SpeechRecognitionLike = {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  start: () => void;
-  stop: () => void;
-  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-  onend: (() => void) | null;
-  onerror: (() => void) | null;
-};
+import {
+  recognitionConstructor,
+  confirmVoicePurpose,
+  isNative,
+  type Recognition,
+} from "@/services/platform/device";
+import { audioEngine } from "@/services/audio/audio-engine";
 
 export function ClassHud() {
   const { messages, nearby, thinking, voiceEnabled, listening, zone } = useClassState();
@@ -29,8 +25,22 @@ export function ClassHud() {
   const speak = useServerFn(guardianSpeak);
   const [draft, setDraft] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
-  const recognition = useRef<SpeechRecognitionLike | null>(null);
+  const recognition = useRef<Recognition | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
+  const session = useRef(0);
+  useEffect(() => {
+    const stop = () => {
+      session.current++;
+      recognition.current?.stop();
+      audioEngine.stopSpeech();
+      setClassState({ listening: false, speaking: null, thinking: false });
+    };
+    window.addEventListener("nyrava-input-reset", stop);
+    return () => {
+      window.removeEventListener("nyrava-input-reset", stop);
+      stop();
+    };
+  }, []);
 
   const { guardianName } = useGuardian();
   const learnerName = guardianName || "Guardian";
@@ -46,6 +56,13 @@ export function ClassHud() {
   }, [messages.length, thinking]);
 
   const send = async (text: string) => {
+    if (isNative() || import.meta.env.MODE === "mobile") {
+      toast.info(
+        "Native Guardian chat needs the secure backend connection. Island exploration and challenges remain available.",
+      );
+      return;
+    }
+    const requestSession = session.current;
     const clean = text.trim();
     if (!clean || thinking) return;
     setDraft("");
@@ -66,6 +83,7 @@ export function ClassHud() {
           history,
         },
       });
+      if (requestSession !== session.current) return;
       pushMessage({ from: active.id, name: active.name, text: reply });
       setClassState({ thinking: false, speaking: active.id });
 
@@ -73,11 +91,8 @@ export function ClassHud() {
         const { audio: base64 } = await speak({
           data: { text: reply.slice(0, 600), voice: active.voice },
         });
-        audio.current?.pause();
-        const player = new Audio(`data:audio/mpeg;base64,${base64}`);
-        audio.current = player;
-        player.onended = () => setClassState({ speaking: null });
-        await player.play();
+        if (requestSession !== session.current) return;
+        await audioEngine.playSpeech(base64, () => setClassState({ speaking: null }));
       } else {
         setTimeout(() => setClassState({ speaking: null }), 3500);
       }
@@ -88,19 +103,19 @@ export function ClassHud() {
   };
 
   const toggleMic = () => {
-    const Ctor =
-      (window as unknown as { SpeechRecognition?: new () => SpeechRecognitionLike }).SpeechRecognition ??
-      (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognitionLike })
-        .webkitSpeechRecognition;
+    const Ctor = recognitionConstructor();
 
     if (!Ctor) {
-      toast.error("Voice chat needs Chrome, Edge or Safari. You can still type.");
+      toast.info(
+        "Microphone recognition is not available on this device. Use text; native voice needs a reviewed speech provider.",
+      );
       return;
     }
     if (listening) {
       recognition.current?.stop();
       return;
     }
+    if (!confirmVoicePurpose()) return;
     const rec = new Ctor();
     rec.lang = "en-US";
     rec.continuous = false;
@@ -113,11 +128,16 @@ export function ClassHud() {
     rec.onerror = () => setClassState({ listening: false });
     recognition.current = rec;
     setClassState({ listening: true });
-    rec.start();
+    try {
+      rec.start();
+    } catch {
+      setClassState({ listening: false });
+      toast.info("Microphone could not start. You can still type.");
+    }
   };
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-20">
+    <div className="class-hud pointer-events-none fixed inset-0 z-20">
       {/* Presence banner */}
       <div className="pointer-events-none absolute left-1/2 top-20 -translate-x-1/2 rounded-full border border-border/60 bg-background/70 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-muted-foreground backdrop-blur">
         {nearby ? `Talking with ${active.name}` : `${current.name} · walk into a portal to travel`}
@@ -125,7 +145,9 @@ export function ClassHud() {
 
       {/* World switcher */}
       <div className="pointer-events-auto absolute left-6 top-32 w-52 rounded-3xl border border-border/60 bg-background/75 p-3 backdrop-blur-xl">
-        <p className="px-1 pb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Worlds</p>
+        <p className="px-1 pb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+          Worlds
+        </p>
         <div className="flex flex-col gap-1">
           {ZONES.map((z) => (
             <button
@@ -171,11 +193,12 @@ export function ClassHud() {
         </div>
 
         <div ref={scroller} className="max-h-56 space-y-2 overflow-y-auto pr-1 text-sm">
-          {messages.length === 0 && (
-            <p className="text-muted-foreground">{active.greeting}</p>
-          )}
+          {messages.length === 0 && <p className="text-muted-foreground">{active.greeting}</p>}
           {messages.map((m) => (
-            <p key={m.id} className={m.from === "you" ? "text-right text-foreground" : "text-muted-foreground"}>
+            <p
+              key={m.id}
+              className={m.from === "you" ? "text-right text-foreground" : "text-muted-foreground"}
+            >
               <span className="font-semibold">{m.name}: </span>
               {m.text}
             </p>

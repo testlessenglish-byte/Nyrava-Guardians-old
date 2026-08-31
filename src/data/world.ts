@@ -108,7 +108,8 @@ export const MISSIONS: Mission[] = [
   {
     id: "stranger-in-dms",
     title: "The Stranger in DMs",
-    briefing: "An unknown user messages you. Every choice has a consequence — think before you act!",
+    briefing:
+      "An unknown user messages you. Every choice has a consequence — think before you act!",
     zone: "Digital City",
     xpReward: 150,
     difficulty: 1,
@@ -124,25 +125,29 @@ export const MISSIONS: Mission[] = [
           id: "a",
           label: "Tell them my school",
           isBest: false,
-          feedback: "Careful! Never share personal info like your school with strangers online. Tess's shield would not approve.",
+          feedback:
+            "Careful! Never share personal info like your school with strangers online. Zoe's shield would not approve.",
         },
         {
           id: "b",
           label: "Ignore and block",
           isBest: true,
-          feedback: "Good thinking! Ignoring and blocking keeps you safe. You're being a real Guardian.",
+          feedback:
+            "Good thinking! Ignoring and blocking keeps you safe. You're being a real Guardian.",
         },
         {
           id: "c",
           label: "Keep chatting",
           isBest: false,
-          feedback: "Risky move. Strangers who ask personal questions and want secrets are a red flag. Block and tell an adult.",
+          feedback:
+            "Risky move. Strangers who ask personal questions and want secrets are a red flag. Block and tell an adult.",
         },
         {
           id: "d",
           label: "Ask a trusted adult",
           isBest: true,
-          feedback: "Excellent! Trusted adults are part of your Guardian team. Telling them is always a strong choice.",
+          feedback:
+            "Excellent! Trusted adults are part of your Guardian team. Telling them is always a strong choice.",
         },
       ],
     },
@@ -174,18 +179,68 @@ export const MISSIONS: Mission[] = [
 ];
 
 export const MASTERIES: Mastery[] = [
-  { skillId: "critical-thinking", skillName: "Critical Thinking", progress: 87, demonstrated: true, evidenceCount: 14, lastDemonstratedAt: "2026-08-28" },
-  { skillId: "privacy", skillName: "Privacy", progress: 91, demonstrated: true, evidenceCount: 17, lastDemonstratedAt: "2026-08-29" },
-  { skillId: "ai-literacy", skillName: "AI Literacy", progress: 76, demonstrated: true, evidenceCount: 9, lastDemonstratedAt: "2026-08-27" },
-  { skillId: "scam-detection", skillName: "Scam Detection", progress: 89, demonstrated: true, evidenceCount: 12, lastDemonstratedAt: "2026-08-29" },
-  { skillId: "cyber-safety", skillName: "Cyber Safety", progress: 84, demonstrated: true, evidenceCount: 11, lastDemonstratedAt: "2026-08-25" },
+  {
+    skillId: "critical-thinking",
+    skillName: "Critical Thinking",
+    progress: 87,
+    demonstrated: true,
+    evidenceCount: 14,
+    lastDemonstratedAt: "2026-08-28",
+  },
+  {
+    skillId: "privacy",
+    skillName: "Privacy",
+    progress: 91,
+    demonstrated: true,
+    evidenceCount: 17,
+    lastDemonstratedAt: "2026-08-29",
+  },
+  {
+    skillId: "ai-literacy",
+    skillName: "AI Literacy",
+    progress: 76,
+    demonstrated: true,
+    evidenceCount: 9,
+    lastDemonstratedAt: "2026-08-27",
+  },
+  {
+    skillId: "scam-detection",
+    skillName: "Scam Detection",
+    progress: 89,
+    demonstrated: true,
+    evidenceCount: 12,
+    lastDemonstratedAt: "2026-08-29",
+  },
+  {
+    skillId: "cyber-safety",
+    skillName: "Cyber Safety",
+    progress: 84,
+    demonstrated: true,
+    evidenceCount: 11,
+    lastDemonstratedAt: "2026-08-25",
+  },
 ];
 
 export const ACHIEVEMENTS = [
-  { id: "ach-1", title: "Shield Bearer", description: "Blocked your first unsafe contact", icon: "shield" },
-  { id: "ach-2", title: "Truth Seeker", description: "Verified 5 sources with Nova", icon: "search" },
+  {
+    id: "ach-1",
+    title: "Shield Bearer",
+    description: "Blocked your first unsafe contact",
+    icon: "shield",
+  },
+  {
+    id: "ach-2",
+    title: "Truth Seeker",
+    description: "Verified 5 sources with Nova",
+    icon: "search",
+  },
   { id: "ach-3", title: "Kind Signal", description: "Sent 10 positive messages", icon: "heart" },
-  { id: "ach-4", title: "First Build", description: "Completed your first Build Lab project", icon: "code" },
+  {
+    id: "ach-4",
+    title: "First Build",
+    description: "Completed your first Build Lab project",
+    icon: "code",
+  },
 ];
 
 export const NEXT_OBJECTIVE = {

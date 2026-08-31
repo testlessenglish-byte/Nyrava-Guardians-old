@@ -1,15 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import {
-  Bot,
-  Compass,
-  Cpu,
-  GraduationCap,
-  Home,
-  Map,
-  Sparkles,
-  Swords,
-  Users,
-} from "lucide-react";
+import { Bot, Compass, Cpu, GraduationCap, Home, Map, Sparkles, Swords, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import logo from "@/assets/guardians/logo.png";
 import { useGuardian } from "@/lib/guardian-context";
@@ -68,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {children}
         <Link
           to="/home"
-          className="fixed left-1/2 top-3 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 text-xs font-bold backdrop-blur transition hover:bg-background"
+          className="leave-world fixed left-3 top-3 z-[60] flex min-h-10 items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 text-xs font-bold backdrop-blur transition hover:bg-background"
         >
           <img src={logo} alt="Nyrava Guardians" className="h-4 w-4" />
           Leave world

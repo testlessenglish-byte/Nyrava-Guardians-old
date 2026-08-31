@@ -63,6 +63,7 @@ export const controls = {
   keys: new Set<string>(),
   joystick: { x: 0, y: 0 },
   cameraYaw: 0,
+  cameraPitch: 0.4,
   player: { x: 0, y: 0, z: 6 },
   spawn: { x: 0, z: 6 },
 };

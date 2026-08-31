@@ -1,15 +1,9 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { GuardianId } from "@/types";
 import { loadGuardianCloud, saveGuardianCloud } from "@/lib/cloud-save";
 import { type LocaleId } from "@/data/bilingual-dictionary";
 import { conversationalVoiceEngine } from "@/services/ai/conversational-voice-engine";
+import { readLocal, writeLocal, hydrateNativeProgress } from "@/services/platform/storage";
 
 interface GuardianState {
   guardianId: GuardianId | null;
@@ -57,7 +51,7 @@ const DEFAULTS: Persisted = {
 function loadPersisted(): Persisted {
   if (typeof window === "undefined") return DEFAULTS;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = readLocal(STORAGE_KEY);
     if (!raw) return DEFAULTS;
     return { ...DEFAULTS, ...(JSON.parse(raw) as Persisted) };
   } catch {
@@ -70,27 +64,36 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const local = loadPersisted();
-    setState(local);
-    conversationalVoiceEngine.setLocale(local.locale);
-    setHydrated(true);
-    
-    void loadGuardianCloud().then((cloud) => {
-      if (!cloud) return;
-      if ((cloud.xp ?? 0) < local.xp) return;
-      setState((s) => ({
-        ...s,
-        ...cloud,
-        guardianId: (cloud.guardianId as GuardianId | null) ?? s.guardianId,
-      }));
+    let cancelled = false;
+    void hydrateNativeProgress().then(() => {
+      if (cancelled) return;
+      const local = loadPersisted();
+      setState(local);
+      conversationalVoiceEngine.setLocale(local.locale);
+      setHydrated(true);
+
+      void loadGuardianCloud()
+        .then((cloud) => {
+          if (cancelled) return;
+          if (!cloud) return;
+          if ((cloud.xp ?? 0) < local.xp) return;
+          setState((s) => ({
+            ...s,
+            ...cloud,
+            guardianId: (cloud.guardianId as GuardianId | null) ?? s.guardianId,
+          }));
+        })
+        .catch(() => console.warn("Cloud progress unavailable; keeping local progress."));
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
     try {
-      window.localStorage.getItem(STORAGE_KEY);
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      writeLocal(STORAGE_KEY, JSON.stringify(state));
     } catch {
       // storage fallback
     }

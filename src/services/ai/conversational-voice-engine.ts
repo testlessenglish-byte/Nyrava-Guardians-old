@@ -6,6 +6,11 @@
 
 import { audioEngine } from "@/services/audio/audio-engine";
 import { GUARDIAN_DIALOGUES, type LocaleId } from "@/data/bilingual-dictionary";
+import {
+  recognitionConstructor,
+  confirmVoicePurpose,
+  type Recognition,
+} from "@/services/platform/device";
 
 export type ConversationState = "IDLE" | "LISTENING" | "THINKING" | "SPEAKING" | "PAUSED" | "ENDED";
 
@@ -23,7 +28,9 @@ class ConversationalVoiceEngine {
   private isMuted = true;
   /** Voice only runs after the child explicitly turns it on. */
   private enabled = false;
-  private recognition: any = null;
+  private recognition: Recognition | null = null;
+  private pending: ReturnType<typeof setTimeout> | undefined;
+  private revision = 0;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -33,8 +40,7 @@ class ConversationalVoiceEngine {
 
   private initRecognition() {
     if (typeof window === "undefined") return;
-    const w = window as unknown as Record<string, any>;
-    const SpeechRecognition = w['SpeechRecognition'] || w['webkitSpeechRecognition'];
+    const SpeechRecognition = recognitionConstructor();
 
     if (SpeechRecognition) {
       try {
@@ -43,7 +49,8 @@ class ConversationalVoiceEngine {
         this.recognition.interimResults = true;
         this.recognition.lang = this.locale;
 
-        this.recognition.onresult = (event: any) => {
+        this.recognition.onresult = (event) => {
+          if (!this.enabled || this.isMuted) return;
           let finalTranscript = "";
           let interimTranscript = "";
 
@@ -124,6 +131,7 @@ class ConversationalVoiceEngine {
 
   /** Explicit user gesture required before any mic or speech starts. */
   public enableVoice() {
+    if (!this.recognition || !confirmVoicePurpose()) return true;
     this.enabled = true;
     this.isMuted = false;
     this.startListening();
@@ -131,6 +139,8 @@ class ConversationalVoiceEngine {
   }
 
   public disableVoice() {
+    this.revision++;
+    clearTimeout(this.pending);
     this.enabled = false;
     this.isMuted = true;
     this.stopListening();
@@ -143,6 +153,8 @@ class ConversationalVoiceEngine {
     if (!this.enabled) return this.enableVoice();
     this.isMuted = !this.isMuted;
     if (this.isMuted) {
+      this.revision++;
+      clearTimeout(this.pending);
       this.stopListening();
       this.stopSpeaking();
       this.setState("PAUSED");
@@ -159,10 +171,10 @@ class ConversationalVoiceEngine {
         this.recognition.start();
         this.setState("LISTENING");
       } catch {
-        this.setState("LISTENING");
+        this.setState("IDLE");
       }
     } else {
-      this.setState("LISTENING");
+      this.setState("IDLE");
     }
   }
 
@@ -180,26 +192,35 @@ class ConversationalVoiceEngine {
   /** Guardian speaks text response with SpeechSynthesis & dynamic audio ducking */
   public speakGuardianResponse(text: string) {
     this.notifyGuardianResponse(text);
-    if (!this.enabled) {
+    if (!this.enabled || this.isMuted) {
       this.setState("IDLE");
       return;
     }
-    if (typeof window === "undefined" || typeof SpeechSynthesisUtterance === "undefined" || !window.speechSynthesis) {
+    if (
+      typeof window === "undefined" ||
+      typeof SpeechSynthesisUtterance === "undefined" ||
+      !window.speechSynthesis
+    ) {
       this.setState("IDLE");
       return;
     }
 
     try {
       this.stopSpeaking();
+      this.stopListening();
+      const revision = this.revision;
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = this.locale;
       utterance.rate = 0.95;
+      const volume = audioEngine.getSettings();
+      utterance.volume = volume.masterVolume * volume.voiceVolume;
 
       utterance.onstart = () => {
         this.setState("SPEAKING");
       };
 
       utterance.onend = () => {
+        if (revision !== this.revision || !this.enabled) return;
         this.setState("IDLE");
         this.startListening();
       };
@@ -226,7 +247,8 @@ class ConversationalVoiceEngine {
 
   public triggerProximityGreeting(guardianId: string) {
     this.activeGuardian = guardianId;
-    const dialogue = GUARDIAN_DIALOGUES[guardianId]?.[this.locale] ?? GUARDIAN_DIALOGUES["lex"]![this.locale];
+    const dialogue =
+      GUARDIAN_DIALOGUES[guardianId]?.[this.locale] ?? GUARDIAN_DIALOGUES["lex"]![this.locale];
     const greetingText = `${dialogue.greeting} ${dialogue.intro} ${dialogue.askPermission}`;
     if (!this.enabled) {
       this.notifyGuardianResponse(greetingText);
@@ -239,16 +261,26 @@ class ConversationalVoiceEngine {
   private handleChildUtterance(text: string) {
     this.setState("THINKING");
     const lower = text.toLowerCase();
-    const dialogue = GUARDIAN_DIALOGUES[this.activeGuardian]?.[this.locale] ?? GUARDIAN_DIALOGUES["lex"]![this.locale];
+    const dialogue =
+      GUARDIAN_DIALOGUES[this.activeGuardian]?.[this.locale] ??
+      GUARDIAN_DIALOGUES["lex"]![this.locale];
 
-    setTimeout(() => {
+    const revision = this.revision;
+    clearTimeout(this.pending);
+    this.pending = setTimeout(() => {
+      if (!this.enabled || revision !== this.revision) return;
       if (lower.includes("spanish") || lower.includes("español")) {
         this.setLocale("es-MX");
         this.speakGuardianResponse(dialogue.spanishSwitch);
       } else if (lower.includes("english") || lower.includes("inglés")) {
         this.setLocale("en-US");
         this.speakGuardianResponse(dialogue.englishSwitch);
-      } else if (lower.includes("yes") || lower.includes("sí") || lower.includes("try") || lower.includes("start")) {
+      } else if (
+        lower.includes("yes") ||
+        lower.includes("sí") ||
+        lower.includes("try") ||
+        lower.includes("start")
+      ) {
         this.speakGuardianResponse(dialogue.accept);
       } else if (lower.includes("no") || lower.includes("not now") || lower.includes("later")) {
         this.speakGuardianResponse(dialogue.decline);
@@ -261,13 +293,17 @@ class ConversationalVoiceEngine {
   }
 
   public handleWalkAway() {
-    const dialogue = GUARDIAN_DIALOGUES[this.activeGuardian]?.[this.locale] ?? GUARDIAN_DIALOGUES["lex"]![this.locale];
+    this.revision++;
+    clearTimeout(this.pending);
+    const dialogue =
+      GUARDIAN_DIALOGUES[this.activeGuardian]?.[this.locale] ??
+      GUARDIAN_DIALOGUES["lex"]![this.locale];
     audioEngine.playSfx("walk-away");
     this.stopSpeaking();
     this.stopListening();
     this.notifyGuardianResponse(dialogue.walkAway);
     this.setState("ENDED");
-    setTimeout(() => this.setState("IDLE"), 2000);
+    this.pending = setTimeout(() => this.setState("IDLE"), 2000);
   }
 
   public getState(): ConversationState {

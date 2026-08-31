@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
+import { cameraMovement } from "@/services/game/input";
 import { Environment, Html, Lightformer, useProgress } from "@react-three/drei";
 import * as THREE from "three";
 import { Character } from "./character";
@@ -23,7 +24,12 @@ function Loader() {
 function Prop({ spec }: { spec: PropSpec }) {
   const [a, b, c] = spec.size;
   return (
-    <mesh position={spec.pos} rotation-x={spec.kind === "torus" ? (spec.rot ?? 0) : 0} castShadow receiveShadow>
+    <mesh
+      position={spec.pos}
+      rotation-x={spec.kind === "torus" ? (spec.rot ?? 0) : 0}
+      castShadow
+      receiveShadow
+    >
       {spec.kind === "box" && <boxGeometry args={[a, b, c]} />}
       {spec.kind === "cyl" && <cylinderGeometry args={[a, b, c, 24]} />}
       {spec.kind === "cone" && <coneGeometry args={[a, b, 20]} />}
@@ -82,7 +88,12 @@ function World({ zone }: { zone: Zone }) {
   const wall = (position: [number, number, number], rotation: number, key: string) => (
     <mesh key={key} position={position} rotation-y={rotation} receiveShadow>
       <planeGeometry args={[R * 2 + 6, 6]} />
-      <meshStandardMaterial color="#111826" metalness={0.5} roughness={0.6} side={THREE.DoubleSide} />
+      <meshStandardMaterial
+        color="#111826"
+        metalness={0.5}
+        roughness={0.6}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 
@@ -134,7 +145,13 @@ function World({ zone }: { zone: Zone }) {
   );
 }
 
-function PortalGate({ portal, accent }: { portal: { to: string; pos: [number, number]; label: string }; accent: string }) {
+function PortalGate({
+  portal,
+  accent,
+}: {
+  portal: { to: string; pos: [number, number]; label: string };
+  accent: string;
+}) {
   const ring = useRef<THREE.Mesh>(null);
   const [x, z] = portal.pos;
   const { player } = controls;
@@ -173,7 +190,13 @@ function PortalGate({ portal, accent }: { portal: { to: string; pos: [number, nu
       </mesh>
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.03, 0]}>
         <ringGeometry args={[1.4, 1.8, 40]} />
-        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={1.1} transparent opacity={0.8} />
+        <meshStandardMaterial
+          color={accent}
+          emissive={accent}
+          emissiveIntensity={1.1}
+          transparent
+          opacity={0.8}
+        />
       </mesh>
       <pointLight position={[0, 2, 0]} color={accent} intensity={6} distance={9} />
       <Html position={[0, 4, 0]} center distanceFactor={12} occlude={false}>
@@ -209,7 +232,11 @@ function Npc({
   return (
     <group position={position} rotation-y={rotation}>
       <group ref={group}>
-        <Character color={guardian.color} clip={isSpeaking ? "talk" : "idle"} guardianId={guardian.id} />
+        <Character
+          color={guardian.color}
+          clip={isSpeaking ? "talk" : "idle"}
+          guardianId={guardian.id}
+        />
       </group>
 
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
@@ -222,7 +249,12 @@ function Npc({
           opacity={0.9}
         />
       </mesh>
-      <pointLight position={[0, 1.6, 0]} color={guardian.color} intensity={isNear ? 8 : 3} distance={7} />
+      <pointLight
+        position={[0, 1.6, 0]}
+        color={guardian.color}
+        intensity={isNear ? 8 : 3}
+        distance={7}
+      />
 
       <Html position={[0, 2.5, 0]} center distanceFactor={11} occlude={false}>
         <div className="pointer-events-none w-64 -translate-y-2 text-center">
@@ -260,8 +292,9 @@ function npcLayout(zone: Zone) {
       const position: [number, number, number] = [Math.cos(a) * r, 0, Math.sin(a) * r];
       return { guardian, position, rotation: Math.atan2(-position[0], -position[2]) };
     })
-    .filter((n): n is { guardian: ClassGuardian; position: [number, number, number]; rotation: number } =>
-      Boolean(n),
+    .filter(
+      (n): n is { guardian: ClassGuardian; position: [number, number, number]; rotation: number } =>
+        Boolean(n),
     );
 }
 
@@ -273,11 +306,13 @@ function Player({
   zone,
   color,
   label,
+  guardianId,
   npcs,
 }: {
   zone: Zone;
   color: string;
   label: string;
+  guardianId: string;
   npcs: { guardian: ClassGuardian; position: [number, number, number] }[];
 }) {
   const group = useRef<THREE.Group>(null);
@@ -296,21 +331,16 @@ function Player({
 
     const keys = controls.keys;
     let ix = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0);
-    let iz = (keys.has("s") ? 1 : 0) - (keys.has("w") ? 1 : 0);
+    let iz = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0);
     ix += controls.joystick.x;
-    iz += controls.joystick.y;
+    iz -= controls.joystick.y;
 
     const len = Math.hypot(ix, iz);
     const isMoving = len > 0.08;
     if (isMoving) {
-      ix /= len;
-      iz /= len;
       const yaw = controls.cameraYaw;
-      move.set(
-        ix * Math.cos(yaw) - iz * Math.sin(yaw),
-        0,
-        ix * Math.sin(yaw) + iz * Math.cos(yaw),
-      );
+      const direction = cameraMovement(ix, iz, yaw);
+      move.set(direction.x, 0, direction.z);
       player.position.addScaledVector(move, SPEED * delta);
       player.position.x = THREE.MathUtils.clamp(player.position.x, -zone.radius, zone.radius);
       player.position.z = THREE.MathUtils.clamp(player.position.z, -zone.radius, zone.radius);
@@ -341,9 +371,9 @@ function Player({
 
     const yaw = controls.cameraYaw;
     camTarget.set(
-      player.position.x + Math.sin(yaw) * -6.2,
-      player.position.y + 6.4,
-      player.position.z + Math.cos(yaw) * -6.2,
+      player.position.x + Math.sin(yaw) * 8 * Math.cos(controls.cameraPitch),
+      player.position.y + 2.2 + Math.sin(controls.cameraPitch) * 8,
+      player.position.z + Math.cos(yaw) * 8 * Math.cos(controls.cameraPitch),
     );
     const camLimit = zone.radius - 0.8;
     const camDist = Math.hypot(camTarget.x, camTarget.z);
@@ -359,10 +389,16 @@ function Player({
 
   return (
     <group ref={group} position={[controls.spawn.x, 0, controls.spawn.z]}>
-      <Character color={color} clip={moving ? "walk" : "idle"} />
+      <Character color={color} clip={moving ? "walk" : "idle"} guardianId={guardianId} />
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
         <ringGeometry args={[0.55, 0.7, 40]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.4} transparent opacity={0.8} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={1.4}
+          transparent
+          opacity={0.8}
+        />
       </mesh>
       <pointLight position={[0, 1.7, 0]} color={color} intensity={4} distance={6} />
       <Html position={[0, 2.4, 0]} center distanceFactor={11}>
@@ -377,9 +413,11 @@ function Player({
 export function ClassroomScene({
   playerColor = "#f4f7ff",
   playerLabel = "You",
+  guardianId = "lex",
 }: {
   playerColor?: string;
   playerLabel?: string;
+  guardianId?: string;
 }) {
   const { zone: zoneId } = useClassState();
   const zone = getZone(zoneId);
@@ -399,20 +437,48 @@ export function ClassroomScene({
         shadow-mapSize-height={2048}
       />
       <Environment>
-        <Lightformer intensity={2.4} position={[0, 6, 0]} scale={[14, 14, 1]} rotation-x={Math.PI / 2} />
-        <Lightformer intensity={1.2} color="#67e8f9" position={[-8, 3, -6]} rotation-y={Math.PI / 2} scale={[14, 3, 1]} />
-        <Lightformer intensity={1} color={zone.accent} position={[8, 3, 6]} rotation-y={-Math.PI / 2} scale={[14, 3, 1]} />
+        <Lightformer
+          intensity={2.4}
+          position={[0, 6, 0]}
+          scale={[14, 14, 1]}
+          rotation-x={Math.PI / 2}
+        />
+        <Lightformer
+          intensity={1.2}
+          color="#67e8f9"
+          position={[-8, 3, -6]}
+          rotation-y={Math.PI / 2}
+          scale={[14, 3, 1]}
+        />
+        <Lightformer
+          intensity={1}
+          color={zone.accent}
+          position={[8, 3, 6]}
+          rotation-y={-Math.PI / 2}
+          scale={[14, 3, 1]}
+        />
       </Environment>
 
       <Suspense fallback={<Loader />}>
         <World key={zone.id} zone={zone} />
         {npcs.map((n) => (
-          <Npc key={n.guardian.id} guardian={n.guardian} position={n.position} rotation={n.rotation} />
+          <Npc
+            key={n.guardian.id}
+            guardian={n.guardian}
+            position={n.position}
+            rotation={n.rotation}
+          />
         ))}
         {zone.portals.map((p) => (
           <PortalGate key={p.to} portal={p} accent={zone.accent} />
         ))}
-        <Player zone={zone} color={playerColor} label={playerLabel} npcs={npcs} />
+        <Player
+          zone={zone}
+          color={playerColor}
+          label={playerLabel}
+          guardianId={guardianId}
+          npcs={npcs}
+        />
       </Suspense>
     </>
   );

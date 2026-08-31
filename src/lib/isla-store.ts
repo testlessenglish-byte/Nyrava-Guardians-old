@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { CRYSTALS, REGIONS, type RegionId } from "@/data/isla";
 import { loadIslaCloud, saveIslaCloud } from "@/lib/cloud-save";
+import { readLocal, writeLocal, hydrateNativeProgress } from "@/services/platform/storage";
 
 /**
  * PLAYER PROGRESS for World 1. Pure state + localStorage persistence.
@@ -68,33 +69,35 @@ function emit() {
 function persist() {
   if (typeof window === "undefined") return;
   const { crystals, secrets, solved, hints, visited, mastery, xp, classComplete } = state;
-  window.localStorage.setItem(
+  writeLocal(
     KEY,
     JSON.stringify({ crystals, secrets, solved, hints, visited, mastery, xp, classComplete }),
   );
   saveIslaCloud({ crystals, secrets, solved, hints, visited, mastery, xp, classComplete });
 }
 
-export function hydrateIsla() {
+export async function hydrateIsla() {
   if (typeof window === "undefined") return;
-  const raw = window.localStorage.getItem(KEY);
-  if (!raw) return;
+  await hydrateNativeProgress();
+  const raw = readLocal(KEY);
   try {
-    state = { ...state, ...(JSON.parse(raw) as Partial<IslaState>) };
+    if (raw) state = { ...state, ...(JSON.parse(raw) as Partial<IslaState>) };
     emit();
   } catch {
     /* corrupt save — start fresh */
   }
   // Cloud save wins when the signed-in account is further along than this device.
-  void loadIslaCloud().then((cloud) => {
-    if (!cloud) return;
-    if ((cloud.xp ?? 0) < state.xp) {
-      persist();
-      return;
-    }
-    state = { ...state, ...(cloud as Partial<IslaState>) };
-    emit();
-  });
+  void loadIslaCloud()
+    .then((cloud) => {
+      if (!cloud) return;
+      if ((cloud.xp ?? 0) < state.xp) {
+        persist();
+        return;
+      }
+      state = { ...state, ...(cloud as Partial<IslaState>) };
+      emit();
+    })
+    .catch(() => console.warn("Cloud progress unavailable; keeping local progress."));
 }
 
 export function patchIsla(patch: Partial<IslaState>) {
@@ -148,7 +151,7 @@ export function isRegionLocked(region: RegionId) {
   return state.crystals.length < lock.requires;
 }
 
-export function useHint(crystalId: string) {
+export function requestHint(crystalId: string) {
   const level = Math.min(3, (state.hints[crystalId] ?? 0) + 1);
   state = { ...state, hints: { ...state.hints, [crystalId]: level } };
   emit();
@@ -246,6 +249,17 @@ export const islaControls = {
   /** Set while the pointer is being dragged so a look-around isn't read as a click. */
   dragged: false,
 };
+
+export function resetIslaControls() {
+  islaControls.keys.clear();
+  islaControls.joystick.x = 0;
+  islaControls.joystick.y = 0;
+  islaControls.jump = false;
+  islaControls.sprint = false;
+  islaControls.interact = false;
+  islaControls.moveTarget = null;
+  islaControls.dragged = false;
+}
 
 /** Toggle between third-person and the avatar's own eyes. */
 export function toggleIslaView() {

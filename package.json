@@ -6,6 +6,13 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "build:mobile": "vite build --mode mobile && node scripts/verify-mobile.mjs",
+    "mobile:sync": "npm run build:mobile && cap sync",
+    "mobile:android": "cap open android",
+    "mobile:ios": "cap open ios",
+    "mobile:run:android": "npm run build:mobile && cap run android",
+    "mobile:run:ios": "npm run build:mobile && cap run ios",
+    "mobile:doctor": "cap doctor",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -17,6 +24,16 @@
     "rolldown": "1.2.1"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.5.0",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/screen-orientation": "^8.0.1",
+    "@fontsource/nunito": "^5.3.0",
+    "@fontsource/sora": "^5.3.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -75,6 +92,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
     "@eslint/js": "^9.32.0",
     "@openai/sites-vite-plugin": "^0.2.0",
     "@types/node": "^22.16.5",

@@ -45,7 +45,7 @@ export const GUARDIANS: Guardian[] = [
   },
   {
     id: "zoey",
-    name: "Zoey",
+    name: "Zoe",
     role: "The Protector",
     tagline: "Shields up. Keeps you and your friends safe online.",
     visualTheme: "guardian-tess",
@@ -76,7 +76,7 @@ export const GUARDIANS: Guardian[] = [
   {
     id: "sarah",
     name: "Sarah",
-    role: "AI Companion",
+    role: "Security Specialist",
     tagline: "Your AI guide, helper and learning companion.",
     visualTheme: "guardian-echo",
     level: 15,
@@ -275,7 +275,7 @@ export function resolveGuardianId(id: string | null | undefined): GuardianId {
   return (GUARDIANS.find((g) => g.id === id)?.id ?? "zoey") as GuardianId;
 }
 
-/** Always returns a Guardian — falls back to Zoey for unknown/legacy ids. */
+/** Always returns a Guardian — falls back to Zoe for unknown/legacy ids. */
 export function resolveGuardian(id: string | null | undefined): Guardian {
   const resolved = resolveGuardianId(id);
   return (GUARDIANS.find((g) => g.id === resolved) ?? GUARDIANS[0]) as Guardian;

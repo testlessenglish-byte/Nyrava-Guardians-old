@@ -10,6 +10,23 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dist-mobile/
+.mobile-build/
+# Native generated output and machine-local signing/SDK configuration
+android/.gradle/
+android/local.properties
+android/**/build/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor*.json
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/DerivedData/
+ios/**/xcuserdata/
+ios/**/Pods/
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
 .output
 .vinxi
 .tanstack/**

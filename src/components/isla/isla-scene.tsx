@@ -1,15 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Billboard, Text } from "@react-three/drei";
+import worldFont from "@fontsource/nunito/files/nunito-latin-400-normal.woff?url";
 import * as THREE from "three";
 import { Character } from "@/components/meta/character";
-import {
-  ACADEMY_DOOR,
-  CRYSTALS,
-  REGIONS,
-  SECRETS,
-  type RegionId,
-} from "@/data/isla";
+import { ACADEMY_DOOR, CRYSTALS, REGIONS, SECRETS, type RegionId } from "@/data/isla";
 import {
   collectSecret,
   enterRegion,
@@ -19,11 +14,20 @@ import {
   patchIsla,
   tryCollectCrystal,
 } from "@/lib/isla-store";
-import { ISLAND_RADIUS, WATER_LEVEL, WORLD_SCALE as S, isWalkable, terrainHeight, ws } from "@/lib/isla-terrain";
+import {
+  ISLAND_RADIUS,
+  WATER_LEVEL,
+  WORLD_SCALE as S,
+  isWalkable,
+  terrainHeight,
+  ws,
+} from "@/lib/isla-terrain";
 
 import { audioEngine } from "@/services/audio/audio-engine";
 import { conversationalVoiceEngine } from "@/services/ai/conversational-voice-engine";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
+import { cameraMovement } from "@/services/game/input";
+import { QUALITY, useQuality } from "@/services/game/quality";
 
 const SPEED = 9.5;
 const SWIM_SPEED = 5.6;
@@ -32,7 +36,6 @@ const SWIM_LIMIT = ISLAND_RADIUS + 70;
 /** Water surface the swimmer floats at (the ocean plane bobs around y = -0.1). */
 const SWIM_Y = WATER_LEVEL - 0.55;
 const move = new THREE.Vector3();
-
 
 function mulberry32(seed: number) {
   let a = seed;
@@ -61,12 +64,13 @@ function regionAt(x: number, z: number): RegionId {
 /* ------------------------------------------------------------------ terrain */
 
 function Terrain() {
+  const { terrainSegments } = QUALITY[useQuality()];
   const geometry = useMemo(() => {
     const size = ISLAND_RADIUS * 2.6;
-    const seg = 300;
+    const seg = terrainSegments;
     const geo = new THREE.PlaneGeometry(size, size, seg, seg);
     geo.rotateX(-Math.PI / 2);
-    const pos = geo.attributes['position'] as THREE.BufferAttribute;
+    const pos = geo.attributes["position"] as THREE.BufferAttribute;
     const colors = new Float32Array(pos.count * 3);
     const c = new THREE.Color();
     for (let i = 0; i < pos.count; i++) {
@@ -91,7 +95,8 @@ function Terrain() {
     geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     geo.computeVertexNormals();
     return geo;
-  }, []);
+  }, [terrainSegments]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
 
   return (
     <mesh
@@ -210,11 +215,12 @@ function Instanced({
 
 /** Island-wide dressing: grass tufts, wildflowers, bushes and boulders. */
 function GroundCover() {
+  const { scatter } = QUALITY[useQuality()];
   const r = ISLAND_RADIUS * 0.92;
-  const grass = useScatter(101, 1400, [0, 0], r, 0.9);
-  const flowers = useScatter(103, 380, [0, 0], r * 0.8, 1.2);
-  const bushes = useScatter(107, 320, [0, 0], r * 0.85, 1.1);
-  const boulders = useScatter(109, 180, [0, 0], r * 0.9, 1.4);
+  const grass = useScatter(101, Math.round(1400 * scatter), [0, 0], r, 0.9);
+  const flowers = useScatter(103, Math.round(380 * scatter), [0, 0], r * 0.8, 1.2);
+  const bushes = useScatter(107, Math.round(320 * scatter), [0, 0], r * 0.85, 1.1);
+  const boulders = useScatter(109, Math.round(180 * scatter), [0, 0], r * 0.9, 1.4);
   return (
     <>
       <Instanced items={grass} color="#4f9e4a" yOffset={0.42}>
@@ -264,7 +270,10 @@ function Sky() {
         {puffs.map((c, i) => (
           <group key={i} position={c.p}>
             {[0, 1, 2].map((k) => (
-              <mesh key={k} position={[k * c.s * 0.5 - c.s * 0.5, (k % 2) * c.s * 0.14, (k % 2) * c.s * 0.3]}>
+              <mesh
+                key={k}
+                position={[k * c.s * 0.5 - c.s * 0.5, (k % 2) * c.s * 0.14, (k % 2) * c.s * 0.3]}
+              >
                 <sphereGeometry args={[c.s * (0.5 + (k % 2) * 0.18), 10, 8]} />
                 <meshStandardMaterial color="#ffffff" roughness={1} transparent opacity={0.82} />
               </mesh>
@@ -277,7 +286,11 @@ function Sky() {
           const a = (i / 9) * Math.PI * 2;
           const d = 150 + (i % 3) * 40;
           return (
-            <mesh key={i} position={[Math.cos(a) * d, (i % 4) * 5, Math.sin(a) * d]} rotation-y={-a}>
+            <mesh
+              key={i}
+              position={[Math.cos(a) * d, (i % 4) * 5, Math.sin(a) * d]}
+              rotation-y={-a}
+            >
               <coneGeometry args={[0.5, 2.4, 3]} />
               <meshStandardMaterial color="#1f2937" />
             </mesh>
@@ -289,7 +302,6 @@ function Sky() {
 }
 
 function Forest() {
-
   const trees = useScatter(11, 420, ws([-44, -40]), 32 * S, 1.2);
   return (
     <>
@@ -318,7 +330,13 @@ function Waterfall() {
     <group position={[x, terrainHeight(x, z), z]}>
       <mesh ref={ref} position={[0, 3.4, 0]}>
         <planeGeometry args={[4.6, 7]} />
-        <meshStandardMaterial color="#9be8ff" transparent opacity={0.7} emissive="#38bdf8" emissiveIntensity={0.6} />
+        <meshStandardMaterial
+          color="#9be8ff"
+          transparent
+          opacity={0.7}
+          emissive="#38bdf8"
+          emissiveIntensity={0.6}
+        />
       </mesh>
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.06, 2.4]}>
         <circleGeometry args={[4, 24]} />
@@ -337,7 +355,11 @@ function Mountains() {
       const d = rand() * 22 * S;
       const x = 44 * S + Math.cos(a) * d;
       const z = -46 * S + Math.sin(a) * d;
-      return { p: [x, terrainHeight(x, z), z] as [number, number, number], s: 1.4 + rand() * 2.2, r: rand() * 3 };
+      return {
+        p: [x, terrainHeight(x, z), z] as [number, number, number],
+        s: 1.4 + rand() * 2.2,
+        r: rand() * 3,
+      };
     });
   }, []);
   return (
@@ -351,7 +373,15 @@ function Mountains() {
       {/* Summit observation temple */}
       <group position={[46 * S, terrainHeight(46 * S, -52 * S), -52 * S]}>
         {[0, 1, 2, 3].map((i) => (
-          <mesh key={i} position={[Math.cos((i / 4) * Math.PI * 2) * 3.4, 2.2, Math.sin((i / 4) * Math.PI * 2) * 3.4]} castShadow>
+          <mesh
+            key={i}
+            position={[
+              Math.cos((i / 4) * Math.PI * 2) * 3.4,
+              2.2,
+              Math.sin((i / 4) * Math.PI * 2) * 3.4,
+            ]}
+            castShadow
+          >
             <cylinderGeometry args={[0.4, 0.5, 4.4, 8]} />
             <meshStandardMaterial color="#c2a373" roughness={0.9} />
           </mesh>
@@ -460,7 +490,13 @@ function SpacePort({ locked }: { locked: boolean }) {
         <meshStandardMaterial color="#c084fc" emissive="#a855f7" emissiveIntensity={0.9} />
       </mesh>
       {locked && (
-        <Text position={[0, 3, 10]} fontSize={1.5} color="#fca5a5" anchorX="center">
+        <Text
+          font={worldFont}
+          position={[0, 3, 10]}
+          fontSize={1.5}
+          color="#fca5a5"
+          anchorX="center"
+        >
           🔒 LAUNCH GATE LOCKED
         </Text>
       )}
@@ -523,16 +559,30 @@ function HutInterior() {
         {[-0.6, -0.3, 0, 0.35, 0.65].map((x, i) => (
           <mesh key={x} position={[x, 1.32, 0]} castShadow>
             <boxGeometry args={[0.16, 0.36, 0.3]} />
-            <meshStandardMaterial color={(["#38bdf8", "#f472b6", "#facc15", "#4ade80", "#c084fc"] as const)[i]!} roughness={0.8} />
+            <meshStandardMaterial
+              color={(["#38bdf8", "#f472b6", "#facc15", "#4ade80", "#c084fc"] as const)[i]!}
+              roughness={0.8}
+            />
           </mesh>
         ))}
       </group>
       {/* hanging lantern */}
       <mesh position={[0, 2.9, 0]}>
         <sphereGeometry args={[0.28, 14, 12]} />
-        <meshStandardMaterial color="#fde68a" emissive="#f59e0b" emissiveIntensity={2.4} toneMapped={false} />
+        <meshStandardMaterial
+          color="#fde68a"
+          emissive="#f59e0b"
+          emissiveIntensity={2.4}
+          toneMapped={false}
+        />
       </mesh>
-      <pointLight position={[0, 2.7, 0]} color="#ffb457" intensity={9} distance={9} castShadow={false} />
+      <pointLight
+        position={[0, 2.7, 0]}
+        color="#ffb457"
+        intensity={9}
+        distance={9}
+        castShadow={false}
+      />
     </group>
   );
 }
@@ -545,7 +595,17 @@ function HutInterior() {
  * Futuristic Guardian Sci-Fi Building (Eco-Tower / Tech-Dome)
  * Replaces old primitive huts with high-tech sci-fi architecture matching World 1: Isla Central specification.
  */
-function GuardianBuilding({ position, scale = 1, rotation = 0, variant = 0 }: { position: [number, number, number]; scale?: number; rotation?: number; variant?: number }) {
+function GuardianBuilding({
+  position,
+  scale = 1,
+  rotation = 0,
+  variant = 0,
+}: {
+  position: [number, number, number];
+  scale?: number;
+  rotation?: number;
+  variant?: number;
+}) {
   const accentColor = variant % 3 === 0 ? "#00f0ff" : variant % 3 === 1 ? "#a855f7" : "#22e07a";
 
   return (
@@ -555,11 +615,16 @@ function GuardianBuilding({ position, scale = 1, rotation = 0, variant = 0 }: { 
         <cylinderGeometry args={[3.2, 3.6, 0.8, 16]} />
         <meshStandardMaterial color="#0f172a" metalness={0.8} roughness={0.2} />
       </mesh>
-      
+
       {/* Glowing neon accent ring at base */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.82, 0]}>
         <ringGeometry args={[3.0, 3.25, 32]} />
-        <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={2.5} toneMapped={false} />
+        <meshStandardMaterial
+          color={accentColor}
+          emissive={accentColor}
+          emissiveIntensity={2.5}
+          toneMapped={false}
+        />
       </mesh>
 
       {/* Main sleek eco-structure body */}
@@ -571,13 +636,27 @@ function GuardianBuilding({ position, scale = 1, rotation = 0, variant = 0 }: { 
       {/* Futuristic Glass Dome Roof */}
       <mesh position={[0, 5.8, 0]} castShadow>
         <sphereGeometry args={[2.3, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial color="#38bdf8" transparent opacity={0.65} emissive="#0ea5e9" emissiveIntensity={0.5} roughness={0.1} />
+        <meshStandardMaterial
+          color="#38bdf8"
+          transparent
+          opacity={0.65}
+          emissive="#0ea5e9"
+          emissiveIntensity={0.5}
+          roughness={0.1}
+        />
       </mesh>
 
       {/* Glowing holographic window strip */}
       <mesh position={[0, 3.5, 0]}>
         <cylinderGeometry args={[2.42, 2.42, 1.2, 16, 1, true]} />
-        <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={1.5} transparent opacity={0.85} toneMapped={false} />
+        <meshStandardMaterial
+          color={accentColor}
+          emissive={accentColor}
+          emissiveIntensity={1.5}
+          transparent
+          opacity={0.85}
+          toneMapped={false}
+        />
       </mesh>
 
       {/* Spire / Antenna */}
@@ -587,7 +666,12 @@ function GuardianBuilding({ position, scale = 1, rotation = 0, variant = 0 }: { 
       </mesh>
       <mesh position={[0, 9.2, 0]}>
         <octahedronGeometry args={[0.45, 0]} />
-        <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={3} toneMapped={false} />
+        <meshStandardMaterial
+          color={accentColor}
+          emissive={accentColor}
+          emissiveIntensity={3}
+          toneMapped={false}
+        />
       </mesh>
     </group>
   );
@@ -611,7 +695,13 @@ function CentralCity() {
     <>
       {/* Sci-Fi Eco-City Guardian Towers */}
       {towers.map((tower, i) => (
-        <GuardianBuilding key={i} position={tower.p} scale={0.8 + (tower.s % 1) * 0.4} rotation={tower.r} variant={i} />
+        <GuardianBuilding
+          key={i}
+          position={tower.p}
+          scale={0.8 + (tower.s % 1) * 0.4}
+          rotation={tower.r}
+          variant={i}
+        />
       ))}
 
       {/* Guardian Main Plaza */}
@@ -650,28 +740,57 @@ function CentralCity() {
         {/* Glowing Central Energy Core */}
         <mesh position={[0, 15, 0]}>
           <cylinderGeometry args={[3.3, 3.3, 10, 16, 1, true]} />
-          <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={2} transparent opacity={0.65} toneMapped={false} />
+          <meshStandardMaterial
+            color="#00f0ff"
+            emissive="#00f0ff"
+            emissiveIntensity={2}
+            transparent
+            opacity={0.65}
+            toneMapped={false}
+          />
         </mesh>
 
         {/* Floating Halo Ring */}
         <mesh position={[0, 22, 0]} rotation-x={Math.PI / 6}>
           <torusGeometry args={[5.5, 0.4, 16, 48]} />
-          <meshStandardMaterial color="#38bdf8" emissive="#0ea5e9" emissiveIntensity={3} toneMapped={false} />
+          <meshStandardMaterial
+            color="#38bdf8"
+            emissive="#0ea5e9"
+            emissiveIntensity={3}
+            toneMapped={false}
+          />
         </mesh>
 
         {/* Floating Top Energy Crest ('N') */}
         <mesh position={[0, 26, 0]} castShadow>
           <octahedronGeometry args={[3.5, 0]} />
-          <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={3.5} toneMapped={false} />
+          <meshStandardMaterial
+            color="#00f0ff"
+            emissive="#00f0ff"
+            emissiveIntensity={3.5}
+            toneMapped={false}
+          />
         </mesh>
-        
-        <Text position={[0, 31, 0]} fontSize={2.4} color="#00f0ff" anchorX="center">
+
+        <Text
+          font={worldFont}
+          position={[0, 31, 0]}
+          fontSize={2.4}
+          color="#00f0ff"
+          anchorX="center"
+        >
           NYRAVA CIUDAD CENTRAL
         </Text>
       </group>
 
       {/* Academy Entrance — Sci-Fi High-Tech Portal */}
-      <group position={[ACADEMY_DOOR[0], terrainHeight(ACADEMY_DOOR[0], ACADEMY_DOOR[1]), ACADEMY_DOOR[1] - 12]}>
+      <group
+        position={[
+          ACADEMY_DOOR[0],
+          terrainHeight(ACADEMY_DOOR[0], ACADEMY_DOOR[1]),
+          ACADEMY_DOOR[1] - 12,
+        ]}
+      >
         <mesh position={[0, 5, 0]} castShadow receiveShadow>
           <boxGeometry args={[20, 10, 14]} />
           <meshStandardMaterial color="#0f172a" metalness={0.7} roughness={0.3} />
@@ -680,16 +799,33 @@ function CentralCity() {
         {/* Glass Dome Entrance Roof */}
         <mesh position={[0, 10.5, 0]} castShadow>
           <sphereGeometry args={[8, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <meshStandardMaterial color="#38bdf8" transparent opacity={0.7} emissive="#0ea5e9" emissiveIntensity={1} />
+          <meshStandardMaterial
+            color="#38bdf8"
+            transparent
+            opacity={0.7}
+            emissive="#0ea5e9"
+            emissiveIntensity={1}
+          />
         </mesh>
 
         {/* Holographic Door Frame */}
         <mesh position={[0, 3.5, 7.1]}>
           <planeGeometry args={[6, 7]} />
-          <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={2.5} toneMapped={false} />
+          <meshStandardMaterial
+            color="#00f0ff"
+            emissive="#00f0ff"
+            emissiveIntensity={2.5}
+            toneMapped={false}
+          />
         </mesh>
-        
-        <Text position={[0, 12.5, 0]} fontSize={1.8} color="#00f0ff" anchorX="center">
+
+        <Text
+          font={worldFont}
+          position={[0, 12.5, 0]}
+          fontSize={1.8}
+          color="#00f0ff"
+          anchorX="center"
+        >
           AI ACADEMY
         </Text>
       </group>
@@ -700,7 +836,14 @@ function CentralCity() {
           <boxGeometry args={[4.8, 3.2, 0.3]} />
           <meshStandardMaterial color="#0f172a" emissive="#00f0ff" emissiveIntensity={0.8} />
         </mesh>
-        <Text position={[0, 0, 0.2]} fontSize={0.45} color="#00f0ff" maxWidth={4.2} anchorX="center">
+        <Text
+          font={worldFont}
+          position={[0, 0, 0.2]}
+          fontSize={0.45}
+          color="#00f0ff"
+          maxWidth={4.2}
+          anchorX="center"
+        >
           WORLD 1 — ISLA CENTRAL
         </Text>
       </group>
@@ -732,8 +875,18 @@ function Pickup({
   return (
     <group position={[position[0], y, position[1]]}>
       <mesh ref={ref} castShadow>
-        {shape === "crystal" ? <octahedronGeometry args={[0.75, 0]} /> : <tetrahedronGeometry args={[0.55, 0]} />}
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.4} roughness={0.1} metalness={0.3} />
+        {shape === "crystal" ? (
+          <octahedronGeometry args={[0.75, 0]} />
+        ) : (
+          <tetrahedronGeometry args={[0.55, 0]} />
+        )}
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={1.4}
+          roughness={0.1}
+          metalness={0.3}
+        />
       </mesh>
       <pointLight position={[0, 1.6, 0]} color={color} intensity={7} distance={9} />
     </group>
@@ -790,9 +943,8 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
     // Camera-relative movement: forward is the direction the camera looks.
     if (len > 0.08) {
       islaControls.moveTarget = null;
-      ix /= len;
-      iz /= len;
-      move.set(ix * Math.cos(yaw) + iz * -Math.sin(yaw), 0, -ix * Math.sin(yaw) + iz * -Math.cos(yaw));
+      const direction = cameraMovement(ix, iz, yaw);
+      move.set(direction.x, 0, direction.z);
     } else if (islaControls.moveTarget) {
       // Click-to-walk: steer toward the clicked spot until we arrive.
       const dx = islaControls.moveTarget.x - player.position.x;
@@ -876,7 +1028,6 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
     const nextGait = inWater ? "swim" : !isMoving ? "idle" : sprinting ? "run" : "walk";
     if (nextGait !== gait) setGait(nextGait);
 
-
     islaControls.player.x = player.position.x;
     islaControls.player.z = player.position.z;
     islaControls.player.y = player.position.y;
@@ -893,7 +1044,10 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
     let nearestStation: (typeof CLASS_GUARDIANS)[0] | null = null;
     let minDist = 14;
     for (const station of CLASS_GUARDIANS) {
-      const d = Math.hypot(player.position.x - station.position[0], player.position.z - station.position[2]);
+      const d = Math.hypot(
+        player.position.x - station.position[0],
+        player.position.z - station.position[2],
+      );
       if (d < minDist) {
         minDist = d;
         nearestStation = station;
@@ -925,13 +1079,19 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
     }
     for (const sec of SECRETS) {
       if (snapshot.secrets.includes(sec.id)) continue;
-      const d = Math.hypot(player.position.x - sec.position[0], player.position.z - sec.position[1]);
+      const d = Math.hypot(
+        player.position.x - sec.position[0],
+        player.position.z - sec.position[1],
+      );
       if (d < best) {
         best = d;
         near = { kind: "secret", id: sec.id, label: sec.name };
       }
     }
-    const dAcademy = Math.hypot(player.position.x - ACADEMY_DOOR[0], player.position.z - ACADEMY_DOOR[1]);
+    const dAcademy = Math.hypot(
+      player.position.x - ACADEMY_DOOR[0],
+      player.position.z - ACADEMY_DOOR[1],
+    );
     if (dAcademy < 10 && dAcademy < best) {
       near = { kind: "academy", id: "academy", label: "the Nyrava Academy doors" };
     }
@@ -990,7 +1150,7 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
       <group ref={group} visible={!firstPerson}>
         <Character color={color} clip={gait} guardianId={guardianId} height={1.7} />
         <Billboard position={[0, 2.35, 0]}>
-          <Text fontSize={0.2} color="#e0f2fe" anchorX="center">
+          <Text font={worldFont} fontSize={0.2} color="#e0f2fe" anchorX="center">
             {name}
           </Text>
         </Billboard>
@@ -1011,6 +1171,7 @@ export function IslaScene({
   playerGuardian?: string;
 }) {
   const found = getIsla();
+  const quality = QUALITY[useQuality()];
   const crystals = found.crystals;
   const secrets = found.secrets;
 
@@ -1023,8 +1184,8 @@ export function IslaScene({
         position={[140, 210, 90]}
         intensity={2.1}
         castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={quality.shadowSize}
+        shadow-mapSize-height={quality.shadowSize}
         shadow-camera-left={-240}
         shadow-camera-right={240}
         shadow-camera-top={240}
@@ -1044,10 +1205,22 @@ export function IslaScene({
       <SpacePort locked={isRegionLocked("spaceport")} />
 
       {CRYSTALS.map((c) => (
-        <Pickup key={c.id} position={c.position} color="#38bdf8" found={crystals.includes(c.id)} shape="crystal" />
+        <Pickup
+          key={c.id}
+          position={c.position}
+          color="#38bdf8"
+          found={crystals.includes(c.id)}
+          shape="crystal"
+        />
       ))}
       {SECRETS.map((s) => (
-        <Pickup key={s.id} position={s.position} color="#fbbf24" found={secrets.includes(s.id)} shape="secret" />
+        <Pickup
+          key={s.id}
+          position={s.position}
+          color="#fbbf24"
+          found={secrets.includes(s.id)}
+          shape="secret"
+        />
       ))}
 
       <Player color={playerColor} name={playerName} guardianId={playerGuardian} />

@@ -41,17 +41,14 @@ const ring = (
     return make(Math.cos(a) * radius, Math.sin(a) * radius, i);
   });
 
-const grid = (
-  xs: number[],
-  zs: number[],
-  make: (x: number, z: number) => PropSpec,
-): PropSpec[] => xs.flatMap((x) => zs.map((z) => make(x, z)));
+const grid = (xs: number[], zs: number[], make: (x: number, z: number) => PropSpec): PropSpec[] =>
+  xs.flatMap((x) => zs.map((z) => make(x, z)));
 
 export const ZONES: Zone[] = [
   {
     id: "academy",
     name: "Academy Classroom",
-    blurb: "Live class with all five Guardians. Walk up to anyone and talk.",
+    blurb: "Live class with all six Guardians. Walk up to anyone and talk.",
     accent: "#38bdf8",
     sky: "#060910",
     ground: "#5b6474",
@@ -117,11 +114,46 @@ export const ZONES: Zone[] = [
     bannerSub: "Your base. Your rules. Your gear.",
     npcs: ["byte"],
     props: [
-      { kind: "box", pos: [0, 0.5, -7], size: [5, 1, 1.6], color: "#1f3a2c", emissive: "#22e07a", emissiveIntensity: 0.3 },
-      { kind: "box", pos: [0, 1.6, -7.7], size: [4.4, 1.6, 0.12], color: "#07130d", emissive: "#22e07a", emissiveIntensity: 0.8 },
-      { kind: "cyl", pos: [-7, 0.6, 2], size: [1.6, 1.6, 1.2], color: "#16281f", emissive: "#22e07a", emissiveIntensity: 0.4 },
-      { kind: "sphere", pos: [-7, 1.7, 2], size: [1.5, 1.5, 1.5], color: "#0d1c15", emissive: "#22e07a", emissiveIntensity: 0.25 },
-      { kind: "box", pos: [7, 1.2, 0], size: [0.4, 2.4, 5], color: "#12241b", emissive: "#22e07a", emissiveIntensity: 0.35 },
+      {
+        kind: "box",
+        pos: [0, 0.5, -7],
+        size: [5, 1, 1.6],
+        color: "#1f3a2c",
+        emissive: "#22e07a",
+        emissiveIntensity: 0.3,
+      },
+      {
+        kind: "box",
+        pos: [0, 1.6, -7.7],
+        size: [4.4, 1.6, 0.12],
+        color: "#07130d",
+        emissive: "#22e07a",
+        emissiveIntensity: 0.8,
+      },
+      {
+        kind: "cyl",
+        pos: [-7, 0.6, 2],
+        size: [1.6, 1.6, 1.2],
+        color: "#16281f",
+        emissive: "#22e07a",
+        emissiveIntensity: 0.4,
+      },
+      {
+        kind: "sphere",
+        pos: [-7, 1.7, 2],
+        size: [1.5, 1.5, 1.5],
+        color: "#0d1c15",
+        emissive: "#22e07a",
+        emissiveIntensity: 0.25,
+      },
+      {
+        kind: "box",
+        pos: [7, 1.2, 0],
+        size: [0.4, 2.4, 5],
+        color: "#12241b",
+        emissive: "#22e07a",
+        emissiveIntensity: 0.35,
+      },
       ...ring(6, 4.5, (x, z) => ({
         kind: "cyl",
         pos: [x, 0.15, z],
@@ -150,8 +182,23 @@ export const ZONES: Zone[] = [
     bannerSub: "Real scenarios. Real choices. Real impact.",
     npcs: ["tess", "nova"],
     props: [
-      { kind: "cyl", pos: [0, 0.12, 0], size: [6, 6, 0.24], color: "#4a3c26", emissive: "#ffb020", emissiveIntensity: 0.08 },
-      { kind: "torus", pos: [0, 3.4, 0], size: [3.2, 0.15, 0], color: "#ffb020", emissive: "#ffb020", emissiveIntensity: 1.4, rot: Math.PI / 2 },
+      {
+        kind: "cyl",
+        pos: [0, 0.12, 0],
+        size: [6, 6, 0.24],
+        color: "#4a3c26",
+        emissive: "#ffb020",
+        emissiveIntensity: 0.08,
+      },
+      {
+        kind: "torus",
+        pos: [0, 3.4, 0],
+        size: [3.2, 0.15, 0],
+        color: "#ffb020",
+        emissive: "#ffb020",
+        emissiveIntensity: 1.4,
+        rot: Math.PI / 2,
+      },
       ...ring(8, 9.5, (x, z, i) => ({
         kind: "box",
         pos: [x, 1.6, z],
@@ -205,7 +252,14 @@ export const ZONES: Zone[] = [
         emissive: "#c084fc",
         emissiveIntensity: 1.1,
       })),
-      { kind: "sphere", pos: [0, 3.2, 0], size: [1.6, 1.6, 1.6], color: "#1b1330", emissive: "#a468ff", emissiveIntensity: 1 },
+      {
+        kind: "sphere",
+        pos: [0, 3.2, 0],
+        size: [1.6, 1.6, 1.6],
+        color: "#1b1330",
+        emissive: "#a468ff",
+        emissiveIntensity: 1,
+      },
       { kind: "cyl", pos: [0, 0.4, 0], size: [3, 3, 0.8], color: "#332a4d" },
     ],
     portals: [
@@ -243,8 +297,23 @@ export const ZONES: Zone[] = [
         emissive: "#f472b6",
         emissiveIntensity: 0.9,
       })),
-      { kind: "cyl", pos: [0, 0.06, 0], size: [7, 7, 0.12], color: "#16232c", emissive: "#22d3ee", emissiveIntensity: 0.05 },
-      { kind: "torus", pos: [0, 0.18, 0], size: [5, 0.1, 0], color: "#22d3ee", emissive: "#22d3ee", emissiveIntensity: 0.8, rot: Math.PI / 2 },
+      {
+        kind: "cyl",
+        pos: [0, 0.06, 0],
+        size: [7, 7, 0.12],
+        color: "#16232c",
+        emissive: "#22d3ee",
+        emissiveIntensity: 0.05,
+      },
+      {
+        kind: "torus",
+        pos: [0, 0.18, 0],
+        size: [5, 0.1, 0],
+        color: "#22d3ee",
+        emissive: "#22d3ee",
+        emissiveIntensity: 0.8,
+        rot: Math.PI / 2,
+      },
     ],
     portals: [
       { to: "missions", pos: [0, 13], label: "Mission Hub" },
@@ -254,7 +323,7 @@ export const ZONES: Zone[] = [
   {
     id: "future",
     name: "Future Lab",
-    blurb: "Prototype tomorrow's tech with Byte in the zero-gravity lab.",
+    blurb: "Prototype tomorrow's tech with Jacob in the zero-gravity lab.",
     accent: "#f472b6",
     sky: "#100518",
     ground: "#2f2536",
@@ -281,8 +350,22 @@ export const ZONES: Zone[] = [
         emissive: "#f9a8d4",
         emissiveIntensity: 1.1,
       })),
-      { kind: "box", pos: [0, 0.5, 0], size: [6, 1, 3], color: "#3a2c42", emissive: "#f472b6", emissiveIntensity: 0.25 },
-      { kind: "torus", pos: [0, 2.8, -6], size: [2.4, 0.18, 0], color: "#f472b6", emissive: "#f472b6", emissiveIntensity: 1.3 },
+      {
+        kind: "box",
+        pos: [0, 0.5, 0],
+        size: [6, 1, 3],
+        color: "#3a2c42",
+        emissive: "#f472b6",
+        emissiveIntensity: 0.25,
+      },
+      {
+        kind: "torus",
+        pos: [0, 2.8, -6],
+        size: [2.4, 0.18, 0],
+        color: "#f472b6",
+        emissive: "#f472b6",
+        emissiveIntensity: 1.3,
+      },
     ],
     portals: [
       { to: "adventure", pos: [-9, 9], label: "Adventure Zone" },
@@ -291,9 +374,7 @@ export const ZONES: Zone[] = [
   },
 ];
 
-export const ZONE_MAP: Record<string, Zone> = Object.fromEntries(
-  ZONES.map((z) => [z.id, z]),
-);
+export const ZONE_MAP: Record<string, Zone> = Object.fromEntries(ZONES.map((z) => [z.id, z]));
 
 export function getZone(id: string): Zone {
   return ZONE_MAP[id] ?? (ZONES[0] as Zone);

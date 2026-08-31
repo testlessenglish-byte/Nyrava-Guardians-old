@@ -2,46 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Canvas } from "@react-three/fiber";
 import { Component, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 
-class IslaErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
-  constructor(props: { children: ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  override componentDidCatch(error: unknown) {
-    console.error("3D World Scene render error:", error);
-  }
-
-  override render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex h-full w-full flex-col items-center justify-center bg-slate-950 p-6 text-center text-white">
-          <h2 className="text-2xl font-black text-cyan-400">Loading Isla Central...</h2>
-          <p className="mt-2 max-w-md text-sm text-slate-300">
-            Initializing 3D graphics engine. If rendering takes longer than expected, please refresh your browser.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-6 rounded-xl bg-cyan-500 px-6 py-2.5 font-bold text-slate-950 transition hover:bg-cyan-400"
-          >
-            Reload Island
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 import { IslaScene } from "@/components/isla/isla-scene";
 import { IslaHud } from "@/components/isla/isla-hud";
 import { IslaControls } from "@/components/isla/isla-controls";
 import { hydrateIsla, islaControls, toggleIslaView } from "@/lib/isla-store";
 import { useGuardian } from "@/lib/guardian-context";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
+import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
+import { QUALITY, useQuality } from "@/services/game/quality";
+import { useAppActive } from "@/services/platform/lifecycle";
+import { isTypingTarget } from "@/services/game/input";
+import { resetIslaControls } from "@/lib/isla-store";
 
 export const Route = createFileRoute("/isla")({
   ssr: false,
@@ -56,7 +27,8 @@ export const Route = createFileRoute("/isla")({
       { property: "og:title", content: "World 1: Isla Central | Nyrava Guardians" },
       {
         property: "og:description",
-        content: "Explore a real walkable island, solve challenges and complete Class 1 with your Guardian.",
+        content:
+          "Explore a real walkable island, solve challenges and complete Class 1 with your Guardian.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -66,9 +38,12 @@ export const Route = createFileRoute("/isla")({
 });
 
 function IslaCentral() {
+  const quality = QUALITY[useQuality()];
+  const active = useAppActive();
   const { guardianId, guardianName } = useGuardian();
   const guardian =
-    CLASS_GUARDIANS.find((g) => g.id === guardianId) ?? (CLASS_GUARDIANS[0] as (typeof CLASS_GUARDIANS)[number]);
+    CLASS_GUARDIANS.find((g) => g.id === guardianId) ??
+    (CLASS_GUARDIANS[0] as (typeof CLASS_GUARDIANS)[number]);
   const wrap = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const dragDist = useRef(0);
@@ -77,8 +52,7 @@ function IslaCentral() {
   useEffect(() => {
     setMounted(true);
     hydrateIsla();
-    // Handy for debugging camera/movement state from the console.
-    (window as unknown as { __isla?: typeof islaControls }).__isla = islaControls;
+    return resetIslaControls;
   }, []);
 
   useEffect(() => {
@@ -89,6 +63,7 @@ function IslaCentral() {
       arrowright: "d",
     };
     const down = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
       const key = e.key.toLowerCase();
       const moveKey = ARROW_MAP[key] ?? (["w", "a", "s", "d"].includes(key) ? key : null);
       if (moveKey) {
@@ -97,7 +72,7 @@ function IslaCentral() {
       }
       if (key === "shift") islaControls.sprint = true;
       if (key === "e") islaControls.interact = true;
-      if (key === "v") toggleIslaView();
+      if (key === "v" && !e.repeat) toggleIslaView();
       if (e.code === "Space") {
         e.preventDefault();
         islaControls.jump = true;
@@ -113,6 +88,7 @@ function IslaCentral() {
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
+      resetIslaControls();
     };
   }, []);
 
@@ -134,8 +110,10 @@ function IslaCentral() {
   return (
     <div
       ref={wrap}
-      className="fixed inset-0 z-50 touch-none bg-background"
-      onPointerDown={() => {
+      className="game-viewport fixed inset-0 z-50 touch-none bg-background"
+      onPointerDown={(e) => {
+        if (e.pointerType !== "mouse" || !(e.target instanceof HTMLCanvasElement)) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
         dragging.current = true;
         dragDist.current = 0;
         islaControls.dragged = false;
@@ -147,6 +125,13 @@ function IslaCentral() {
         }, 0);
       }}
       onPointerLeave={() => {
+        dragging.current = false;
+      }}
+      onPointerCancel={() => {
+        dragging.current = false;
+        resetIslaControls();
+      }}
+      onLostPointerCapture={() => {
         dragging.current = false;
       }}
       onPointerMove={(e) => {
@@ -161,8 +146,13 @@ function IslaCentral() {
       }}
     >
       {mounted && (
-        <IslaErrorBoundary>
-          <Canvas shadows camera={{ position: [0, 26, 52], fov: 58, near: 0.1, far: 5000 }} dpr={[1, 1.6]}>
+        <GameErrorBoundary>
+          <Canvas
+            frameloop={active ? "always" : "never"}
+            shadows={quality.shadows}
+            camera={{ position: [0, 26, 52], fov: 58, near: 0.1, far: 5000 }}
+            dpr={quality.dpr}
+          >
             <Suspense fallback={null}>
               <IslaScene
                 playerColor={guardian.color}
@@ -171,10 +161,12 @@ function IslaCentral() {
               />
             </Suspense>
           </Canvas>
-        </IslaErrorBoundary>
+        </GameErrorBoundary>
       )}
       <IslaHud guardianName={guardian.name} />
       <IslaControls />
+      <WorldLoading />
+      <GameSettings />
     </div>
   );
 }

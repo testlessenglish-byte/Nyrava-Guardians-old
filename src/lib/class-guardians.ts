@@ -33,7 +33,7 @@ export const CLASS_GUARDIANS: ClassGuardian[] = [
   },
   {
     id: "zoey",
-    name: "Zoey",
+    name: "Zoe",
     role: "The Protector",
     color: "#3aa0ff",
     voice: "shimmer",
@@ -64,11 +64,11 @@ export const CLASS_GUARDIANS: ClassGuardian[] = [
   {
     id: "sarah",
     name: "Sarah",
-    role: "AI Companion",
+    role: "Security Specialist",
     color: "#38bdf8",
     voice: "nova",
     position: [0, 0, 9],
     rotation: Math.PI,
-    greeting: "I am Sarah, your AI guide and companion!",
+    greeting: "I am Sarah, your Security Specialist!",
   },
 ];

@@ -11,6 +11,7 @@ const GUARDIAN_MODELS: Record<string, string> = {
   lex: "/models/kay_Knight.glb",
   nova: "/models/kay_Mage.glb",
   zoey: "/models/kay_Rogue.glb",
+  zoe: "/models/kay_Rogue.glb",
   jacob: "/models/kay_Barbarian.glb",
   dayana: "/models/kay_Rogue_Hooded.glb",
   sarah: "/models/kay_Knight.glb",
@@ -60,7 +61,9 @@ export function Character({
         mesh.castShadow = true;
         mesh.frustumCulled = false;
         const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        mats.forEach((m) => {
+        const ownedMaterials = mats.map((source) => source.clone());
+        mesh.material = Array.isArray(mesh.material) ? ownedMaterials : ownedMaterials[0]!;
+        ownedMaterials.forEach((m) => {
           const mat = m as THREE.MeshStandardMaterial;
           // Keep baked kid-armor texture dominant; gentle guardian tint only.
           mat.color = new THREE.Color("#ffffff").lerp(new THREE.Color(color), 0.12);
@@ -98,7 +101,24 @@ export function Character({
     };
   }, [actions, clip]);
 
-  useFrame((_, delta) => mixer.update(delta));
+  useEffect(
+    () => () => {
+      mixer.stopAllAction();
+      // React may replay effects with the same memoized actions. Uncaching their
+      // bindings here invalidates those actions; the owned mixer is GC'd on unmount.
+      current.current = null;
+      rig.traverse((obj) => {
+        const mesh = obj as THREE.Mesh;
+        if (mesh.isMesh)
+          (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).forEach((m) =>
+            m.dispose(),
+          );
+      });
+    },
+    [mixer, rig],
+  );
+
+  useFrame((_, delta) => mixer.update(Math.min(delta, 0.05)));
 
   const swimming = clip === "swim";
 
@@ -146,4 +166,4 @@ export function Character({
   );
 }
 
-Object.values(GUARDIAN_MODELS).forEach((u) => useGLTF.preload(u));
+// useGLTF caches on demand; avoid downloading every Guardian before it is visible.

@@ -7,6 +7,11 @@ import { ClassHud } from "@/components/meta/class-hud";
 import { controls } from "@/lib/class-store";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
 import { useGuardian } from "@/lib/guardian-context";
+import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
+import { LookPad } from "@/components/game/touch-controls";
+import { QUALITY, useQuality } from "@/services/game/quality";
+import { useAppActive } from "@/services/platform/lifecycle";
+import { isTypingTarget } from "@/services/game/input";
 
 export const Route = createFileRoute("/classroom")({
   ssr: false,
@@ -31,6 +36,8 @@ export const Route = createFileRoute("/classroom")({
 });
 
 function ClassroomPage() {
+  const quality = QUALITY[useQuality()];
+  const active = useAppActive();
   const dragging = useRef(false);
   const { guardianId, guardianName } = useGuardian();
   const chosen = CLASS_GUARDIANS.find((g) => g.id === guardianId);
@@ -39,6 +46,8 @@ function ClassroomPage() {
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
+      if (e.key.startsWith("Arrow")) e.preventDefault();
       const key = e.key.toLowerCase();
       if (["w", "a", "s", "d"].includes(key)) controls.keys.add(key);
       if (key === "arrowup") controls.keys.add("w");
@@ -67,10 +76,11 @@ function ClassroomPage() {
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-background">
+    <div className="game-viewport classroom-viewport fixed inset-0 bg-background">
       <div
         className="absolute inset-0 touch-none"
         onPointerDown={(e) => {
+          if (e.pointerType !== "mouse") return;
           dragging.current = true;
           e.currentTarget.setPointerCapture(e.pointerId);
         }}
@@ -79,12 +89,29 @@ function ClassroomPage() {
         }}
         onPointerUp={() => (dragging.current = false)}
         onPointerCancel={() => (dragging.current = false)}
+        onLostPointerCapture={() => (dragging.current = false)}
       >
-        <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 5, 13], fov: 58 }}>
-          <ClassroomScene playerColor={playerColor} playerLabel={playerLabel} />
-        </Canvas>
+        <GameErrorBoundary>
+          <Canvas
+            frameloop={active ? "always" : "never"}
+            shadows={quality.shadows}
+            dpr={quality.dpr}
+            camera={{ position: [0, 5, 13], fov: 58 }}
+          >
+            <ClassroomScene
+              playerColor={playerColor}
+              playerLabel={playerLabel}
+              guardianId={chosen?.id ?? "lex"}
+            />
+          </Canvas>
+        </GameErrorBoundary>
       </div>
       <ClassHud />
+      <div className="mobile-game-controls game-right z-40">
+        <LookPad target={controls} />
+      </div>
+      <WorldLoading />
+      <GameSettings />
     </div>
   );
 }
