@@ -1,4 +1,3 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { createFileRoute } from "@tanstack/react-router";
 import { StoryTrackerHud } from "@/components/mission/story-tracker-hud";
 import { Canvas } from "@react-three/fiber";
@@ -114,7 +113,7 @@ function IslaCentral() {
               cameraPitch={cameraPitch}
             />
           </Canvas>
-          <IslaHud />
+          <IslaHud guardianName={guardianName || "Alex"} />
           <IslaControls guardianName={guardianName || "Alex"} />
           <StoryTrackerHud />
           <GuardianJourney />
