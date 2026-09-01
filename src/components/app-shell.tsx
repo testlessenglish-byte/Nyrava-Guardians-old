@@ -6,6 +6,7 @@ import { useGuardian } from "@/lib/guardian-context";
 import { GUARDIAN_IMAGES, GUARDIANS } from "@/data/guardians";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
+import { isImmersiveGameRoute } from "@/lib/game-route";
 
 const NAV = [
   { to: "/home", label: "My Home", icon: Home },
@@ -69,13 +70,12 @@ function GuardianChip() {
   );
 }
 
-const IMMERSIVE = ["/isla", "/classroom"];
-
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  // 3D worlds take the whole screen: no header, sidebar or bottom bar over the canvas.
-  if (IMMERSIVE.some((route) => pathname.startsWith(route))) {
+  // Every real-time 3D route must own the full viewport. Running these scenes
+  // inside the standard header/sidebar shell changes their layout and pointer area.
+  if (isImmersiveGameRoute(pathname)) {
     return (
       <div className="fixed inset-0 overflow-hidden bg-background">
         {children}
@@ -130,8 +130,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="min-w-0 flex-1">{children}</main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/90 backdrop-blur-md md:hidden">
-        <div className="grid grid-cols-6">
+      <nav className="fixed inset-x-0 bottom-0 z-40 overflow-x-auto border-t border-border/60 bg-background/90 backdrop-blur-md md:hidden">
+        <div className="flex min-w-max justify-center">
           {NAV.map(({ to, label, icon: Icon }) => {
             const active = pathname.startsWith(to);
             return (
@@ -140,7 +140,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={to}
                 aria-label={label}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 py-2.5 text-[9px] font-bold",
+                  "flex min-w-20 flex-col items-center gap-0.5 px-2 py-2.5 text-[9px] font-bold",
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >
