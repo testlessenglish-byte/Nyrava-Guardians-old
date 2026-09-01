@@ -8,6 +8,7 @@ import { controls, travelTo } from "@/lib/class-store";
 import { PlayerController } from "@/components/game/player/third-person-controller";
 import { updateFollowCamera } from "@/components/game/player/camera-follower";
 import { CLASSROOM_BOUNDS, isPositionColliding } from "@/components/game/player/classroom-collision";
+import { STUDENT_SEATS, CLASSROOM_DOORS } from "./academy-classroom-set";
 
 function Loader() {
   const { progress } = useProgress();
@@ -23,26 +24,17 @@ function Loader() {
 function TeacherNpc({
   guardian,
   position,
-  rotation,
 }: {
   guardian: ClassGuardian;
   position: [number, number, number];
-  rotation: number;
 }) {
   return (
-    <group position={position} rotation-y={rotation}>
+    <group position={position}>
       <Character color={guardian.color} clip="idle" guardianId={guardian.id} />
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
         <ringGeometry args={[0.9, 1.15, 48]} />
-        <meshStandardMaterial
-          color={guardian.color}
-          emissive={guardian.color}
-          emissiveIntensity={1.2}
-          transparent
-          opacity={0.85}
-        />
+        <meshStandardMaterial color={guardian.color} emissive={guardian.color} emissiveIntensity={1.2} transparent opacity={0.85} />
       </mesh>
-      <pointLight position={[0, 1.6, 0]} color={guardian.color} intensity={5} distance={6} />
       <Html position={[0, 2.5, 0]} center distanceFactor={10} occlude={false}>
         <div className="pointer-events-none select-none text-center">
           <span
@@ -59,19 +51,29 @@ function TeacherNpc({
 
 const playerController = new PlayerController();
 
-function Player({
-  color,
-  label,
-  guardianId,
+export function ClassroomScene({
+  playerColor = "#f4f7ff",
+  playerLabel = "You",
+  guardianId = "lex",
+  onStartCourse,
+  activeSeatId,
+  setActiveSeatId,
+  openDoorIds,
+  setOpenDoorIds,
+  setActiveInteraction,
 }: {
-  color: string;
-  label: string;
-  guardianId: string;
+  playerColor?: string;
+  playerLabel?: string;
+  guardianId?: string;
+  onStartCourse?: () => void;
+  activeSeatId?: string | null;
+  setActiveSeatId?: (id: string | null) => void;
+  openDoorIds?: Set<string>;
+  setOpenDoorIds?: (updater: (prev: Set<string>) => Set<string>) => void;
+  setActiveInteraction?: (interaction: { type: string; label: { en: string; es: string }; action: () => void } | null) => void;
 }) {
   const group = useRef<THREE.Group>(null);
   const [moving, setMoving] = useState(false);
-  const [nearPortal, setNearPortal] = useState(false);
-  const [nearBoard, setNearBoard] = useState(false);
 
   useEffect(() => {
     if (group.current) {
@@ -85,6 +87,8 @@ function Player({
     const delta = Math.min(rawDelta, 0.05);
     const player = group.current;
     if (!player) return;
+
+    playerController.playerState = activeSeatId ? "seated" : "walking";
 
     const keys = controls.keys;
     const input = {
@@ -106,7 +110,9 @@ function Player({
       (nextPos) => isPositionColliding(nextPos, 0.45)
     );
 
-    player.rotation.y = playerController.rotationY;
+    if (!activeSeatId) {
+      player.rotation.y = playerController.rotationY;
+    }
 
     if (playerController.isMoving !== moving) {
       setMoving(playerController.isMoving);
@@ -125,89 +131,108 @@ function Player({
       );
     }
 
-    const portalDist = Math.hypot(player.position.x - 11.2, player.position.z - 0);
-    const isPortalNear = portalDist < 2.5;
-    if (isPortalNear !== nearPortal) setNearPortal(isPortalNear);
+    // UNIFIED INTERACTION PRIORITY EVALUATOR
+    const pX = player.position.x;
+    const pZ = player.position.z;
 
-    const boardDist = Math.hypot(player.position.x - 0, player.position.z - (-6.5));
-    const isBoardNear = boardDist < 3.2;
-    if (isBoardNear !== nearBoard) setNearBoard(isBoardNear);
+    // 1. Seated Action
+    if (activeSeatId) {
+      setActiveInteraction?.({
+        type: "stand",
+        label: { en: "Press E to Stand", es: "Presiona E para levantarte" },
+        action: () => {
+          const seat = STUDENT_SEATS.find((s) => s.id === activeSeatId);
+          if (seat && group.current) {
+            group.current.position.set(...seat.standPosition);
+          }
+          setActiveSeatId?.(null);
+        },
+      });
+      return;
+    }
+
+    // 2. Front Teaching Screen / Course Board (Distance < 3.2m)
+    const boardDist = Math.hypot(pX, pZ - (-6.5));
+    if (boardDist < 3.2) {
+      setActiveInteraction?.({
+        type: "course",
+        label: { en: "Press E to View Class", es: "Presiona E para ver la clase" },
+        action: () => onStartCourse?.(),
+      });
+      return;
+    }
+
+    // 3. Doors (Distance < 2.5m)
+    let nearestDoor = null;
+    let minDoorDist = 2.5;
+    for (const d of CLASSROOM_DOORS) {
+      const dist = Math.hypot(pX - d.position[0], pZ - d.position[2]);
+      if (dist < minDoorDist) {
+        minDoorDist = dist;
+        nearestDoor = d;
+      }
+    }
+    if (nearestDoor) {
+      const doorId = nearestDoor.id;
+      const isOpen = openDoorIds?.has(doorId);
+      setActiveInteraction?.({
+        type: "door",
+        label: isOpen
+          ? { en: "Press E to Close Door", es: "Presiona E para cerrar la puerta" }
+          : { en: "Press E to Open Door", es: "Presiona E para abrir la puerta" },
+        action: () => {
+          setOpenDoorIds?.((prev) => {
+            const next = new Set(prev);
+            if (next.has(doorId)) next.delete(doorId);
+            else next.add(doorId);
+            return next;
+          });
+        },
+      });
+      return;
+    }
+
+    // 4. Chairs (Distance < 2.0m)
+    let nearestSeat = null;
+    let minSeatDist = 2.0;
+    for (const s of STUDENT_SEATS) {
+      const dist = Math.hypot(pX - s.position[0], pZ - s.position[2]);
+      if (dist < minSeatDist) {
+        minSeatDist = dist;
+        nearestSeat = s;
+      }
+    }
+    if (nearestSeat) {
+      const s = nearestSeat;
+      setActiveInteraction?.({
+        type: "sit",
+        label: { en: "Press E to Sit", es: "Presiona E para sentarte" },
+        action: () => {
+          if (group.current) {
+            group.current.position.set(...s.seatPosition);
+            group.current.rotation.y = s.seatRotation;
+          }
+          setActiveSeatId?.(s.id);
+        },
+      });
+      return;
+    }
+
+    // 5. Mission Hub Portal (Distance < 2.5m)
+    const portalDist = Math.hypot(pX - 11.2, pZ - 2.0);
+    if (portalDist < 2.5) {
+      setActiveInteraction?.({
+        type: "portal",
+        label: { en: "Press E to Enter Mission Hub", es: "Presiona E para entrar al Mission Hub" },
+        action: () => travelTo("isla"),
+      });
+      return;
+    }
+
+    // No interaction nearby
+    setActiveInteraction?.(null);
   });
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "e") {
-        const pX = controls.player.x;
-        const pZ = controls.player.z;
-        if (Math.hypot(pX - 11.2, pZ) < 2.8) {
-          travelTo("isla");
-        } else if (Math.hypot(pX, pZ - (-6.5)) < 3.5) {
-          window.dispatchEvent(new Event("nyrava-open-journey"));
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  return (
-    <group ref={group} position={[0, 0, 0]}>
-      <Character color={color} clip={moving ? "walk" : "idle"} guardianId={guardianId} />
-
-      <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
-        <ringGeometry args={[0.55, 0.72, 40]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={1.5}
-          transparent
-          opacity={0.85}
-        />
-      </mesh>
-      <pointLight position={[0, 1.7, 0]} color={color} intensity={4} distance={5} />
-
-      <Html position={[0, 2.35, 0]} center distanceFactor={10}>
-        <span className="pointer-events-none select-none rounded-full border border-cyan-400/30 bg-slate-950/80 px-3 py-1 text-xs font-black uppercase tracking-widest text-cyan-300 backdrop-blur">
-          {label}
-        </span>
-      </Html>
-
-      {nearPortal && (
-        <Html position={[0, 2.9, 0]} center distanceFactor={8}>
-          <button
-            type="button"
-            onClick={() => travelTo("isla")}
-            className="animate-bounce rounded-full border border-indigo-400/60 bg-indigo-950/90 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-indigo-200 shadow-xl backdrop-blur"
-          >
-            Press E · Enter Mission Hub
-          </button>
-        </Html>
-      )}
-
-      {nearBoard && (
-        <Html position={[0, 2.9, 0]} center distanceFactor={8}>
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new Event("nyrava-open-journey"))}
-            className="animate-bounce rounded-full border border-cyan-400/60 bg-slate-950/90 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-cyan-300 shadow-xl backdrop-blur"
-          >
-            Press E · Open Lesson
-          </button>
-        </Html>
-      )}
-    </group>
-  );
-}
-
-export function ClassroomScene({
-  playerColor = "#f4f7ff",
-  playerLabel = "You",
-  guardianId = "lex",
-}: {
-  playerColor?: string;
-  playerLabel?: string;
-  guardianId?: string;
-}) {
   const teacher = CLASS_GUARDIANS.find((g) => g.id === "sarah") ?? CLASS_GUARDIANS[0]!;
 
   return (
@@ -216,8 +241,21 @@ export function ClassroomScene({
       <fog attach="fog" args={["#0f172a", 20, 50]} />
 
       <Suspense fallback={<Loader />}>
-        <TeacherNpc guardian={teacher} position={[0, 0.55, -6.6]} rotation={0} />
-        <Player color={playerColor} label={playerLabel} guardianId={guardianId} />
+        <TeacherNpc guardian={teacher} position={[0, 0.55, -6.6]} />
+
+        <group ref={group} position={[0, 0, 0]}>
+          <Character color={playerColor} clip={moving ? "walk" : "idle"} guardianId={guardianId} />
+          <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
+            <ringGeometry args={[0.55, 0.72, 40]} />
+            <meshStandardMaterial color={playerColor} emissive={playerColor} emissiveIntensity={1.5} transparent opacity={0.85} />
+          </mesh>
+          <pointLight position={[0, 1.7, 0]} color={playerColor} intensity={4} distance={5} />
+          <Html position={[0, 2.35, 0]} center distanceFactor={10}>
+            <span className="pointer-events-none select-none rounded-full border border-cyan-400/30 bg-slate-950/80 px-3 py-1 text-xs font-black uppercase tracking-widest text-cyan-300 backdrop-blur">
+              {playerLabel}
+            </span>
+          </Html>
+        </group>
       </Suspense>
     </>
   );
