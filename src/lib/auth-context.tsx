@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -39,8 +39,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loadingSessionKey = useRef<string | null>(null);
 
   async function loadAccount(nextSession: Session | null) {
+    const sessionKey = nextSession?.access_token ?? "signed-out";
+    if (loadingSessionKey.current === sessionKey) return;
+    loadingSessionKey.current = sessionKey;
+
     setSession(nextSession);
     setError(null);
     if (!nextSession?.user) {
@@ -92,12 +97,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         .catch((authError) => {
           if (!active) return;
+          loadingSessionKey.current = null;
           setError(safeAuthMessage(authError));
           setLoading(false);
         });
       const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
         if (!active) return;
         void loadAccount(nextSession).catch((authError) => {
+          loadingSessionKey.current = null;
           setError(safeAuthMessage(authError));
           setLoading(false);
         });
@@ -107,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data.subscription.unsubscribe();
       };
     } catch (authError) {
+      loadingSessionKey.current = null;
       setError(safeAuthMessage(authError));
       setLoading(false);
       return () => {
