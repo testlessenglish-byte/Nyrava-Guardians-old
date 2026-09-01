@@ -2,8 +2,10 @@ import * as THREE from "three";
 
 const tempDesiredCamPos = new THREE.Vector3();
 const tempTargetPos = new THREE.Vector3();
+const tempTargetOffset = new THREE.Vector3();
 const tempRayDirection = new THREE.Vector3();
 const raycaster = new THREE.Raycaster();
+const EMPTY_COLLISION_OBJECTS: THREE.Object3D[] = [];
 
 export function updateThirdPersonCamera(
   camera: THREE.PerspectiveCamera,
@@ -13,10 +15,11 @@ export function updateThirdPersonCamera(
   delta: number,
   distance = 4.5,
   targetHeight = 1.5,
-  collisionObjects: THREE.Object3D[] = [],
+  collisionObjects: THREE.Object3D[] = EMPTY_COLLISION_OBJECTS,
   roomBounds?: { minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number }
 ) {
-  tempTargetPos.copy(playerPos).add(new THREE.Vector3(0, targetHeight, 0));
+  tempTargetOffset.set(0, targetHeight, 0);
+  tempTargetPos.copy(playerPos).add(tempTargetOffset);
 
   const cosPitch = Math.cos(pitch);
   const sinPitch = Math.sin(pitch);
@@ -40,7 +43,7 @@ export function updateThirdPersonCamera(
   tempRayDirection.subVectors(tempDesiredCamPos, tempTargetPos);
   const maxDist = tempRayDirection.length();
 
-  if (maxDist > 0.001) {
+  if (maxDist > 0.001 && collisionObjects.length > 0) {
     tempRayDirection.normalize();
     raycaster.set(tempTargetPos, tempRayDirection);
     raycaster.far = maxDist;
