@@ -1,4 +1,4 @@
-import { Html } from "@react-three/drei";
+import { Text } from "@react-three/drei";
 import { InteractiveSeat, type SeatData } from "@/components/game/interactive-seat";
 import { InteractiveDoor, type DoorData } from "@/components/game/interactive-door";
 
@@ -26,26 +26,21 @@ export function BuilderLabSet({ activeSeatId, openDoorIds }: { activeSeatId?: st
       <mesh position={[0, 0.15, -8.8]}><boxGeometry args={[14, 0.3, 2.4]} /><meshStandardMaterial color="#d97706" roughness={0.4} /></mesh>
       <group position={[0, 2.8, -9.4]}>
         <mesh><boxGeometry args={[11.5, 3.1, 0.15]} /><meshStandardMaterial color="#78350f" roughness={0.4} /></mesh>
-        <Html position={[0, 0, 0.12]} transform distanceFactor={18} occlude={false}>
-          <div className="w-[850px] select-none text-center text-white">
-            <h1 className="text-3xl font-black tracking-widest text-amber-400">JACOB'S BUILDER LAB</h1>
-            <p className="mt-1 text-sm font-extrabold text-amber-200">Coding · Robotics · Hardware · AI Workflows</p>
-            <div className="mt-4 flex justify-center gap-6">
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-amber-500/40 bg-amber-950/70 p-3 w-28">
-                <span className="text-3xl">💻</span>
-                <span className="text-[10px] font-black text-amber-300">Code Editor</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-orange-500/40 bg-orange-950/70 p-3 w-28">
-                <span className="text-3xl">🤖</span>
-                <span className="text-[10px] font-black text-orange-300">Robot Rig</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-yellow-500/40 bg-yellow-950/70 p-3 w-28">
-                <span className="text-3xl">⚡</span>
-                <span className="text-[10px] font-black text-yellow-300">Circuit Lab</span>
-              </div>
-            </div>
-          </div>
-        </Html>
+        <Text position={[0, 0.8, 0.1]} fontSize={0.24} color="#fbbf24" anchorX="center" anchorY="middle" letterSpacing={0.08}>
+          JACOB'S BUILDER LAB
+        </Text>
+        <Text position={[0, 0.3, 0.1]} fontSize={0.14} color="#fde68a" anchorX="center" anchorY="middle">
+          Coding · Robotics · Hardware · AI Workflows
+        </Text>
+        <Text position={[-2.2, -0.4, 0.1]} fontSize={0.13} color="#f59e0b" anchorX="center" anchorY="middle">
+          💻 Code Editor
+        </Text>
+        <Text position={[0, -0.4, 0.1]} fontSize={0.13} color="#fb923c" anchorX="center" anchorY="middle">
+          🤖 Robot Rig
+        </Text>
+        <Text position={[2.2, -0.4, 0.1]} fontSize={0.13} color="#facc15" anchorX="center" anchorY="middle">
+          ⚡ Circuit Lab
+        </Text>
       </group>
 
       {BUILDER_DOORS.map((door) => (
