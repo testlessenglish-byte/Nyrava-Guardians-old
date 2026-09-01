@@ -2,23 +2,40 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PauseMenu } from "@/components/game/pause-menu";
 import { StoryTrackerHud } from "@/components/mission/story-tracker-hud";
 import { Canvas } from "@react-three/fiber";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { IslaScene } from "@/components/isla/isla-scene";
 import { IslaHud } from "@/components/isla/isla-hud";
 import { IslaControls } from "@/components/isla/isla-controls";
-import { hydrateIsla } from "@/lib/isla-store";
+import { hydrateIsla, islaControls, toggleIslaView } from "@/lib/isla-store";
 import { useGuardian } from "@/lib/guardian-context";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
 import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
 import { QUALITY, useQuality } from "@/services/game/quality";
 import { useAppActive } from "@/services/platform/lifecycle";
 import { GuardianJourney } from "@/components/progression/guardian-journey";
-import { InputManager, type GameInputState } from "@/components/game/core/input-manager";
-import { type PlayerMode } from "@/components/game/core/player-state-machine";
+import { isGameInputPaused, isTypingTarget } from "@/components/game/core/input-manager";
 import { advancePhishingStory } from "@/lib/phishing-story-state";
 
 export const Route = createFileRoute("/isla")({ ssr: false, component: IslaCentral });
+
+const movementKey = (key: string) => {
+  if (key === "arrowup") return "w";
+  if (key === "arrowdown") return "s";
+  if (key === "arrowleft") return "a";
+  if (key === "arrowright") return "d";
+  return key;
+};
+
+function clearLegacyInput() {
+  islaControls.keys.clear();
+  islaControls.joystick.x = 0;
+  islaControls.joystick.y = 0;
+  islaControls.sprint = false;
+  islaControls.jump = false;
+  islaControls.interact = false;
+  islaControls.moveTarget = null;
+}
 
 function IslaCentral() {
   const quality = QUALITY[useQuality()];
@@ -27,13 +44,7 @@ function IslaCentral() {
   const guardian = CLASS_GUARDIANS.find((g) => g.id === guardianId) ?? CLASS_GUARDIANS[0]!;
   const wrap = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
-  const dragDist = useRef(0);
   const [mounted, setMounted] = useState(false);
-  const inputManager = useMemo(() => new InputManager(), []);
-  const [inputState, setInputState] = useState<GameInputState>(() => inputManager.getSnapshot());
-  const [cameraYaw, setCameraYaw] = useState(0);
-  const [cameraPitch, setCameraPitch] = useState(0.2);
-  const [playerMode, setPlayerMode] = useState<PlayerMode>("idle");
 
   useEffect(() => {
     setMounted(true);
@@ -42,48 +53,76 @@ function IslaCentral() {
   }, []);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => inputManager.onKeyDown(e);
-    const up = (e: KeyboardEvent) => inputManager.onKeyUp(e);
+    const down = (event: KeyboardEvent) => {
+      if (isGameInputPaused() || isTypingTarget(event.target)) return;
+      const raw = event.key.toLowerCase();
+      const key = movementKey(raw);
+      if (["w", "a", "s", "d"].includes(key)) {
+        if (raw.startsWith("arrow")) event.preventDefault();
+        islaControls.keys.add(key);
+      }
+      if (raw === "shift") islaControls.sprint = true;
+      if (raw === "e") islaControls.interact = true;
+      if (event.code === "Space") {
+        event.preventDefault();
+        islaControls.jump = true;
+      }
+      if (raw === "v" && !event.repeat) toggleIslaView();
+    };
+    const up = (event: KeyboardEvent) => {
+      const raw = event.key.toLowerCase();
+      const key = movementKey(raw);
+      islaControls.keys.delete(key);
+      if (raw === "shift") islaControls.sprint = false;
+    };
+    const reset = () => clearLegacyInput();
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    const interval = window.setInterval(() => {
-      const snap = inputManager.getSnapshot();
-      setInputState(snap);
-      setPlayerMode(snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
-    }, 32);
+    window.addEventListener("blur", reset);
+    window.addEventListener("nyrava-input-reset", reset);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
-      window.clearInterval(interval);
-      inputManager.dispose();
+      window.removeEventListener("blur", reset);
+      window.removeEventListener("nyrava-input-reset", reset);
+      clearLegacyInput();
     };
-  }, [inputManager]);
+  }, []);
 
   return (
     <div
       ref={wrap}
       className="game-viewport fixed inset-0 z-50 touch-none bg-background"
-      onPointerDown={(e) => {
-        if (e.pointerType !== "mouse" || !(e.target instanceof HTMLCanvasElement)) return;
-        e.currentTarget.setPointerCapture(e.pointerId);
+      onPointerDown={(event) => {
+        if (event.pointerType !== "mouse" || !(event.target instanceof HTMLCanvasElement) || isGameInputPaused()) return;
+        event.currentTarget.setPointerCapture(event.pointerId);
         dragging.current = true;
-        dragDist.current = 0;
+        islaControls.dragged = false;
       }}
       onPointerUp={() => { dragging.current = false; }}
       onPointerLeave={() => { dragging.current = false; }}
-      onPointerCancel={() => { dragging.current = false; inputManager.reset(); }}
+      onPointerCancel={() => { dragging.current = false; clearLegacyInput(); }}
       onLostPointerCapture={() => { dragging.current = false; }}
-      onPointerMove={(e) => {
-        if (!dragging.current) return;
-        dragDist.current += Math.abs(e.movementX) + Math.abs(e.movementY);
-        setCameraYaw((prev) => prev - e.movementX * 0.005);
-        setCameraPitch((prev) => Math.min(0.85, Math.max(-0.15, prev + e.movementY * 0.003)));
+      onPointerMove={(event) => {
+        if (!dragging.current || isGameInputPaused()) return;
+        if (Math.abs(event.movementX) + Math.abs(event.movementY) > 2) islaControls.dragged = true;
+        islaControls.cameraYaw -= event.movementX * 0.005;
+        islaControls.cameraPitch = Math.min(0.85, Math.max(-0.15, islaControls.cameraPitch + event.movementY * 0.003));
       }}
     >
       {mounted && (
         <GameErrorBoundary>
-          <Canvas frameloop={active ? "always" : "never"} shadows={quality.shadows} dpr={quality.dpr} camera={{ position: [0, 8, 24], fov: 58 }}>
-            <IslaScene playerColor={guardian.color} playerName={guardianName || "Alex"} playerGuardian={guardian.id} inputState={inputState} playerMode={playerMode} cameraYaw={cameraYaw} cameraPitch={cameraPitch} />
+          <Canvas
+            frameloop={active ? "always" : "never"}
+            shadows={quality.shadows}
+            dpr={quality.dpr}
+            camera={{ position: [0, 8, 24], fov: 58 }}
+          >
+            <IslaScene
+              playerColor={guardian.color}
+              playerName={guardianName || "Alex"}
+              playerGuardian={guardian.id}
+            />
           </Canvas>
           <IslaHud guardianName={guardianName || "Alex"} />
           <IslaControls guardianName={guardianName || "Alex"} />
