@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Canvas } from "@react-three/fiber";
 import { useRef, useState, useEffect, useMemo } from "react";
-import { ClassroomScene } from "@/components/meta/classroom-scene";
+import { ClassroomScene, type ClassroomRoom } from "@/components/meta/classroom-scene";
 import { AcademyClassroomSet } from "@/components/meta/academy-classroom-set";
 import { BuilderLabSet } from "@/components/meta/builder-lab-set";
 import { CommunicationStudioSet } from "@/components/meta/communication-studio-set";
@@ -17,11 +17,19 @@ import { useAppActive } from "@/services/platform/lifecycle";
 import { InputManager, type GameInputState } from "@/components/game/core/input-manager";
 import { type PlayerMode } from "@/components/game/core/player-state-machine";
 import { FullViewportCourseExperience } from "@/components/progression/full-course-experience";
+import { PauseMenu } from "@/components/game/pause-menu";
+import { missions } from "@/domain/progression/catalog";
 
 export const Route = createFileRoute("/classroom")({
   ssr: false,
   component: ClassroomPage,
 });
+
+function readSelectedMission() {
+  if (typeof window === "undefined") return missions[0]!.id;
+  const saved = window.sessionStorage.getItem("nyrava-selected-mission");
+  return missions.some((mission) => mission.id === saved) ? saved! : missions[0]!.id;
+}
 
 function ClassroomPage() {
   const quality = QUALITY[useQuality()];
@@ -34,12 +42,13 @@ function ClassroomPage() {
 
   const inputManager = useMemo(() => new InputManager(), []);
   const [inputState, setInputState] = useState<GameInputState>(() => inputManager.getSnapshot());
-
   const [mode, setMode] = useState<PlayerMode>("idle");
   const [cameraYaw, setCameraYaw] = useState(0);
   const [cameraPitch, setCameraPitch] = useState(0.15);
   const [activeSeatId, setActiveSeatId] = useState<string | null>(null);
   const [openDoorIds, setOpenDoorIds] = useState<Set<string>>(new Set());
+  const [currentRoom, setCurrentRoom] = useState<ClassroomRoom>("security");
+  const [selectedMissionId, setSelectedMissionId] = useState(readSelectedMission);
   const [activeInteraction, setActiveInteraction] = useState<{
     id: string;
     type: string;
@@ -53,32 +62,37 @@ function ClassroomPage() {
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
 
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
       const snap = inputManager.getSnapshot();
       setInputState(snap);
       if (mode !== "course") {
         setMode(activeSeatId ? "seated" : snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
       }
-    }, 16);
+    }, 32);
 
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
-      clearInterval(interval);
+      window.clearInterval(interval);
       inputManager.reset();
     };
   }, [inputManager, mode, activeSeatId]);
 
+  const startCourse = () => {
+    const missionId = readSelectedMission();
+    setSelectedMissionId(missionId);
+    setMode("course");
+  };
+
   if (mode === "course") {
     return (
       <FullViewportCourseExperience
+        missionId={selectedMissionId}
         onExit={() => setMode("idle")}
-        onComplete={() => setMode("idle")}
+        onComplete={() => undefined}
       />
     );
   }
-
-  const [currentRoom, setCurrentRoom] = useState<"security" | "builder" | "communication" | "truth">("security");
 
   return (
     <div className="game-viewport classroom-viewport fixed inset-0 bg-background">
@@ -100,13 +114,9 @@ function ClassroomPage() {
         onLostPointerCapture={() => (dragging.current = false)}
       >
         <GameErrorBoundary>
-          <Canvas
-            frameloop={active ? "always" : "never"}
-            shadows={quality.shadows}
-            dpr={quality.dpr}
-            camera={{ position: [0, 2.5, 4.5], fov: 58 }}
-          >
+          <Canvas frameloop={active ? "always" : "never"} shadows={quality.shadows} dpr={quality.dpr} camera={{ position: [0, 2.5, 4.5], fov: 58 }}>
             <ClassroomScene
+              room={currentRoom}
               playerColor={playerColor}
               playerLabel={playerLabel}
               guardianId={chosen?.id ?? "lex"}
@@ -114,30 +124,21 @@ function ClassroomPage() {
               playerMode={mode}
               cameraYaw={cameraYaw}
               cameraPitch={cameraPitch}
-              onStartCourse={() => setMode("course")}
+              onStartCourse={startCourse}
               activeSeatId={activeSeatId}
               setActiveSeatId={setActiveSeatId}
               openDoorIds={openDoorIds}
               setOpenDoorIds={setOpenDoorIds}
               setActiveInteraction={setActiveInteraction}
             />
-            {currentRoom === "security" && (
-              <AcademyClassroomSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
-            )}
-            {currentRoom === "builder" && (
-              <BuilderLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
-            )}
-            {currentRoom === "communication" && (
-              <CommunicationStudioSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
-            )}
-            {currentRoom === "truth" && (
-              <TruthLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
-            )}
+            {currentRoom === "security" && <AcademyClassroomSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
+            {currentRoom === "builder" && <BuilderLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
+            {currentRoom === "communication" && <CommunicationStudioSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
+            {currentRoom === "truth" && <TruthLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
           </Canvas>
         </GameErrorBoundary>
       </div>
 
-      {/* ROOM SWITCHER HUD */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex gap-2 rounded-2xl border border-slate-800 bg-slate-950/85 p-1.5 backdrop-blur-md shadow-xl">
         {[
           { id: "security", label: "🛡️ Command Center" },
@@ -149,31 +150,23 @@ function ClassroomPage() {
             key={room.id}
             type="button"
             onClick={() => {
-              setCurrentRoom(room.id as any);
+              setCurrentRoom(room.id as ClassroomRoom);
               setActiveSeatId(null);
+              setOpenDoorIds(new Set());
             }}
-            className={
-              "rounded-xl px-3 py-1.5 text-xs font-black transition " +
-              (currentRoom === room.id
-                ? "bg-cyan-500 text-slate-950 shadow-md"
-                : "text-slate-300 hover:bg-slate-800 hover:text-white")
-            }
+            className={"rounded-xl px-3 py-1.5 text-xs font-black transition " +
+              (currentRoom === room.id ? "bg-cyan-500 text-slate-950 shadow-md" : "text-slate-300 hover:bg-slate-800 hover:text-white")}
           >
             {room.label}
           </button>
         ))}
       </div>
 
-      <ClassHud
-        activeInteraction={activeInteraction}
-        activeSeatId={activeSeatId}
-      />
-
-      <div className="mobile-game-controls game-right z-40">
-        <LookPad target={controls} />
-      </div>
+      <ClassHud activeInteraction={activeInteraction} activeSeatId={activeSeatId} />
+      <div className="mobile-game-controls game-right z-40"><LookPad target={controls} /></div>
       <WorldLoading />
       <GameSettings />
+      <PauseMenu />
     </div>
   );
 }
