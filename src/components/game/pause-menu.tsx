@@ -68,11 +68,11 @@ export function PauseMenu() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => updateAudio({ sfx: !audio.sfx, music: !audio.music })}
+              onClick={() => updateAudio({ soundEffects: !audio.soundEffects, backgroundMusic: !audio.backgroundMusic })}
               className="border-slate-700 bg-slate-950 text-white font-bold text-xs"
             >
-              {audio.sfx ? <Volume2 className="size-4 text-emerald-400 mr-1" /> : <VolumeX className="size-4 text-rose-400 mr-1" />}
-              {audio.sfx ? "Enabled" : "Muted"}
+              {audio.soundEffects ? <Volume2 className="size-4 text-emerald-400 mr-1" /> : <VolumeX className="size-4 text-rose-400 mr-1" />}
+              {audio.soundEffects ? "Enabled" : "Muted"}
             </Button>
           </div>
         </div>
