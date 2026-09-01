@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Canvas } from "@react-three/fiber";
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect, Suspense } from "react";
 import { Award, ArrowLeft, ArrowRight, Calendar, CheckCircle2, Target, X } from "lucide-react";
 import { MissionHubScene } from "@/components/missions/mission-hub-scene";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
@@ -92,14 +92,16 @@ function MissionHubPage() {
       >
         <GameErrorBoundary>
           <Canvas frameloop={active ? "always" : "never"} shadows={quality.shadows} dpr={quality.dpr} camera={{ position: [0, 3.1, 10.2], fov: 54 }}>
-            <MissionHubScene
-              playerColor={playerColor}
-              playerLabel={playerLabel}
-              guardianId={chosen?.id ?? guardianId ?? "lex"}
-              inputManager={inputManager}
-              blocked={boardOpen}
-              onOpenBoard={openMissionBoardWithSarah}
-            />
+            <Suspense fallback={null}>
+              <MissionHubScene
+                playerColor={playerColor}
+                playerLabel={playerLabel}
+                guardianId={chosen?.id ?? guardianId ?? "lex"}
+                inputManager={inputManager}
+                blocked={boardOpen}
+                onOpenBoard={openMissionBoardWithSarah}
+              />
+            </Suspense>
           </Canvas>
         </GameErrorBoundary>
       </div>

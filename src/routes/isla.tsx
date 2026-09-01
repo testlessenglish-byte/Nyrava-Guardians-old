@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PauseMenu } from "@/components/game/pause-menu";
 import { StoryTrackerHud } from "@/components/mission/story-tracker-hud";
 import { Canvas } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 import { IslaScene } from "@/components/isla/isla-scene";
 import { IslaBrandOverlays } from "@/components/isla/isla-brand-overlays";
@@ -119,12 +119,14 @@ function IslaCentral() {
             dpr={quality.dpr}
             camera={{ position: [0, 8, 24], fov: 58 }}
           >
-            <IslaScene
-              playerColor={guardian.color}
-              playerName={guardianName || "Alex"}
-              playerGuardian={guardian.id}
-            />
-            <IslaBrandOverlays />
+            <Suspense fallback={null}>
+              <IslaScene
+                playerColor={guardian.color}
+                playerName={guardianName || "Alex"}
+                playerGuardian={guardian.id}
+              />
+              <IslaBrandOverlays />
+            </Suspense>
           </Canvas>
           <IslaHud guardianName={guardianName || "Alex"} />
           <IslaControls guardianName={guardianName || "Alex"} />

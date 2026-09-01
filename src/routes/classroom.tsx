@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Canvas } from "@react-three/fiber";
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo, Suspense } from "react";
 import { ClassroomScene } from "@/components/meta/classroom-scene";
 import { AcademyClassroomSet } from "@/components/meta/academy-classroom-set";
 import { SecurityClassroomCorrection } from "@/components/meta/security-classroom-correction";
@@ -125,28 +125,30 @@ function ClassroomPage() {
       >
         <GameErrorBoundary>
           <Canvas frameloop={active ? "always" : "never"} shadows={quality.shadows} dpr={quality.dpr} camera={{ position: [0, 3.2, 13.2], fov: 58 }}>
-            <ClassroomScene
-              room={currentRoom}
-              playerColor={playerColor}
-              playerLabel={playerLabel}
-              guardianId={chosen.id}
-              inputManager={inputManager}
-              onStartCourse={currentRoom === "security" ? startCourse : undefined}
-              activeSeatId={activeSeatId}
-              setActiveSeatId={setActiveSeatId}
-              openDoorIds={openDoorIds}
-              setOpenDoorIds={setOpenDoorIds}
-              setActiveInteraction={setActiveInteraction}
-            />
-            {currentRoom === "security" && (
-              <>
-                <AcademyClassroomSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
-                <SecurityClassroomCorrection />
-              </>
-            )}
-            {currentRoom === "builder" && <BuilderLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
-            {currentRoom === "communication" && <CommunicationStudioSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
-            {currentRoom === "truth" && <TruthLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
+            <Suspense fallback={null}>
+              <ClassroomScene
+                room={currentRoom}
+                playerColor={playerColor}
+                playerLabel={playerLabel}
+                guardianId={chosen.id}
+                inputManager={inputManager}
+                onStartCourse={currentRoom === "security" ? startCourse : undefined}
+                activeSeatId={activeSeatId}
+                setActiveSeatId={setActiveSeatId}
+                openDoorIds={openDoorIds}
+                setOpenDoorIds={setOpenDoorIds}
+                setActiveInteraction={setActiveInteraction}
+              />
+              {currentRoom === "security" && (
+                <>
+                  <AcademyClassroomSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
+                  <SecurityClassroomCorrection />
+                </>
+              )}
+              {currentRoom === "builder" && <BuilderLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
+              {currentRoom === "communication" && <CommunicationStudioSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
+              {currentRoom === "truth" && <TruthLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
+            </Suspense>
           </Canvas>
         </GameErrorBoundary>
       </div>
