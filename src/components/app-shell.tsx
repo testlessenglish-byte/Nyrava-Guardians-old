@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bot, Compass, Cpu, GraduationCap, Home, Map, Sparkles, Swords, Users } from "lucide-react";
+import { Bot, Compass, Cpu, GraduationCap, Home, Map, Shield, Sparkles, Swords, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import logo from "@/assets/guardians/logo.png";
 import { useGuardian } from "@/lib/guardian-context";
@@ -16,7 +16,7 @@ const NAV = [
   { to: "/classroom", label: "Live Class", icon: Users },
   { to: "/missions", label: "Missions", icon: Swords },
   { to: "/builder", label: "AI Builder", icon: Bot },
-  { to: "/core", label: "Core", icon: Cpu },
+  { to: "/parent", label: "Parent Portal", icon: Shield },
 ] as const;
 
 function GuardianChip() {

@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Bot, CheckCircle2, Loader2, ShieldCheck, Wand2 } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Bot, CheckCircle2, Loader2, ShieldCheck, Sparkles, Wand2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { GUARDIANS, GUARDIAN_IMAGES } from "@/data/guardians";
@@ -8,6 +8,7 @@ import { useGuardian } from "@/lib/guardian-context";
 import { cn } from "@/lib/utils";
 import { BuilderService, GuardianAI } from "@/services/mock";
 import type { BuilderStatus, GuardianId } from "@/types";
+import { resolveChildPolicy } from "@/domain/policy/resolver";
 
 export const Route = createFileRoute("/builder")({
   head: () => ({
@@ -45,6 +46,22 @@ function BuilderPage() {
   const [plan, setPlan] = useState<string[]>([]);
   const [safety, setSafety] = useState<"pending" | "passed" | "blocked">("pending");
   const runId = useRef(0);
+
+  const policy = resolveChildPolicy({});
+  if (!policy.canAccessBuilder) {
+    return (
+      <div className="panel mx-auto max-w-lg p-8 text-center space-y-4">
+        <Sparkles className="mx-auto h-12 w-12 text-amber-400 opacity-60" />
+        <h1 className="text-xl font-black">AI Builder Not Available</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          This feature isn’t available on your account right now. Ask your parent or guardian if you’d like to use it.
+        </p>
+        <Link to="/home" className="inline-flex rounded-xl bg-primary px-5 py-2.5 text-xs font-extrabold text-primary-foreground">
+          Return to Guardian Base
+        </Link>
+      </div>
+    );
+  }
 
   const busy = !["idle", "done", "error"].includes(status);
 
