@@ -98,7 +98,10 @@ export class InputManager {
     const key = e.key.toLowerCase();
     this.keys.delete(key);
     if (key === "shift") this.sprint = false;
-    if (key === "e") this.currentInteract = false;
+    if (key === "e") {
+      this.currentInteract = false;
+      this.prevInteract = false;
+    }
     if (e.code === "Space") this.jump = false;
   }
 
