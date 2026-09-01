@@ -59,10 +59,12 @@ export function GameSettings() {
   };
   return (
     <details
-      className="game-settings game-panel"
+      className="game-settings game-panel pointer-events-auto"
       name="game-panels"
       onToggle={(e) => toggleGamePanel(e.currentTarget)}
       onPointerDown={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       <summary aria-label="Game settings">
         <Settings2 size={18} />

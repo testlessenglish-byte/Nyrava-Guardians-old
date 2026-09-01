@@ -76,9 +76,11 @@ function MissionHubPage() {
       <div
         className="absolute inset-0 touch-none"
         onPointerDown={(event) => {
-          if (event.pointerType !== "mouse" || boardOpen || !(event.target instanceof HTMLCanvasElement)) return;
+          if (boardOpen) return;
+          const target = event.target as HTMLElement | null;
+          if (target?.closest("button, a, select, input, summary, details, label, [role='button'], .game-panel, .game-panel-content")) return;
+          if (event.pointerType === "mouse" && event.button !== 0) return;
           dragging.current = true;
-          event.currentTarget.setPointerCapture(event.pointerId);
         }}
         onPointerMove={(event) => {
           if (dragging.current && !boardOpen) inputManager.setCameraLook(event.movementX, event.movementY);

@@ -95,8 +95,10 @@ function IslaCentral() {
       ref={wrap}
       className="game-viewport fixed inset-0 z-50 touch-none bg-background"
       onPointerDown={(event) => {
-        if (event.pointerType !== "mouse" || !(event.target instanceof HTMLCanvasElement) || isGameInputPaused()) return;
-        event.currentTarget.setPointerCapture(event.pointerId);
+        if (isGameInputPaused()) return;
+        const target = event.target as HTMLElement | null;
+        if (target?.closest("button, a, select, input, summary, details, label, [role='button'], .game-panel, .game-panel-content, .isla-talk-prompt, .isla-conversation")) return;
+        if (event.pointerType === "mouse" && event.button !== 0) return;
         dragging.current = true;
         islaControls.dragged = false;
       }}
