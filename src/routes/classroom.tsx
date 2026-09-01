@@ -8,14 +8,12 @@ import { CommunicationStudioSet } from "@/components/meta/communication-studio-s
 import { TruthLabSet } from "@/components/meta/truth-lab-set";
 import { ClassHud } from "@/components/meta/class-hud";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
-import { controls } from "@/lib/class-store";
 import { useGuardian } from "@/lib/guardian-context";
 import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
 import { AnalogJoystick, LookPad } from "@/components/game/touch-controls";
 import { QUALITY, useQuality } from "@/services/game/quality";
 import { useAppActive } from "@/services/platform/lifecycle";
-import { InputManager, type GameInputState } from "@/components/game/core/input-manager";
-import { type PlayerMode } from "@/components/game/core/player-state-machine";
+import { InputManager } from "@/components/game/core/input-manager";
 import { FullViewportCourseExperience } from "@/components/progression/full-course-experience";
 import { PauseMenu } from "@/components/game/pause-menu";
 import { missions } from "@/domain/progression/catalog";
@@ -37,10 +35,7 @@ function ClassroomPage() {
   const playerColor = chosen?.color ?? "#f4f7ff";
   const playerLabel = `${guardianName || "You"}${chosen ? ` · ${chosen.name}` : ""}`;
   const inputManager = useMemo(() => new InputManager(), []);
-  const [inputState, setInputState] = useState<GameInputState>(() => inputManager.getSnapshot());
-  const [mode, setMode] = useState<PlayerMode>("idle");
-  const [cameraYaw, setCameraYaw] = useState(controls.cameraYaw);
-  const [cameraPitch, setCameraPitch] = useState(controls.cameraPitch);
+  const [courseOpen, setCourseOpen] = useState(false);
   const [activeSeatId, setActiveSeatId] = useState<string | null>(null);
   const [openDoorIds, setOpenDoorIds] = useState<Set<string>>(new Set());
   const [currentRoom, setCurrentRoom] = useState<ClassroomRoom>("security");
@@ -57,38 +52,28 @@ function ClassroomPage() {
     const up = (event: KeyboardEvent) => inputManager.onKeyUp(event);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    const interval = window.setInterval(() => {
-      inputManager.joystickX = controls.joystick.x;
-      inputManager.joystickY = controls.joystick.y;
-      const snap = inputManager.getSnapshot();
-      setInputState(snap);
-      setCameraYaw((previous) => previous === controls.cameraYaw ? previous : controls.cameraYaw);
-      setCameraPitch((previous) => previous === controls.cameraPitch ? previous : controls.cameraPitch);
-      if (mode !== "course") {
-        setMode(activeSeatId ? "seated" : snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
-      }
-    }, 32);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
-      window.clearInterval(interval);
-      controls.joystick.x = 0;
-      controls.joystick.y = 0;
       inputManager.dispose();
     };
-  }, [inputManager, mode, activeSeatId]);
+  }, [inputManager]);
 
   const startCourse = () => {
     const missionId = readSelectedMission();
     setSelectedMissionId(missionId);
-    controls.joystick.x = 0;
-    controls.joystick.y = 0;
-    inputManager.reset();
-    setMode("course");
+    inputManager.setEnabled(false);
+    setCourseOpen(true);
   };
 
-  if (mode === "course") {
-    return <FullViewportCourseExperience missionId={selectedMissionId} onExit={() => setMode("idle")} onComplete={() => undefined} />;
+  const exitCourse = () => {
+    inputManager.setEnabled(true);
+    inputManager.reset();
+    setCourseOpen(false);
+  };
+
+  if (courseOpen) {
+    return <FullViewportCourseExperience missionId={selectedMissionId} onExit={exitCourse} onComplete={() => undefined} />;
   }
 
   return (
@@ -102,13 +87,13 @@ function ClassroomPage() {
         }}
         onPointerMove={(event) => {
           if (!dragging.current) return;
-          controls.cameraYaw -= event.movementX * 0.005;
-          controls.cameraPitch = Math.min(0.85, Math.max(-0.15, controls.cameraPitch + event.movementY * 0.003));
-          setCameraYaw(controls.cameraYaw);
-          setCameraPitch(controls.cameraPitch);
+          inputManager.setCameraLook(event.movementX, event.movementY);
         }}
         onPointerUp={() => (dragging.current = false)}
-        onPointerCancel={() => (dragging.current = false)}
+        onPointerCancel={() => {
+          dragging.current = false;
+          inputManager.reset();
+        }}
         onLostPointerCapture={() => (dragging.current = false)}
       >
         <GameErrorBoundary>
@@ -118,10 +103,7 @@ function ClassroomPage() {
               playerColor={playerColor}
               playerLabel={playerLabel}
               guardianId={chosen?.id ?? "lex"}
-              inputState={inputState}
-              playerMode={mode}
-              cameraYaw={cameraYaw}
-              cameraPitch={cameraPitch}
+              inputManager={inputManager}
               onStartCourse={startCourse}
               activeSeatId={activeSeatId}
               setActiveSeatId={setActiveSeatId}
@@ -151,8 +133,7 @@ function ClassroomPage() {
               setCurrentRoom(room.id as ClassroomRoom);
               setActiveSeatId(null);
               setOpenDoorIds(new Set());
-              controls.joystick.x = 0;
-              controls.joystick.y = 0;
+              inputManager.reset();
             }}
             className={"rounded-xl px-3 py-1.5 text-xs font-black transition " + (currentRoom === room.id ? "bg-cyan-500 text-slate-950 shadow-md" : "text-slate-300 hover:bg-slate-800 hover:text-white")}
           >
@@ -163,8 +144,8 @@ function ClassroomPage() {
 
       <ClassHud room={currentRoom} activeInteraction={activeInteraction} activeSeatId={activeSeatId} />
       <div className="mobile-game-controls pointer-events-none fixed inset-0 z-40">
-        <div className="game-left pointer-events-auto"><AnalogJoystick target={controls.joystick} /></div>
-        <div className="game-right pointer-events-auto"><LookPad target={controls} /></div>
+        <div className="game-left pointer-events-auto"><AnalogJoystick target={inputManager.joystick} /></div>
+        <div className="game-right pointer-events-auto"><LookPad target={inputManager} /></div>
         <div className="game-actions pointer-events-auto">
           <button type="button" className="game-action" aria-label="Interact" onClick={() => inputManager.triggerInteract()}>Use</button>
         </div>
