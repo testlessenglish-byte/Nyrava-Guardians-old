@@ -37,8 +37,14 @@ export function startPhishingStory() {
 
 export function subscribePhishingStory(listener: (step: PhishingStoryStep) => void) {
   if (typeof window === "undefined") return () => undefined;
-  const handler = (event: Event) => listener((event as CustomEvent<PhishingStoryStep>).detail);
-  window.addEventListener(EVENT_NAME, handler);
-  window.addEventListener("storage", () => listener(getPhishingStoryStep()));
-  return () => window.removeEventListener(EVENT_NAME, handler);
+  const customHandler = (event: Event) => listener((event as CustomEvent<PhishingStoryStep>).detail);
+  const storageHandler = (event: StorageEvent) => {
+    if (!event.key || event.key === STORAGE_KEY) listener(getPhishingStoryStep());
+  };
+  window.addEventListener(EVENT_NAME, customHandler);
+  window.addEventListener("storage", storageHandler);
+  return () => {
+    window.removeEventListener(EVENT_NAME, customHandler);
+    window.removeEventListener("storage", storageHandler);
+  };
 }
