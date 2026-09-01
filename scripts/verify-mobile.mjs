@@ -7,7 +7,7 @@ const index = await readFile(join(root, "index.html"), "utf8");
 assert.match(index, /<html/);
 assert.match(index, /<script/);
 const forbidden =
-  /sb_secret_[A-Za-z0-9_-]+|SUPABASE_SERVICE_ROLE_KEY|LOVABLE_API_KEY|GROQ_API_KEY|GEMINI_API_KEY|postgres(?:ql)?:\/\//;
+  /sb_secret_[A-Za-z0-9_-]+|SUPABASE_SERVICE_ROLE_KEY|API_KEY_ENCRYPTION_KEY|GROQ_API_KEY|GEMINI_API_KEY|postgres(?:ql)?:\/\//;
 let count = 0;
 async function inspect(dir) {
   for (const name of await readdir(dir)) {

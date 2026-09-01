@@ -56,11 +56,10 @@ keys and produces a clear error instead of referencing undefined `process`.
    intended role matrix and add a new reviewed migration. Preserve applied SQL.
    Roles/memberships/safety settings also lack an implemented trusted onboarding
    path. Seed data and any old users/files/content were not copied by schema SQL.
-4. **AI/voice still use Lovable.** `classroom.functions.ts` requires
-   `LOVABLE_API_KEY` and calls its gateway. A Groq/Gemini router exists but is
-   not wired into the classroom; the builder route still uses mock services.
-   Choose/configure providers and add server-side auth, rate limits and safety
-   validation before enabling paid endpoints. Never embed provider keys in JS.
+4. **AI/voice provider hardening.** Gemini is connected server-side and the
+   Groq/Gemini router is available. Provider keys are now managed through the
+   protected admin console and encrypted at rest. Rate limits and expanded safety
+   validation remain required before broad public traffic. Never embed provider keys in JS.
 5. **Generated types and integration coverage.** Current database types cover
    all 27 table names and the cloud-save columns. They were not regenerated from
    the live database in this continuation. Regenerate after any reviewed schema
@@ -71,19 +70,19 @@ keys and produces a clear error instead of referencing undefined `process`.
    These are not a complete application or RLS test suite. Large 3D bundle
    warnings and deprecated TanStack APIs need follow-up, not a broad redesign.
 
-## Lovable classification
+## Independent platform status
 
 | Item                                                  | Decision                     | Status                                                    |
 | ----------------------------------------------------- | ---------------------------- | --------------------------------------------------------- |
 | React, TypeScript, TanStack, Three.js, assets and SQL | KEEP                         | Preserved                                                 |
-| Lovable Vite wrapper                                  | REPLACE                      | Replaced by explicit standard plugins and Sites packaging |
+| Legacy Vite wrapper                                   | REPLACE                      | Replaced by explicit standard plugins and Sites packaging |
 | Editor auth-session broker                            | REPLACE                      | Origin-local Supabase storage; no parent-frame forwarding |
 | Error-reporting hooks                                 | REMOVE from active app       | Detached from root; historical helper retained unused     |
 | Cloud-specific configuration errors                   | REPLACE                      | Independent environment guidance                          |
-| AI gateway and `LOVABLE_API_KEY`                      | REPLACE                      | Still pending provider selection/credentials              |
-| Cron-specific secret names                            | REPLACE                      | Inactive helper retained; no cron routes currently use it |
-| `.lovable/project.json`, `bun.lock`, `bunfig.toml`    | REMOVE from active toolchain | Retained historical files; maintained path uses npm       |
-| Lovable-only README/agent sync instructions           | REPLACE                      | Updated for the independent repository                    |
+| Legacy AI gateway                                     | REPLACE                      | Replaced by direct server-side provider integrations       |
+| Legacy cron-specific secret names                     | REMOVE                       | Obsolete helper and variables removed                      |
+| Historical Bun/editor files                           | REMOVE from active toolchain | Removed; maintained path uses npm                           |
+| Legacy README/agent sync instructions                 | REPLACE                      | Updated for the independent repository                    |
 
 ## Reference documentation
 

@@ -140,7 +140,7 @@ web/native Auth callbacks. No remote SQL, Auth settings or old project were chan
 
 Classroom AI server functions cannot run inside a binary. Native chat reports
 that its authenticated HTTPS service is not connected instead of sending requests
-to a nonexistent local server. The web AI gateway still needs Lovable replacement
+to a nonexistent local server. The web AI gateway still needs production provider
 and server credentials, authentication, rate limiting and safety review.
 
 ## Release / device acceptance checklist
