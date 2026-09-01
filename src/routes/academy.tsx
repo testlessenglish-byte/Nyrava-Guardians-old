@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AcademyCourseDashboard } from "@/components/academy/academy-course-dashboard";
+import { CertificateGallery } from "@/components/academy/certificate-gallery";
 
 export const Route = createFileRoute("/academy")({
   head: () => ({
@@ -17,5 +18,14 @@ export const Route = createFileRoute("/academy")({
       },
     ],
   }),
-  component: AcademyCourseDashboard,
+  component: AcademyPage,
 });
+
+function AcademyPage() {
+  return (
+    <>
+      <AcademyCourseDashboard />
+      <CertificateGallery />
+    </>
+  );
+}
