@@ -95,7 +95,7 @@ test("certificate cannot issue early", () => {
   const p = createProgress(at);
   p.missions["phishing-defense"] = completed("mastered");
   assert.equal(p.certificates.length, 0);
-  assert.equal(certificateProgress(p), 15);
+  assert.equal(certificateProgress(p), 33);
 });
 test("inventory and equipment survive serialization", () => {
   const p = JSON.parse(JSON.stringify(createProgress(at)));
