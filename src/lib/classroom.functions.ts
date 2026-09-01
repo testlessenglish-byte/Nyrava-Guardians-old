@@ -1,13 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { getProviderApiKey } from "@/lib/server/api-key-vault";
 
 const GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models";
-
-function geminiKey() {
-  const key = process.env["GEMINI_API_KEY"];
-  if (!key) throw new Error("Gemini is not configured yet.");
-  return key;
-}
 
 function pcmToWavBase64(pcmBase64: string, sampleRate = 24_000) {
   const pcm = Buffer.from(pcmBase64, "base64");
@@ -49,7 +44,7 @@ const chatSchema = z.object({
 export const guardianChat = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => chatSchema.parse(data))
   .handler(async ({ data }) => {
-    const key = geminiKey();
+    const key = await getProviderApiKey("gemini");
 
     const system = [
       `You are ${data.guardian}, ${data.role}, a friendly teacher inside the Nyrava Guardians digital-literacy academy.`,
@@ -100,7 +95,7 @@ const speakSchema = z.object({
 export const guardianSpeak = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => speakSchema.parse(data))
   .handler(async ({ data }) => {
-    const key = geminiKey();
+    const key = await getProviderApiKey("gemini");
 
     const res = await fetch(`${GEMINI_API}/gemini-2.5-flash-preview-tts:generateContent`, {
       method: "POST",

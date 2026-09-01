@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
 function LoginPage() {
-  const { user, loading, error, signInWithEmail, signUpWithEmail } = useAuth();
+  const { user, loading, error, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -19,18 +19,49 @@ function LoginPage() {
   }, [user, navigate]);
 
   return (
-    <div className="mx-auto max-w-md py-8">
-      <div className="panel overflow-hidden p-6 text-center sm:p-8">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-primary/40 bg-primary/10">
+    <div className="mx-auto max-w-md py-8 sm:py-12">
+      <div className="panel overflow-hidden border-cyan-400/25 bg-gradient-to-br from-cyan-400/10 via-background to-violet-500/10 p-6 text-center shadow-2xl sm:p-8">
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl border border-primary/40 bg-primary/10 shadow-lg shadow-cyan-500/10">
           <ShieldCheck className="h-7 w-7 text-primary" />
         </div>
-        <h1 className="mt-5 text-2xl font-extrabold">Guardian Account</h1>
+        <p className="mt-5 text-[11px] font-black uppercase tracking-[0.22em] text-cyan-300">
+          Nyrava Guardians
+        </p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight">Welcome back, Guardian</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Sign in to protect your profile, save progress and access approved Guardian tools.
+          Sign in to continue your academy progress, missions and protected Guardian tools.
         </p>
 
+        <button
+          type="button"
+          disabled={loading || busy}
+          onClick={() => {
+            setBusy(true);
+            setMessage(null);
+            void signInWithGoogle()
+              .catch((signInError) =>
+                setMessage(
+                  signInError instanceof Error
+                    ? signInError.message
+                    : "Google sign-in could not be started.",
+                ),
+              )
+              .finally(() => setBusy(false));
+          }}
+          className="mt-6 flex w-full items-center justify-center gap-3 rounded-2xl border border-border bg-white px-5 py-3 text-sm font-extrabold text-slate-900 transition hover:bg-slate-100 disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Chrome className="h-5 w-5" />}
+          Continue with Google
+        </button>
+
+        <div className="my-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          or use email
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
         <form
-          className="mt-6 space-y-3 text-left"
+          className="space-y-3 text-left"
           onSubmit={(event) => {
             event.preventDefault();
             setBusy(true);
@@ -87,7 +118,7 @@ function LoginPage() {
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Mail className="h-5 w-5" />}
-            {createAccount ? "Create testing account" : "Sign in with email"}
+            {createAccount ? "Create Guardian account" : "Sign in with email"}
           </button>
         </form>
 
@@ -99,22 +130,7 @@ function LoginPage() {
             setMessage(null);
           }}
         >
-          {createAccount ? "I already have an account" : "Create an account for testing"}
-        </button>
-
-        <div className="my-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          <span className="h-px flex-1 bg-border" />
-          Google later
-          <span className="h-px flex-1 bg-border" />
-        </div>
-
-        <button
-          type="button"
-          disabled
-          className="flex w-full items-center justify-center gap-3 rounded-2xl border border-border bg-white px-5 py-3 text-sm font-extrabold text-slate-900 transition hover:bg-slate-100 disabled:opacity-50"
-        >
-          <Chrome className="h-5 w-5" />
-          Google sign-in after testing
+          {createAccount ? "I already have an account" : "Create a new Guardian account"}
         </button>
 
         {(message || error) && (
@@ -123,7 +139,7 @@ function LoginPage() {
           </p>
         )}
         <p className="mt-5 text-xs text-muted-foreground">
-          The game remains playable without an account.{" "}
+          Want to explore first? The academy remains playable without an account.{" "}
           <Link to="/home" className="font-bold text-primary">
             Return home
           </Link>

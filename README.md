@@ -26,7 +26,7 @@ on this browser without a Supabase session. Classroom AI/voice still require the
 old provider integration to be replaced, and some product screens use mock services.
 
 See [MIGRATION_STATUS.md](MIGRATION_STATUS.md) for database verification, Auth/RLS
-blockers, environment requirements, and remaining Lovable replacement work.
+blockers, environment requirements, and remaining independent-platform work.
 Do not change the old repository or its Supabase project. Do not reapply recorded
 migrations or rewrite shared Git history to resolve application errors.
 

@@ -3,6 +3,7 @@
  * Server-side router abstracting Groq and Gemini adapters behind task classes.
  * Enforces timeouts, retries, failover, idempotency, and safe non-AI fallbacks per PDF directive.
  */
+import { getProviderApiKey } from "@/lib/server/api-key-vault";
 
 export type TaskClass =
   | "guardian_dialogue"
@@ -38,16 +39,26 @@ export interface ProviderAdapter {
   execute(request: AIProviderRequest, timeoutMs: number): Promise<AIProviderResponse>;
 }
 
+interface GroqResponse {
+  choices?: Array<{ message?: { content?: string } }>;
+  usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+}
+
+interface GeminiResponse {
+  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    totalTokenCount?: number;
+  };
+}
+
 export class GroqAdapter implements ProviderAdapter {
   name = "groq" as const;
 
   async execute(request: AIProviderRequest, timeoutMs: number): Promise<AIProviderResponse> {
-    const apiKey = process.env['GROQ_API_KEY'];
+    const apiKey = await getProviderApiKey("groq");
     const startTime = Date.now();
-
-    if (!apiKey) {
-      throw new Error("GROQ_API_KEY not configured");
-    }
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -73,7 +84,7 @@ export class GroqAdapter implements ProviderAdapter {
         throw new Error(`Groq API returned HTTP ${res.status}`);
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as GroqResponse;
       const latencyMs = Date.now() - startTime;
       const text = data.choices?.[0]?.message?.content ?? "";
 
@@ -101,33 +112,31 @@ export class GeminiAdapter implements ProviderAdapter {
   name = "gemini" as const;
 
   async execute(request: AIProviderRequest, timeoutMs: number): Promise<AIProviderResponse> {
-    const apiKey = process.env['GEMINI_API_KEY'];
+    const apiKey = await getProviderApiKey("gemini");
     const startTime = Date.now();
-
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY not configured");
-    }
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-      const res = await fetch(url, {
+      const res = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: request.prompt }] }],
         }),
         signal: controller.signal,
-      });
+        },
+      );
 
       clearTimeout(timer);
       if (!res.ok) {
         throw new Error(`Gemini API returned HTTP ${res.status}`);
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as GeminiResponse;
       const latencyMs = Date.now() - startTime;
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 

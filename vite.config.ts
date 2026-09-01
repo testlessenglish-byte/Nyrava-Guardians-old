@@ -41,7 +41,9 @@ export default defineConfig(({ command, mode }) => {
           build: { outDir: ".mobile-build" },
           environments: { client: { build: { outDir: "dist-mobile" } } },
         }
-      : {}),
+      : {
+          build: { rolldownOptions: { external: ["cloudflare:workers"] } },
+        }),
     server: { host: "127.0.0.1", port: 8080, strictPort: true },
     resolve: {
       dedupe: ["react", "react-dom", "@tanstack/react-query", "@tanstack/query-core"],
