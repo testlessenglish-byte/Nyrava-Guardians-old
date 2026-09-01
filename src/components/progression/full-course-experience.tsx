@@ -63,13 +63,14 @@ export function FullViewportCourseExperience({
     try {
       const answers = questions.map((q) => selectedOptions[q.id] ?? -1);
       const result = await submitProgressionAssessment({ data: { attemptId, answers } });
-      setScore(result.score);
+      const finalScore = result.score ?? 0;
+      setScore(finalScore);
       setCertificateEarned(result.certificates.some((certificate) => certificate.course === FOUNDATION_CERTIFICATE.id));
       setSubmitted(true);
-      if (result.score >= 75 && activeMission.id === "phishing-defense") {
+      if (finalScore >= 75 && activeMission.id === "phishing-defense") {
         advancePhishingStory("COMPLETE_ACADEMY_LESSON", "SOLVE_INCIDENT");
       }
-      onComplete(result.score);
+      onComplete(finalScore);
     } finally {
       setSubmitting(false);
     }
