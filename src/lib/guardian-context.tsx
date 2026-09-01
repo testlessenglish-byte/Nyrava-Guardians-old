@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { GuardianId } from "@/types";
 import { loadGuardianCloud, saveGuardianCloud } from "@/lib/cloud-save";
 import { type LocaleId } from "@/data/bilingual-dictionary";
-import { conversationalVoiceEngine } from "@/services/ai/conversational-voice-engine";
 import { readLocal, writeLocal, hydrateNativeProgress } from "@/services/platform/storage";
 
 interface GuardianState {
@@ -60,9 +59,27 @@ function loadPersisted(): Persisted {
   }
 }
 
+function setVoiceLocale(locale: LocaleId, idle = false) {
+  if (typeof window === "undefined") return;
+  const apply = () => {
+    void import("@/services/ai/conversational-voice-engine")
+      .then(({ conversationalVoiceEngine }) => conversationalVoiceEngine.setLocale(locale))
+      .catch(() => undefined);
+  };
+  if (idle && "requestIdleCallback" in window) {
+    (window as Window & { requestIdleCallback: (cb: () => void, options?: { timeout: number }) => number })
+      .requestIdleCallback(apply, { timeout: 1200 });
+  } else if (idle) {
+    window.setTimeout(apply, 0);
+  } else {
+    apply();
+  }
+}
+
 export function GuardianProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<Persisted>(DEFAULTS);
   const [hydrated, setHydrated] = useState(false);
+  const [cloudSynchronized, setCloudSynchronized] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,29 +87,49 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       const local = loadPersisted();
       setState(local);
-      conversationalVoiceEngine.setLocale(local.locale);
+      setVoiceLocale(local.locale, true);
       setHydrated(true);
 
       void loadGuardianCloud()
         .then((cloud) => {
           if (cancelled || !cloud) return;
-          if ((cloud.xp ?? 0) < local.xp) return;
-
-          // The avatar chosen on this device is authoritative for the active play session.
-          // Cloud progress may fill gaps, but it must not replace a local avatar/name with
-          // stale defaults while a route is mounting.
-          setState((current) => ({
-            ...current,
-            ...cloud,
-            guardianId: local.guardianId ?? (cloud.guardianId as GuardianId | null) ?? current.guardianId,
-            guardianName:
-              local.guardianName !== DEFAULTS.guardianName
-                ? local.guardianName
-                : (cloud.guardianName ?? current.guardianName),
-            cosmetics: Object.keys(local.cosmetics).length > 0 ? local.cosmetics : (cloud.cosmetics ?? current.cosmetics),
-          }));
+          setState((current) => {
+            if ((cloud.xp ?? 0) < current.xp) return current;
+            return {
+              ...current,
+              ...cloud,
+              guardianId:
+                current.guardianId ??
+                local.guardianId ??
+                (cloud.guardianId as GuardianId | null) ??
+                null,
+              guardianName:
+                current.guardianName !== DEFAULTS.guardianName
+                  ? current.guardianName
+                  : local.guardianName !== DEFAULTS.guardianName
+                    ? local.guardianName
+                    : (cloud.guardianName ?? current.guardianName),
+              cosmetics:
+                Object.keys(current.cosmetics).length > 0
+                  ? current.cosmetics
+                  : Object.keys(local.cosmetics).length > 0
+                    ? local.cosmetics
+                    : (cloud.cosmetics ?? current.cosmetics),
+              homeDecor:
+                Object.keys(current.homeDecor).length > 0
+                  ? current.homeDecor
+                  : (cloud.homeDecor ?? current.homeDecor),
+              xp: Math.max(current.xp, cloud.xp ?? 0),
+              completedMissions: Array.from(
+                new Set([...(current.completedMissions ?? []), ...(cloud.completedMissions ?? [])]),
+              ),
+            };
+          });
         })
-        .catch(() => console.warn("Cloud progress unavailable; keeping local progress."));
+        .catch(() => console.warn("Cloud progress unavailable; keeping local progress."))
+        .finally(() => {
+          if (!cancelled) setCloudSynchronized(true);
+        });
     });
     return () => {
       cancelled = true;
@@ -106,8 +143,9 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
     } catch {
       // storage fallback
     }
-    saveGuardianCloud(state);
-  }, [state, hydrated]);
+    // Never race the initial cloud read with an immediate upsert of local data.
+    if (cloudSynchronized) saveGuardianCloud(state);
+  }, [state, hydrated, cloudSynchronized]);
 
   const value = useMemo<GuardianState>(
     () => ({
@@ -116,12 +154,12 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
       selectGuardian: (id) => setState((s) => ({ ...s, guardianId: id })),
       setGuardianName: (name) => setState((s) => ({ ...s, guardianName: name })),
       setLocale: (newLocale) => {
-        conversationalVoiceEngine.setLocale(newLocale);
+        setVoiceLocale(newLocale);
         setState((s) => ({ ...s, locale: newLocale }));
       },
       toggleLocale: () => {
         const nextLocale = state.locale === "en-US" ? "es-MX" : "en-US";
-        conversationalVoiceEngine.setLocale(nextLocale);
+        setVoiceLocale(nextLocale);
         setState((s) => ({ ...s, locale: nextLocale }));
       },
       setCosmetic: (slot, option) =>
