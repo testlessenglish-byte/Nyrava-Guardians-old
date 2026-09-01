@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PauseMenu } from "@/components/game/pause-menu";
 import { StoryTrackerHud } from "@/components/mission/story-tracker-hud";
 import { Canvas } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 import { IslaScene } from "@/components/isla/isla-scene";
 import { IslaBrandOverlays } from "@/components/isla/isla-brand-overlays";
@@ -95,8 +95,10 @@ function IslaCentral() {
       ref={wrap}
       className="game-viewport fixed inset-0 z-50 touch-none bg-background"
       onPointerDown={(event) => {
-        if (event.pointerType !== "mouse" || !(event.target instanceof HTMLCanvasElement) || isGameInputPaused()) return;
-        event.currentTarget.setPointerCapture(event.pointerId);
+        if (isGameInputPaused()) return;
+        const target = event.target as HTMLElement | null;
+        if (target?.closest("button, a, select, input, summary, details, label, [role='button'], .game-panel, .game-panel-content, .isla-talk-prompt, .isla-conversation")) return;
+        if (event.pointerType === "mouse" && event.button !== 0) return;
         dragging.current = true;
         islaControls.dragged = false;
       }}
@@ -119,12 +121,14 @@ function IslaCentral() {
             dpr={quality.dpr}
             camera={{ position: [0, 8, 24], fov: 58 }}
           >
-            <IslaScene
-              playerColor={guardian.color}
-              playerName={guardianName || "Alex"}
-              playerGuardian={guardian.id}
-            />
-            <IslaBrandOverlays />
+            <Suspense fallback={null}>
+              <IslaScene
+                playerColor={guardian.color}
+                playerName={guardianName || "Alex"}
+                playerGuardian={guardian.id}
+              />
+              <IslaBrandOverlays />
+            </Suspense>
           </Canvas>
           <IslaHud guardianName={guardianName || "Alex"} />
           <IslaControls guardianName={guardianName || "Alex"} />
