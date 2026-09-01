@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { Character } from "@/components/meta/character";
 import { PlayerController } from "@/components/game/core/player-controller";
 import { updateThirdPersonCamera } from "@/components/game/core/camera-follower";
-import { type GameInputState } from "@/components/game/core/input-manager";
+import { type InputManager } from "@/components/game/core/input-manager";
 import { type PlayerMode } from "@/components/game/core/player-state-machine";
 
 const playerController = new PlayerController();
@@ -14,10 +14,7 @@ export function HomeHqScene({
   playerColor = "#f4f7ff",
   playerLabel = "You",
   guardianId = "lex",
-  inputState,
-  playerMode = "idle",
-  cameraYaw = 0,
-  cameraPitch = 0.15,
+  inputManager,
   level = 1,
   xp = 0,
   trophyCount = 0,
@@ -27,10 +24,7 @@ export function HomeHqScene({
   playerColor?: string;
   playerLabel?: string;
   guardianId?: string;
-  inputState: GameInputState;
-  playerMode?: PlayerMode;
-  cameraYaw?: number;
-  cameraPitch?: number;
+  inputManager: InputManager;
   level?: number;
   xp?: number;
   trophyCount?: number;
@@ -45,11 +39,16 @@ export function HomeHqScene({
     const player = group.current;
     if (!player) return;
 
+    const input = inputManager.getSnapshot();
+    const mode: PlayerMode = input.moveX !== 0 || input.moveY !== 0
+      ? input.run ? "running" : "walking"
+      : "idle";
+
     playerController.update(
       player.position,
       camera,
-      inputState,
-      playerMode,
+      input,
+      mode,
       delta,
       { minX: -8.5, maxX: 8.5, minZ: -8.5, maxZ: 8.5 },
     );
@@ -57,7 +56,7 @@ export function HomeHqScene({
     if (playerController.isMoving !== moving) setMoving(playerController.isMoving);
 
     if (camera instanceof THREE.PerspectiveCamera) {
-      updateThirdPersonCamera(camera, player.position, cameraYaw, cameraPitch, delta, 4.5, 1.5, [], {
+      updateThirdPersonCamera(camera, player.position, inputManager.cameraYaw, inputManager.cameraPitch, delta, 4.5, 1.5, [], {
         minX: -9,
         maxX: 9,
         minY: 0.8,
