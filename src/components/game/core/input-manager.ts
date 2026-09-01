@@ -10,15 +10,22 @@ export interface GameInputState {
   inputMethod: "keyboard" | "mouse" | "touch";
 }
 
+let gameInputPaused = false;
+const managers = new Set<InputManager>();
+
+export function setGameInputPaused(paused: boolean) {
+  gameInputPaused = paused;
+  if (paused) managers.forEach((manager) => manager.reset());
+}
+
+export function isGameInputPaused() {
+  return gameInputPaused;
+}
+
 export function isTypingTarget(target: EventTarget | null): boolean {
   if (!target || !(target instanceof HTMLElement)) return false;
   const tag = target.tagName.toLowerCase();
-  return (
-    tag === "input" ||
-    tag === "textarea" ||
-    tag === "select" ||
-    target.isContentEditable
-  );
+  return tag === "input" || tag === "textarea" || tag === "select" || target.isContentEditable;
 }
 
 export class InputManager {
@@ -34,8 +41,12 @@ export class InputManager {
   jump = false;
   inputMethod: "keyboard" | "mouse" | "touch" = "keyboard";
 
+  constructor() {
+    managers.add(this);
+  }
+
   onKeyDown(e: KeyboardEvent) {
-    if (isTypingTarget(e.target)) return;
+    if (gameInputPaused || isTypingTarget(e.target)) return;
     const key = e.key.toLowerCase();
     if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) {
       if (key.startsWith("arrow")) e.preventDefault();
@@ -71,10 +82,28 @@ export class InputManager {
     this.currentInteract = false;
   }
 
+  dispose() {
+    this.reset();
+    managers.delete(this);
+  }
+
   getSnapshot(): GameInputState {
+    if (gameInputPaused) {
+      return {
+        moveX: 0,
+        moveY: 0,
+        lookX: 0,
+        lookY: 0,
+        run: false,
+        jump: false,
+        interactPressed: false,
+        menuPressed: true,
+        inputMethod: this.inputMethod,
+      };
+    }
+
     let moveX = 0;
     let moveY = 0;
-
     if (this.keys.has("w") || this.keys.has("arrowup")) moveY += 1;
     if (this.keys.has("s") || this.keys.has("arrowdown")) moveY -= 1;
     if (this.keys.has("d") || this.keys.has("arrowright")) moveX += 1;

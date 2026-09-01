@@ -14,9 +14,11 @@ import { Route as AcademyRouteImport } from './routes/academy'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as BuilderRouteImport } from './routes/builder'
+import { Route as CityRouteImport } from './routes/city'
 import { Route as ClassroomRouteImport } from './routes/classroom'
 import { Route as CoreRouteImport } from './routes/core'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as HomeHqRouteImport } from './routes/home-hq'
 import { Route as IslaRouteImport } from './routes/isla'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MissionsRouteImport } from './routes/missions'
@@ -48,6 +50,11 @@ const BuilderRoute = BuilderRouteImport.update({
   path: '/builder',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CityRoute = CityRouteImport.update({
+  id: '/city',
+  path: '/city',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClassroomRoute = ClassroomRouteImport.update({
   id: '/classroom',
   path: '/classroom',
@@ -61,6 +68,11 @@ const CoreRoute = CoreRouteImport.update({
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeHqRoute = HomeHqRouteImport.update({
+  id: '/home-hq',
+  path: '/home-hq',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IslaRoute = IslaRouteImport.update({
@@ -95,9 +107,11 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/builder': typeof BuilderRoute
+  '/city': typeof CityRoute
   '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
+  '/home-hq': typeof HomeHqRoute
   '/isla': typeof IslaRoute
   '/login': typeof LoginRoute
   '/missions': typeof MissionsRoute
@@ -110,9 +124,11 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/builder': typeof BuilderRoute
+  '/city': typeof CityRoute
   '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
+  '/home-hq': typeof HomeHqRoute
   '/isla': typeof IslaRoute
   '/login': typeof LoginRoute
   '/missions': typeof MissionsRoute
@@ -126,9 +142,11 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/builder': typeof BuilderRoute
+  '/city': typeof CityRoute
   '/classroom': typeof ClassroomRoute
   '/core': typeof CoreRoute
   '/home': typeof HomeRoute
+  '/home-hq': typeof HomeHqRoute
   '/isla': typeof IslaRoute
   '/login': typeof LoginRoute
   '/missions': typeof MissionsRoute
@@ -143,9 +161,11 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/builder'
+    | '/city'
     | '/classroom'
     | '/core'
     | '/home'
+    | '/home-hq'
     | '/isla'
     | '/login'
     | '/missions'
@@ -158,9 +178,11 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/builder'
+    | '/city'
     | '/classroom'
     | '/core'
     | '/home'
+    | '/home-hq'
     | '/isla'
     | '/login'
     | '/missions'
@@ -173,9 +195,11 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/builder'
+    | '/city'
     | '/classroom'
     | '/core'
     | '/home'
+    | '/home-hq'
     | '/isla'
     | '/login'
     | '/missions'
@@ -189,9 +213,11 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
   BuilderRoute: typeof BuilderRoute
+  CityRoute: typeof CityRoute
   ClassroomRoute: typeof ClassroomRoute
   CoreRoute: typeof CoreRoute
   HomeRoute: typeof HomeRoute
+  HomeHqRoute: typeof HomeHqRoute
   IslaRoute: typeof IslaRoute
   LoginRoute: typeof LoginRoute
   MissionsRoute: typeof MissionsRoute
@@ -236,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuilderRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/city': {
+      id: '/city'
+      path: '/city'
+      fullPath: '/city'
+      preLoaderRoute: typeof CityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/classroom': {
       id: '/classroom'
       path: '/classroom'
@@ -255,6 +288,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home-hq': {
+      id: '/home-hq'
+      path: '/home-hq'
+      fullPath: '/home-hq'
+      preLoaderRoute: typeof HomeHqRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/isla': {
@@ -301,9 +341,11 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   BuilderRoute: BuilderRoute,
+  CityRoute: CityRoute,
   ClassroomRoute: ClassroomRoute,
   CoreRoute: CoreRoute,
   HomeRoute: HomeRoute,
+  HomeHqRoute: HomeHqRoute,
   IslaRoute: IslaRoute,
   LoginRoute: LoginRoute,
   MissionsRoute: MissionsRoute,
