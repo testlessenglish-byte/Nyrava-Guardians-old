@@ -35,6 +35,7 @@ export class InputManager {
   private keys = new Set<string>();
   private prevInteract = false;
   private currentInteract = false;
+  private queuedInteract = false;
 
   joystickX = 0;
   joystickY = 0;
@@ -46,6 +47,12 @@ export class InputManager {
 
   constructor() {
     managers.add(this);
+  }
+
+  triggerInteract() {
+    if (gameInputPaused) return;
+    this.queuedInteract = true;
+    this.inputMethod = "touch";
   }
 
   onKeyDown(e: KeyboardEvent) {
@@ -83,6 +90,7 @@ export class InputManager {
     this.jump = false;
     this.prevInteract = false;
     this.currentInteract = false;
+    this.queuedInteract = false;
   }
 
   dispose() {
@@ -124,7 +132,8 @@ export class InputManager {
       moveY /= len;
     }
 
-    const interactPressed = this.currentInteract && !this.prevInteract;
+    const interactPressed = this.queuedInteract || (this.currentInteract && !this.prevInteract);
+    this.queuedInteract = false;
     this.prevInteract = this.currentInteract;
 
     return {
