@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { Character } from "@/components/meta/character";
 import { PlayerController } from "@/components/game/core/player-controller";
 import { updateThirdPersonCamera } from "@/components/game/core/camera-follower";
-import { type GameInputState } from "@/components/game/core/input-manager";
+import { type InputManager } from "@/components/game/core/input-manager";
 import { type PlayerMode } from "@/components/game/core/player-state-machine";
 
 const playerController = new PlayerController();
@@ -14,19 +14,15 @@ export function DigitalCityScene({
   playerColor = "#f4f7ff",
   playerLabel = "You",
   guardianId = "lex",
-  inputState,
-  playerMode = "idle",
-  cameraYaw = 0,
-  cameraPitch = 0.15,
+  inputManager,
+  blocked = false,
   onInspectMessage,
 }: {
   playerColor?: string;
   playerLabel?: string;
   guardianId?: string;
-  inputState: GameInputState;
-  playerMode?: PlayerMode;
-  cameraYaw?: number;
-  cameraPitch?: number;
+  inputManager: InputManager;
+  blocked?: boolean;
   onInspectMessage?: () => void;
 }) {
   const group = useRef<THREE.Group>(null);
@@ -37,37 +33,39 @@ export function DigitalCityScene({
     const player = group.current;
     if (!player) return;
 
+    const input = inputManager.getSnapshot();
+    const mode: PlayerMode = blocked
+      ? "interacting"
+      : input.moveX !== 0 || input.moveY !== 0
+        ? input.run ? "running" : "walking"
+        : "idle";
+
     playerController.update(
       player.position,
       camera,
-      inputState,
-      playerMode,
+      input,
+      mode,
       delta,
-      { minX: -22, maxX: 22, minZ: -22, maxZ: 22 }
+      { minX: -22, maxX: 22, minZ: -22, maxZ: 22 },
     );
 
     player.rotation.y = playerController.rotationY;
-
-    if (playerController.isMoving !== moving) {
-      setMoving(playerController.isMoving);
-    }
+    if (playerController.isMoving !== moving) setMoving(playerController.isMoving);
 
     if (camera instanceof THREE.PerspectiveCamera) {
       updateThirdPersonCamera(
         camera,
         player.position,
-        cameraYaw,
-        cameraPitch,
+        inputManager.cameraYaw,
+        inputManager.cameraPitch,
         delta,
         5.0,
-        1.5
+        1.5,
       );
     }
 
-    const distToTerminal = Math.hypot(player.position.x - 0, player.position.z - (-8));
-    if (distToTerminal < 2.5 && inputState.interactPressed) {
-      onInspectMessage?.();
-    }
+    const distToTerminal = Math.hypot(player.position.x, player.position.z + 8);
+    if (!blocked && distToTerminal < 2.5 && input.interactPressed) onInspectMessage?.();
   });
 
   return (
