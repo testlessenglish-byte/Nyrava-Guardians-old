@@ -29,6 +29,7 @@ function MissionHubPage() {
   const quality = QUALITY[useQuality()];
   const active = useAppActive();
   const dragging = useRef(false);
+  const boardOpenRef = useRef(false);
   const { guardianId, guardianName, locale } = useGuardian();
   const es = locale.startsWith("es");
   const chosen = CLASS_GUARDIANS.find((guardian) => guardian.id === guardianId);
@@ -48,6 +49,11 @@ function MissionHubPage() {
   }, []);
 
   useEffect(() => {
+    boardOpenRef.current = boardOpen;
+    if (boardOpen) inputManager.reset();
+  }, [boardOpen, inputManager]);
+
+  useEffect(() => {
     const down = (event: KeyboardEvent) => inputManager.onKeyDown(event);
     const up = (event: KeyboardEvent) => inputManager.onKeyUp(event);
     window.addEventListener("keydown", down);
@@ -55,7 +61,7 @@ function MissionHubPage() {
     const interval = window.setInterval(() => {
       const snap = inputManager.getSnapshot();
       setInputState(snap);
-      setMode(boardOpen ? "idle" : snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
+      setMode(boardOpenRef.current ? "idle" : snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
     }, 32);
     return () => {
       window.removeEventListener("keydown", down);
@@ -63,7 +69,7 @@ function MissionHubPage() {
       window.clearInterval(interval);
       inputManager.dispose();
     };
-  }, [inputManager, boardOpen]);
+  }, [inputManager]);
 
   const acceptPhishingMission = () => {
     selectMission("phishing-defense");
