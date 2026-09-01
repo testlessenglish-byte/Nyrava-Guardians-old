@@ -85,7 +85,7 @@ function ClassroomPage() {
           e.currentTarget.setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
-          if (dragging.current && mode !== "course") {
+          if (dragging.current) {
             setCameraYaw((prev) => prev - e.movementX * 0.005);
             setCameraPitch((prev) => Math.min(0.85, Math.max(-0.15, prev + e.movementY * 0.003)));
           }

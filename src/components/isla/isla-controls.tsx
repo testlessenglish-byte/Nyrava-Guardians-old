@@ -61,7 +61,7 @@ function HoldKey({
   );
 }
 
-export function IslaControls() {
+export function IslaControls({ guardianName }: { guardianName?: string } = {}) {
   const state = useIsla();
   const busy = !!state.challengeFor || state.reporting;
   const [view, setView] = useState(islaControls.view);
