@@ -9,13 +9,16 @@ import { updateThirdPersonCamera } from "@/components/game/core/camera-follower"
 import { type GameInputState } from "@/components/game/core/input-manager";
 import { type PlayerMode } from "@/components/game/core/player-state-machine";
 import { InteractionManager, type InteractiveTarget } from "@/components/game/core/interaction-manager";
-import { CLASSROOM_BOUNDS, isPositionColliding } from "@/components/game/player/classroom-collision";
+import { isPositionColliding } from "@/components/game/player/classroom-collision";
 import { STUDENT_SEATS, CLASSROOM_DOORS } from "./academy-classroom-set";
 import { BUILDER_SEATS, BUILDER_DOORS } from "./builder-lab-set";
 import { COMMUNICATION_SEATS, COMMUNICATION_DOORS } from "./communication-studio-set";
 import { TRUTH_SEATS, TRUTH_DOORS } from "./truth-lab-set";
 
 export type ClassroomRoom = "security" | "builder" | "communication" | "truth";
+
+const ROOM_BOUNDS = { minX: -12.15, maxX: 12.15, minZ: -9.15, maxZ: 9.15 };
+const CAMERA_BOUNDS = { minX: -11.8, maxX: 11.8, minY: 0.8, maxY: 4.55, minZ: -8.8, maxZ: 8.8 };
 
 function Loader() {
   const { progress } = useProgress();
@@ -82,6 +85,7 @@ export function ClassroomScene({
   setActiveInteraction?: (interaction: { id: string; type: string; label: { en: string; es: string }; action: () => void } | null) => void;
 }) {
   const group = useRef<THREE.Group>(null);
+  const lastInteractionKey = useRef<string | null>(null);
   const [moving, setMoving] = useState(false);
 
   const roomData = useMemo(() => {
@@ -93,20 +97,23 @@ export function ClassroomScene({
 
   useEffect(() => {
     if (group.current) group.current.position.set(0, 0, 0);
-  }, [room]);
+    lastInteractionKey.current = null;
+    setActiveInteraction?.(null);
+  }, [room, setActiveInteraction]);
 
   useFrame(({ camera }, rawDelta) => {
     const delta = Math.min(rawDelta, 0.05);
     const player = group.current;
     if (!player) return;
 
-    playerController.update(player.position, camera, inputState, playerMode, delta, CLASSROOM_BOUNDS, (nextPos) => isPositionColliding(nextPos, 0.45));
+    const collisionCheck = room === "security" ? (nextPos: THREE.Vector3) => isPositionColliding(nextPos, 0.45) : undefined;
+    playerController.update(player.position, camera, inputState, playerMode, delta, ROOM_BOUNDS, collisionCheck);
 
     if (!activeSeatId) player.rotation.y = playerController.rotationY;
     if (playerController.isMoving !== moving) setMoving(playerController.isMoving);
 
     if (camera instanceof THREE.PerspectiveCamera) {
-      updateThirdPersonCamera(camera, player.position, cameraYaw, cameraPitch, delta, 4.5, 1.5, [], { minX: -11.0, maxX: 11.0, minY: 0.8, maxY: 4.4, minZ: -8.0, maxZ: 8.0 });
+      updateThirdPersonCamera(camera, player.position, cameraYaw, cameraPitch, delta, 4.8, 1.55, [], CAMERA_BOUNDS);
     }
 
     const pPos: [number, number, number] = [player.position.x, player.position.y, player.position.z];
@@ -190,7 +197,11 @@ export function ClassroomScene({
     });
 
     const best = interactionManager.getBestInteraction(pPos, targets);
-    setActiveInteraction?.(best ? { id: best.id, type: best.type, label: best.label, action: best.action } : null);
+    const nextKey = best ? `${best.id}:${best.label.en}` : null;
+    if (nextKey !== lastInteractionKey.current) {
+      lastInteractionKey.current = nextKey;
+      setActiveInteraction?.(best ? { id: best.id, type: best.type, label: best.label, action: best.action } : null);
+    }
     if (best && inputState.interactPressed) best.action();
   });
 

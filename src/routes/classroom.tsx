@@ -11,7 +11,7 @@ import { CLASS_GUARDIANS } from "@/lib/class-guardians";
 import { controls } from "@/lib/class-store";
 import { useGuardian } from "@/lib/guardian-context";
 import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
-import { LookPad } from "@/components/game/touch-controls";
+import { AnalogJoystick, LookPad } from "@/components/game/touch-controls";
 import { QUALITY, useQuality } from "@/services/game/quality";
 import { useAppActive } from "@/services/platform/lifecycle";
 import { InputManager, type GameInputState } from "@/components/game/core/input-manager";
@@ -39,8 +39,8 @@ function ClassroomPage() {
   const inputManager = useMemo(() => new InputManager(), []);
   const [inputState, setInputState] = useState<GameInputState>(() => inputManager.getSnapshot());
   const [mode, setMode] = useState<PlayerMode>("idle");
-  const [cameraYaw, setCameraYaw] = useState(0);
-  const [cameraPitch, setCameraPitch] = useState(0.15);
+  const [cameraYaw, setCameraYaw] = useState(controls.cameraYaw);
+  const [cameraPitch, setCameraPitch] = useState(controls.cameraPitch);
   const [activeSeatId, setActiveSeatId] = useState<string | null>(null);
   const [openDoorIds, setOpenDoorIds] = useState<Set<string>>(new Set());
   const [currentRoom, setCurrentRoom] = useState<ClassroomRoom>("security");
@@ -53,13 +53,17 @@ function ClassroomPage() {
   } | null>(null);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => inputManager.onKeyDown(e);
-    const up = (e: KeyboardEvent) => inputManager.onKeyUp(e);
+    const down = (event: KeyboardEvent) => inputManager.onKeyDown(event);
+    const up = (event: KeyboardEvent) => inputManager.onKeyUp(event);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     const interval = window.setInterval(() => {
+      inputManager.joystickX = controls.joystick.x;
+      inputManager.joystickY = controls.joystick.y;
       const snap = inputManager.getSnapshot();
       setInputState(snap);
+      setCameraYaw((previous) => previous === controls.cameraYaw ? previous : controls.cameraYaw);
+      setCameraPitch((previous) => previous === controls.cameraPitch ? previous : controls.cameraPitch);
       if (mode !== "course") {
         setMode(activeSeatId ? "seated" : snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
       }
@@ -68,13 +72,18 @@ function ClassroomPage() {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
       window.clearInterval(interval);
-      inputManager.reset();
+      controls.joystick.x = 0;
+      controls.joystick.y = 0;
+      inputManager.dispose();
     };
   }, [inputManager, mode, activeSeatId]);
 
   const startCourse = () => {
     const missionId = readSelectedMission();
     setSelectedMissionId(missionId);
+    controls.joystick.x = 0;
+    controls.joystick.y = 0;
+    inputManager.reset();
     setMode("course");
   };
 
@@ -86,16 +95,17 @@ function ClassroomPage() {
     <div className="game-viewport classroom-viewport fixed inset-0 bg-background">
       <div
         className="absolute inset-0 touch-none"
-        onPointerDown={(e) => {
-          if (e.pointerType !== "mouse") return;
+        onPointerDown={(event) => {
+          if (event.pointerType !== "mouse" || !(event.target instanceof HTMLCanvasElement)) return;
           dragging.current = true;
-          e.currentTarget.setPointerCapture(e.pointerId);
+          event.currentTarget.setPointerCapture(event.pointerId);
         }}
-        onPointerMove={(e) => {
-          if (dragging.current) {
-            setCameraYaw((prev) => prev - e.movementX * 0.005);
-            setCameraPitch((prev) => Math.min(0.85, Math.max(-0.15, prev + e.movementY * 0.003)));
-          }
+        onPointerMove={(event) => {
+          if (!dragging.current) return;
+          controls.cameraYaw -= event.movementX * 0.005;
+          controls.cameraPitch = Math.min(0.85, Math.max(-0.15, controls.cameraPitch + event.movementY * 0.003));
+          setCameraYaw(controls.cameraYaw);
+          setCameraPitch(controls.cameraPitch);
         }}
         onPointerUp={() => (dragging.current = false)}
         onPointerCancel={() => (dragging.current = false)}
@@ -141,6 +151,8 @@ function ClassroomPage() {
               setCurrentRoom(room.id as ClassroomRoom);
               setActiveSeatId(null);
               setOpenDoorIds(new Set());
+              controls.joystick.x = 0;
+              controls.joystick.y = 0;
             }}
             className={"rounded-xl px-3 py-1.5 text-xs font-black transition " + (currentRoom === room.id ? "bg-cyan-500 text-slate-950 shadow-md" : "text-slate-300 hover:bg-slate-800 hover:text-white")}
           >
@@ -150,7 +162,13 @@ function ClassroomPage() {
       </div>
 
       <ClassHud room={currentRoom} activeInteraction={activeInteraction} activeSeatId={activeSeatId} />
-      <div className="mobile-game-controls game-right z-40"><LookPad target={controls} /></div>
+      <div className="mobile-game-controls pointer-events-none fixed inset-0 z-40">
+        <div className="game-left pointer-events-auto"><AnalogJoystick target={controls.joystick} /></div>
+        <div className="game-right pointer-events-auto"><LookPad target={controls} /></div>
+        <div className="game-actions pointer-events-auto">
+          <button type="button" className="game-action" aria-label="Interact" onClick={() => inputManager.triggerInteract()}>Use</button>
+        </div>
+      </div>
       <WorldLoading />
       <GameSettings />
       <PauseMenu />

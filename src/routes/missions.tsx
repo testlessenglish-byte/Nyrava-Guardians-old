@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Canvas } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { Award, ArrowLeft, ArrowRight, Calendar, CheckCircle2, Target, X } from "lucide-react";
 import { MissionHubScene } from "@/components/missions/mission-hub-scene";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
@@ -44,11 +44,6 @@ function MissionHubPage() {
   const [selectedTab, setSelectedTab] = useState<"story" | "daily" | "weekly">("story");
 
   useEffect(() => {
-    advancePhishingStory("GOTO_MISSION_HUB", "TALK_SARAH");
-    advancePhishingStory("RETURN_SARAH", "MISSION_COMPLETED");
-  }, []);
-
-  useEffect(() => {
     boardOpenRef.current = boardOpen;
     if (boardOpen) inputManager.reset();
   }, [boardOpen, inputManager]);
@@ -70,6 +65,13 @@ function MissionHubPage() {
       inputManager.dispose();
     };
   }, [inputManager]);
+
+  const openMissionBoardWithSarah = () => {
+    const step = getPhishingStoryStep();
+    if (step === "GOTO_MISSION_HUB") advancePhishingStory("GOTO_MISSION_HUB", "TALK_SARAH");
+    if (step === "RETURN_SARAH") advancePhishingStory("RETURN_SARAH", "MISSION_COMPLETED");
+    setBoardOpen(true);
+  };
 
   const acceptPhishingMission = () => {
     selectMission("phishing-defense");
@@ -108,15 +110,14 @@ function MissionHubPage() {
               playerMode={boardOpen ? "idle" : mode}
               cameraYaw={cameraYaw}
               cameraPitch={cameraPitch}
-              onOpenBoard={() => setBoardOpen(true)}
+              onOpenBoard={openMissionBoardWithSarah}
             />
           </Canvas>
         </GameErrorBoundary>
       </div>
 
-      <div className="absolute left-4 top-4 z-40 flex gap-2">
+      <div className="absolute left-4 top-4 z-40">
         <Link to="/isla"><Button variant="outline" size="sm" className="border-slate-700 bg-slate-950/85 text-white font-bold"><ArrowLeft className="size-4 mr-1" /> Isla Central</Button></Link>
-        <Button size="sm" onClick={() => setBoardOpen(true)} className="bg-cyan-500 text-slate-950 font-black">{es ? "Tablero de misiones" : "Mission Board"}</Button>
       </div>
 
       {!boardOpen && (
