@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 
 import { IslaScene } from "@/components/isla/isla-scene";
+import { IslaBrandOverlays } from "@/components/isla/isla-brand-overlays";
 import { IslaHud } from "@/components/isla/isla-hud";
 import { IslaControls } from "@/components/isla/isla-controls";
 import { hydrateIsla, islaControls, toggleIslaView } from "@/lib/isla-store";
@@ -123,6 +124,7 @@ function IslaCentral() {
               playerName={guardianName || "Alex"}
               playerGuardian={guardian.id}
             />
+            <IslaBrandOverlays />
           </Canvas>
           <IslaHud guardianName={guardianName || "Alex"} />
           <IslaControls guardianName={guardianName || "Alex"} />
