@@ -1,4 +1,4 @@
-import { Html } from "@react-three/drei";
+import { Text } from "@react-three/drei";
 import { InteractiveSeat, type SeatData } from "@/components/game/interactive-seat";
 import { InteractiveDoor, type DoorData } from "@/components/game/interactive-door";
 
@@ -26,26 +26,21 @@ export function TruthLabSet({ activeSeatId, openDoorIds }: { activeSeatId?: stri
       <mesh position={[0, 0.15, -8.8]}><boxGeometry args={[14, 0.3, 2.4]} /><meshStandardMaterial color="#0284c7" roughness={0.4} /></mesh>
       <group position={[0, 2.8, -9.4]}>
         <mesh><boxGeometry args={[11.5, 3.1, 0.15]} /><meshStandardMaterial color="#0f4c75" roughness={0.4} /></mesh>
-        <Html position={[0, 0, 0.12]} transform distanceFactor={18} occlude={false}>
-          <div className="w-[850px] select-none text-center text-white">
-            <h1 className="text-3xl font-black tracking-widest text-cyan-400">NOVA & LEX'S TRUTH LAB</h1>
-            <p className="mt-1 text-sm font-extrabold text-cyan-200">Critical Thinking · Evidence Analysis · Research</p>
-            <div className="mt-4 flex justify-center gap-6">
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-cyan-500/40 bg-cyan-950/70 p-3 w-28">
-                <span className="text-3xl">🔍</span>
-                <span className="text-[10px] font-black text-cyan-300">Source Check</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-purple-500/40 bg-purple-950/70 p-3 w-28">
-                <span className="text-3xl">🧩</span>
-                <span className="text-[10px] font-black text-purple-300">Logic Puzzles</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-indigo-500/40 bg-indigo-950/70 p-3 w-28">
-                <span className="text-3xl">📊</span>
-                <span className="text-[10px] font-black text-indigo-300">Data Proof</span>
-              </div>
-            </div>
-          </div>
-        </Html>
+        <Text position={[0, 0.8, 0.1]} fontSize={0.24} color="#38bdf8" anchorX="center" anchorY="middle" letterSpacing={0.08}>
+          NOVA & LEX'S TRUTH LAB
+        </Text>
+        <Text position={[0, 0.3, 0.1]} fontSize={0.14} color="#bae6fd" anchorX="center" anchorY="middle">
+          Critical Thinking · Evidence Analysis · Research
+        </Text>
+        <Text position={[-2.2, -0.4, 0.1]} fontSize={0.13} color="#0ea5e9" anchorX="center" anchorY="middle">
+          🔍 Source Check
+        </Text>
+        <Text position={[0, -0.4, 0.1]} fontSize={0.13} color="#a855f7" anchorX="center" anchorY="middle">
+          🧩 Logic Puzzles
+        </Text>
+        <Text position={[2.2, -0.4, 0.1]} fontSize={0.13} color="#6366f1" anchorX="center" anchorY="middle">
+          📊 Data Proof
+        </Text>
       </group>
 
       {TRUTH_DOORS.map((door) => (

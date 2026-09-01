@@ -1,4 +1,4 @@
-import { Html } from "@react-three/drei";
+import { Text } from "@react-three/drei";
 import { InteractiveSeat, type SeatData } from "@/components/game/interactive-seat";
 import { InteractiveDoor, type DoorData } from "@/components/game/interactive-door";
 
@@ -26,26 +26,21 @@ export function CommunicationStudioSet({ activeSeatId, openDoorIds }: { activeSe
       <mesh position={[0, 0.15, -8.8]}><boxGeometry args={[14, 0.3, 2.4]} /><meshStandardMaterial color="#be185d" roughness={0.4} /></mesh>
       <group position={[0, 2.8, -9.4]}>
         <mesh><boxGeometry args={[11.5, 3.1, 0.15]} /><meshStandardMaterial color="#831843" roughness={0.4} /></mesh>
-        <Html position={[0, 0, 0.12]} transform distanceFactor={18} occlude={false}>
-          <div className="w-[850px] select-none text-center text-white">
-            <h1 className="text-3xl font-black tracking-widest text-pink-400">DAYANA'S COMMUNICATION STUDIO</h1>
-            <p className="mt-1 text-sm font-extrabold text-pink-200">Online Kindness · Digital Citizenship · Networks</p>
-            <div className="mt-4 flex justify-center gap-6">
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-pink-500/40 bg-pink-950/70 p-3 w-28">
-                <span className="text-3xl">💬</span>
-                <span className="text-[10px] font-black text-pink-300">Safe Responses</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-purple-500/40 bg-purple-950/70 p-3 w-28">
-                <span className="text-3xl">🌐</span>
-                <span className="text-[10px] font-black text-purple-300">Network Map</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-rose-500/40 bg-rose-950/70 p-3 w-28">
-                <span className="text-3xl">🤝</span>
-                <span className="text-[10px] font-black text-rose-300">Kindness Hub</span>
-              </div>
-            </div>
-          </div>
-        </Html>
+        <Text position={[0, 0.8, 0.1]} fontSize={0.24} color="#f472b6" anchorX="center" anchorY="middle" letterSpacing={0.08}>
+          DAYANA'S COMMUNICATION STUDIO
+        </Text>
+        <Text position={[0, 0.3, 0.1]} fontSize={0.14} color="#fbcfe8" anchorX="center" anchorY="middle">
+          Online Kindness · Digital Citizenship · Networks
+        </Text>
+        <Text position={[-2.2, -0.4, 0.1]} fontSize={0.13} color="#ec4899" anchorX="center" anchorY="middle">
+          💬 Safe Responses
+        </Text>
+        <Text position={[0, -0.4, 0.1]} fontSize={0.13} color="#c084fc" anchorX="center" anchorY="middle">
+          🌐 Network Map
+        </Text>
+        <Text position={[2.2, -0.4, 0.1]} fontSize={0.13} color="#fb7185" anchorX="center" anchorY="middle">
+          🤝 Kindness Hub
+        </Text>
       </group>
 
       {COMMUNICATION_DOORS.map((door) => (
