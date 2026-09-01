@@ -72,7 +72,7 @@ export function ClassroomScene({
   playerLabel?: string;
   guardianId?: string;
   inputManager: InputManager;
-  onStartCourse?: () => void;
+  onStartCourse?: (() => void) | undefined;
   activeSeatId?: string | null;
   setActiveSeatId?: (id: string | null) => void;
   openDoorIds?: Set<string>;

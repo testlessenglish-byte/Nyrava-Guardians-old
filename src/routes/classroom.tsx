@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Canvas } from "@react-three/fiber";
 import { useRef, useState, useEffect, useMemo } from "react";
-import { ClassroomScene, type ClassroomRoom } from "@/components/meta/classroom-scene";
+import { ClassroomScene } from "@/components/meta/classroom-scene";
 import { AcademyClassroomSet } from "@/components/meta/academy-classroom-set";
+import { SecurityClassroomCorrection } from "@/components/meta/security-classroom-correction";
 import { BuilderLabSet } from "@/components/meta/builder-lab-set";
 import { CommunicationStudioSet } from "@/components/meta/communication-studio-set";
 import { TruthLabSet } from "@/components/meta/truth-lab-set";
 import { ClassHud } from "@/components/meta/class-hud";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
 import { useGuardian } from "@/lib/guardian-context";
+import { readSelectedClassroom } from "@/lib/classroom-selection";
 import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
 import { AnalogJoystick, LookPad } from "@/components/game/touch-controls";
 import { QUALITY, useQuality } from "@/services/game/quality";
@@ -35,10 +37,10 @@ function ClassroomPage() {
   const playerColor = chosen?.color ?? "#f4f7ff";
   const playerLabel = `${guardianName || "You"}${chosen ? ` · ${chosen.name}` : ""}`;
   const inputManager = useMemo(() => new InputManager(), []);
+  const currentRoom = useMemo(() => readSelectedClassroom(), []);
   const [courseOpen, setCourseOpen] = useState(false);
   const [activeSeatId, setActiveSeatId] = useState<string | null>(null);
   const [openDoorIds, setOpenDoorIds] = useState<Set<string>>(new Set());
-  const [currentRoom, setCurrentRoom] = useState<ClassroomRoom>("security");
   const [selectedMissionId, setSelectedMissionId] = useState(readSelectedMission);
   const [activeInteraction, setActiveInteraction] = useState<{
     id: string;
@@ -60,6 +62,7 @@ function ClassroomPage() {
   }, [inputManager]);
 
   const startCourse = () => {
+    if (currentRoom !== "security") return;
     const missionId = readSelectedMission();
     setSelectedMissionId(missionId);
     inputManager.setEnabled(false);
@@ -89,7 +92,7 @@ function ClassroomPage() {
       <div className="fixed inset-0 grid place-items-center bg-slate-950 p-6 text-white">
         <div className="max-w-md rounded-3xl border border-amber-400/30 bg-slate-900/90 p-6 text-center shadow-2xl">
           <h1 className="text-xl font-black">Choose your Guardian first</h1>
-          <p className="mt-2 text-sm text-slate-300">Your classroom will not substitute a different avatar. Return to the world, select your Guardian, then enter class again.</p>
+          <p className="mt-2 text-sm text-slate-300">Your classroom will not substitute a different avatar. Return to Isla Central, select your Guardian, then enter class again.</p>
           <button type="button" onClick={() => window.location.assign("/isla")} className="mt-5 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950">Return to Isla Central</button>
         </div>
       </div>
@@ -121,51 +124,31 @@ function ClassroomPage() {
         onLostPointerCapture={() => (dragging.current = false)}
       >
         <GameErrorBoundary>
-          <Canvas frameloop={active ? "always" : "never"} shadows={quality.shadows} dpr={quality.dpr} camera={{ position: [0, 3.1, 10.3], fov: 56 }}>
+          <Canvas frameloop={active ? "always" : "never"} shadows={quality.shadows} dpr={quality.dpr} camera={{ position: [0, 3.2, 13.2], fov: 58 }}>
             <ClassroomScene
               room={currentRoom}
               playerColor={playerColor}
               playerLabel={playerLabel}
               guardianId={chosen.id}
               inputManager={inputManager}
-              onStartCourse={startCourse}
+              onStartCourse={currentRoom === "security" ? startCourse : undefined}
               activeSeatId={activeSeatId}
               setActiveSeatId={setActiveSeatId}
               openDoorIds={openDoorIds}
               setOpenDoorIds={setOpenDoorIds}
               setActiveInteraction={setActiveInteraction}
             />
-            {currentRoom === "security" && <AcademyClassroomSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
+            {currentRoom === "security" && (
+              <>
+                <AcademyClassroomSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
+                <SecurityClassroomCorrection />
+              </>
+            )}
             {currentRoom === "builder" && <BuilderLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
             {currentRoom === "communication" && <CommunicationStudioSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
             {currentRoom === "truth" && <TruthLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
           </Canvas>
         </GameErrorBoundary>
-      </div>
-
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex gap-2 rounded-2xl border border-slate-800 bg-slate-950/85 p-1.5 backdrop-blur-md shadow-xl">
-        {[
-          { id: "security", label: "🛡️ Command Center" },
-          { id: "builder", label: "💻 Builder Lab" },
-          { id: "communication", label: "💬 Studio" },
-          { id: "truth", label: "🔍 Truth Lab" },
-        ].map((room) => (
-          <button
-            key={room.id}
-            type="button"
-            onClick={() => {
-              setCurrentRoom(room.id as ClassroomRoom);
-              setActiveSeatId(null);
-              setOpenDoorIds(new Set());
-              inputManager.reset();
-              inputManager.cameraYaw = 0;
-              inputManager.cameraPitch = 0.12;
-            }}
-            className={"rounded-xl px-3 py-1.5 text-xs font-black transition " + (currentRoom === room.id ? "bg-cyan-500 text-slate-950 shadow-md" : "text-slate-300 hover:bg-slate-800 hover:text-white")}
-          >
-            {room.label}
-          </button>
-        ))}
       </div>
 
       <ClassHud room={currentRoom} activeInteraction={activeInteraction} activeSeatId={activeSeatId} />
