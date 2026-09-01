@@ -58,38 +58,44 @@ function Plant({ position }: { position: [number, number, number] }) {
 
 function TeachingBoard({ title }: { title: string }) {
   return (
-    <group position={[0, 2.8, -9.22]}>
-      <mesh castShadow>
-        <boxGeometry args={[8.5, 2.75, 0.18]} />
-        <meshStandardMaterial color="#0b2a45" emissive="#0ea5e9" emissiveIntensity={0.32} metalness={0.45} roughness={0.25} />
+    <group position={[0, 2.72, -9.56]}>
+      <mesh position={[0, 0, -0.02]} castShadow receiveShadow>
+        <boxGeometry args={[7.4, 2.45, 0.1]} />
+        <meshStandardMaterial color="#1e293b" roughness={0.5} metalness={0.4} />
       </mesh>
-      <mesh position={[0, 0, 0.105]}>
-        <planeGeometry args={[8.08, 2.34]} />
-        <meshStandardMaterial color="#04111f" emissive="#082f49" emissiveIntensity={0.42} />
+      <mesh position={[0, 0, 0.04]}>
+        <planeGeometry args={[7.08, 2.12]} />
+        <meshStandardMaterial color="#04111f" emissive="#082f49" emissiveIntensity={0.28} />
       </mesh>
-      <Text position={[0, 0.78, 0.14]} fontSize={0.22} color="#22d3ee" anchorX="center" anchorY="middle" letterSpacing={0.12}>
+      <Text position={[0, 0.7, 0.07]} fontSize={0.17} color="#22d3ee" anchorX="center" anchorY="middle" letterSpacing={0.1}>
         DIGITAL SAFETY FOUNDATIONS
       </Text>
-      <Text position={[0, 0.25, 0.14]} fontSize={0.5} maxWidth={7.2} color="#f8fafc" anchorX="center" anchorY="middle">
+      <Text position={[0, 0.2, 0.07]} fontSize={0.42} maxWidth={6.25} color="#f8fafc" anchorX="center" anchorY="middle">
         {title}
       </Text>
-      <Text position={[0, -0.22, 0.14]} fontSize={0.18} color="#bae6fd" anchorX="center" anchorY="middle">
+      <Text position={[0, -0.2, 0.07]} fontSize={0.15} color="#bae6fd" anchorX="center" anchorY="middle">
         Be smart. Stay safe. Don't get hooked.
       </Text>
       {[
-        { x: -2.45, label: "SPOT THE BAIT", color: "#22d3ee" },
+        { x: -2.0, label: "SPOT THE BAIT", color: "#22d3ee" },
         { x: 0, label: "GUARDIAN SHIELD", color: "#fbbf24" },
-        { x: 2.45, label: "VERIFY LINKS", color: "#34d399" },
+        { x: 2.0, label: "VERIFY LINKS", color: "#34d399" },
       ].map((item) => (
-        <group key={item.label} position={[item.x, -0.78, 0.15]}>
+        <group key={item.label} position={[item.x, -0.72, 0.075]}>
           <mesh>
-            <boxGeometry args={[1.8, 0.48, 0.08]} />
-            <meshStandardMaterial color="#0f172a" emissive={item.color} emissiveIntensity={0.22} />
+            <boxGeometry args={[1.5, 0.4, 0.045]} />
+            <meshStandardMaterial color="#0f172a" emissive={item.color} emissiveIntensity={0.18} />
           </mesh>
-          <Text position={[0, 0, 0.055]} fontSize={0.12} color={item.color} anchorX="center" anchorY="middle">
+          <Text position={[0, 0, 0.032]} fontSize={0.1} color={item.color} anchorX="center" anchorY="middle">
             {item.label}
           </Text>
         </group>
+      ))}
+      {[-3.35, 3.35].map((x) => (
+        <mesh key={x} position={[x, -1.34, -0.03]}>
+          <boxGeometry args={[0.13, 0.28, 0.18]} />
+          <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
+        </mesh>
       ))}
     </group>
   );
@@ -111,15 +117,24 @@ export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatI
         <planeGeometry args={[26, 20]} />
         <meshStandardMaterial color="#5a321c" roughness={0.52} />
       </mesh>
+      {/* Walkable landing beyond the main entrance so visible floor is never blocked by an invisible boundary. */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.005, 11.8]} receiveShadow>
+        <planeGeometry args={[6.5, 5.2]} />
+        <meshStandardMaterial color="#64748b" roughness={0.78} />
+      </mesh>
       <mesh position={[0, 4.8, 0]} rotation-x={Math.PI / 2}>
         <planeGeometry args={[26, 20]} />
         <meshStandardMaterial color="#f1f5f9" roughness={0.9} />
       </mesh>
 
-      {/* Front wall */}
+      {/* Front wall with the lesson board mounted directly on it. */}
       <mesh position={[0, 2.4, -9.72]} receiveShadow>
-        <boxGeometry args={[26, 4.8, 0.22]} />
+        <boxGeometry args={[26, 4.8, 0.28]} />
         <meshStandardMaterial color="#d9e7ef" roughness={0.72} />
+      </mesh>
+      <mesh position={[0, 2.72, -9.61]} receiveShadow>
+        <boxGeometry args={[7.9, 2.85, 0.05]} />
+        <meshStandardMaterial color="#a9bdc9" roughness={0.82} />
       </mesh>
 
       {/* Rear wall built around the real main-door opening. */}
@@ -131,16 +146,13 @@ export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatI
       <mesh position={[-12.72, 2.4, 3.0]} receiveShadow><boxGeometry args={[0.22, 4.8, 13.0]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
       <mesh position={[-12.72, 2.4, -8.0]} receiveShadow><boxGeometry args={[0.22, 4.8, 3.0]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
       <mesh position={[-12.72, 4.1, -4.5]} receiveShadow><boxGeometry args={[0.22, 1.4, 4.0]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
-
       <mesh position={[12.72, 2.4, 0]} receiveShadow><boxGeometry args={[0.22, 4.8, 20]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
 
-      {/* Warm trim and room lighting. */}
       <mesh position={[0, 1.15, -9.55]}><boxGeometry args={[26, 0.1, 0.12]} /><meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={0.35} /></mesh>
       <mesh position={[0, 0.13, -8.55]} receiveShadow><boxGeometry args={[12.5, 0.26, 1.6]} /><meshStandardMaterial color="#74401f" roughness={0.48} /></mesh>
 
       <TeachingBoard title={activeLesson.title.en} />
 
-      {/* Nyrava center rug leaves a clear player lane toward the teaching area. */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.025, 0]} receiveShadow>
         <circleGeometry args={[3.75, 64]} />
         <meshStandardMaterial color="#0b2038" roughness={0.55} />
@@ -151,7 +163,6 @@ export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatI
       </mesh>
       <Text position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]} fontSize={1.05} color="#fbbf24" anchorX="center" anchorY="middle">N</Text>
 
-      {/* Desks intentionally stay to the sides so the avatar is visible from spawn. */}
       <Desk position={[-6.5, 0, 2.5]} />
       <Desk position={[-6.5, 0, 6.0]} />
       <Desk position={[6.5, 0, 2.5]} />
@@ -163,7 +174,6 @@ export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatI
       {CLASSROOM_DOORS.map((door) => <InteractiveDoor key={door.id} door={door} isOpen={Boolean(openDoorIds?.has(door.id))} />)}
       {STUDENT_SEATS.map((seat) => <InteractiveSeat key={seat.id} seat={seat} occupied={activeSeatId === seat.id} />)}
 
-      {/* Achievements wall */}
       <group position={[12.48, 2.9, -4.0]} rotation-y={-Math.PI / 2}>
         <mesh><boxGeometry args={[4.4, 2.3, 0.12]} /><meshStandardMaterial color="#11283f" /></mesh>
         <Text position={[0, 0.65, 0.08]} fontSize={0.18} color="#fbbf24" anchorX="center">ACHIEVEMENTS</Text>
@@ -175,7 +185,6 @@ export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatI
         ))}
       </group>
 
-      {/* Mission Hub portal */}
       <group position={[11.45, 0, 2.0]}>
         <mesh position={[0, 2.15, 0]}><boxGeometry args={[0.35, 4.2, 3.4]} /><meshStandardMaterial color="#23364d" /></mesh>
         <mesh ref={portalRingRef} position={[-0.2, 2.15, 0]} rotation-y={Math.PI / 2}><torusGeometry args={[1.28, 0.13, 18, 56]} /><meshStandardMaterial color="#60a5fa" emissive="#3b82f6" emissiveIntensity={2.5} /></mesh>
