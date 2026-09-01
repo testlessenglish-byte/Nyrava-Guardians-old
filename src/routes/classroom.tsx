@@ -3,6 +3,9 @@ import { Canvas } from "@react-three/fiber";
 import { useRef, useState, useEffect, useMemo } from "react";
 import { ClassroomScene } from "@/components/meta/classroom-scene";
 import { AcademyClassroomSet } from "@/components/meta/academy-classroom-set";
+import { BuilderLabSet } from "@/components/meta/builder-lab-set";
+import { CommunicationStudioSet } from "@/components/meta/communication-studio-set";
+import { TruthLabSet } from "@/components/meta/truth-lab-set";
 import { ClassHud } from "@/components/meta/class-hud";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
 import { controls } from "@/lib/class-store";
@@ -75,6 +78,8 @@ function ClassroomPage() {
     );
   }
 
+  const [currentRoom, setCurrentRoom] = useState<"security" | "builder" | "communication" | "truth">("security");
+
   return (
     <div className="game-viewport classroom-viewport fixed inset-0 bg-background">
       <div
@@ -116,12 +121,47 @@ function ClassroomPage() {
               setOpenDoorIds={setOpenDoorIds}
               setActiveInteraction={setActiveInteraction}
             />
-            <AcademyClassroomSet
-              activeSeatId={activeSeatId}
-              openDoorIds={openDoorIds}
-            />
+            {currentRoom === "security" && (
+              <AcademyClassroomSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
+            )}
+            {currentRoom === "builder" && (
+              <BuilderLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
+            )}
+            {currentRoom === "communication" && (
+              <CommunicationStudioSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
+            )}
+            {currentRoom === "truth" && (
+              <TruthLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
+            )}
           </Canvas>
         </GameErrorBoundary>
+      </div>
+
+      {/* ROOM SWITCHER HUD */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex gap-2 rounded-2xl border border-slate-800 bg-slate-950/85 p-1.5 backdrop-blur-md shadow-xl">
+        {[
+          { id: "security", label: "🛡️ Command Center" },
+          { id: "builder", label: "💻 Builder Lab" },
+          { id: "communication", label: "💬 Studio" },
+          { id: "truth", label: "🔍 Truth Lab" },
+        ].map((room) => (
+          <button
+            key={room.id}
+            type="button"
+            onClick={() => {
+              setCurrentRoom(room.id as any);
+              setActiveSeatId(null);
+            }}
+            className={
+              "rounded-xl px-3 py-1.5 text-xs font-black transition " +
+              (currentRoom === room.id
+                ? "bg-cyan-500 text-slate-950 shadow-md"
+                : "text-slate-300 hover:bg-slate-800 hover:text-white")
+            }
+          >
+            {room.label}
+          </button>
+        ))}
       </div>
 
       <ClassHud
