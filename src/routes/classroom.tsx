@@ -97,7 +97,10 @@ function ClassroomPage() {
           e.currentTarget.setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
-          if (dragging.current) controls.cameraYaw -= e.movementX * 0.005;
+          if (dragging.current) {
+            controls.cameraYaw -= e.movementX * 0.005;
+            controls.cameraPitch += e.movementY * 0.003;
+          }
         }}
         onPointerUp={() => (dragging.current = false)}
         onPointerCancel={() => (dragging.current = false)}

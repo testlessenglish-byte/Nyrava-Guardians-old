@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Mic, MicOff, Send, Volume2, VolumeX } from "lucide-react";
+import { CheckCircle2, Circle, Mic, MicOff, Send, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { Joystick } from "./joystick";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
-import { pushMessage, setClassState, travelTo, useClassState } from "@/lib/class-store";
-import { ZONES, getZone } from "@/lib/worlds";
+import { controls, pushMessage, setClassState, useClassState } from "@/lib/class-store";
 import { guardianChat, guardianSpeak } from "@/lib/classroom.functions";
 import { useGuardian } from "@/lib/guardian-context";
 import { Button } from "@/components/ui/button";
@@ -17,17 +16,44 @@ import {
   type Recognition,
 } from "@/services/platform/device";
 import { audioEngine } from "@/services/audio/audio-engine";
+import { createProgress } from "@/domain/progression/engine";
+import { missions } from "@/domain/progression/catalog";
 
 export function ClassHud() {
-  const { messages, nearby, thinking, voiceEnabled, listening, zone } = useClassState();
-  const current = getZone(zone);
+  const { messages, thinking, voiceEnabled, listening } = useClassState();
   const chat = useServerFn(guardianChat);
   const speak = useServerFn(guardianSpeak);
   const [draft, setDraft] = useState("");
+  const [hasMoved, setHasMoved] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const recognition = useRef<Recognition | null>(null);
-  const audio = useRef<HTMLAudioElement | null>(null);
   const session = useRef(0);
+
+  const { guardianName, guardianId } = useGuardian();
+  const learnerName = guardianName || "Alex";
+  const currentGuardian = CLASS_GUARDIANS.find((g) => g.id === guardianId) ?? CLASS_GUARDIANS[0]!;
+  const sarah = CLASS_GUARDIANS.find((g) => g.id === "sarah") ?? CLASS_GUARDIANS[0]!;
+
+  const progress = createProgress();
+  const activeLesson = missions[0]!;
+  const missionData = progress.missions[activeLesson.id];
+  const isLessonDone = !!missionData && (missionData.status === "completed" || missionData.status === "mastered");
+  const isQuizDone = !!missionData && (missionData.status === "mastered" || (missionData.bestScore ?? 0) >= 75);
+  const isPassed = isQuizDone;
+  const isCertEarned = progress.certificates.length > 0;
+
+  const completedStepsCount = (isLessonDone ? 1 : 0) + (isQuizDone ? 1 : 0) + (isPassed ? 1 : 0) + (isCertEarned ? 1 : 0);
+
+  useEffect(() => {
+    const checkMovement = () => {
+      if (controls.keys.size > 0 || Math.hypot(controls.joystick.x, controls.joystick.y) > 0.1) {
+        setHasMoved(true);
+      }
+    };
+    const interval = setInterval(checkMovement, 200);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     const stop = () => {
       session.current++;
@@ -42,15 +68,6 @@ export function ClassHud() {
     };
   }, []);
 
-  const { guardianName } = useGuardian();
-  const learnerName = guardianName || "Guardian";
-
-  const host =
-    CLASS_GUARDIANS.find((g) => g.id === current.npcs[0]) ??
-    CLASS_GUARDIANS[CLASS_GUARDIANS.length - 1];
-  const active = (CLASS_GUARDIANS.find((g) => g.id === nearby) ??
-    host) as (typeof CLASS_GUARDIANS)[number];
-
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
   }, [messages.length, thinking]);
@@ -58,7 +75,7 @@ export function ClassHud() {
   const send = async (text: string) => {
     if (isNative() || import.meta.env.MODE === "mobile") {
       toast.info(
-        "Native Guardian chat needs the secure backend connection. Island exploration and challenges remain available.",
+        "Native Guardian chat needs the secure backend connection. Exploration remains available."
       );
       return;
     }
@@ -76,20 +93,20 @@ export function ClassHud() {
       }));
       const { reply } = await chat({
         data: {
-          guardian: active.name,
-          role: active.role,
+          guardian: sarah.name,
+          role: sarah.role,
           learnerName,
           message: clean,
           history,
         },
       });
       if (requestSession !== session.current) return;
-      pushMessage({ from: active.id, name: active.name, text: reply });
-      setClassState({ thinking: false, speaking: active.id });
+      pushMessage({ from: sarah.id, name: sarah.name, text: reply });
+      setClassState({ thinking: false, speaking: sarah.id });
 
       if (voiceEnabled) {
         const { audio: base64, mimeType } = await speak({
-          data: { text: reply.slice(0, 600), voice: active.voice },
+          data: { text: reply.slice(0, 600), voice: sarah.voice },
         });
         if (requestSession !== session.current) return;
         await audioEngine.playSpeech(base64, () => setClassState({ speaking: null }), mimeType);
@@ -104,11 +121,8 @@ export function ClassHud() {
 
   const toggleMic = () => {
     const Ctor = recognitionConstructor();
-
     if (!Ctor) {
-      toast.info(
-        "Microphone recognition is not available on this device. Use text; native voice needs a reviewed speech provider.",
-      );
+      toast.info("Microphone recognition is not available on this device.");
       return;
     }
     if (listening) {
@@ -132,59 +146,141 @@ export function ClassHud() {
       rec.start();
     } catch {
       setClassState({ listening: false });
-      toast.info("Microphone could not start. You can still type.");
     }
   };
 
   return (
-    <div className="class-hud pointer-events-none fixed inset-0 z-20">
-      {/* Presence banner */}
-      <div className="pointer-events-none absolute left-1/2 top-20 -translate-x-1/2 rounded-full border border-border/60 bg-background/70 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-muted-foreground backdrop-blur">
-        {nearby ? `Talking with ${active.name}` : `${current.name} · walk into a portal to travel`}
-      </div>
-
-      {/* World switcher */}
-      <div className="pointer-events-auto absolute left-6 top-32 w-52 rounded-3xl border border-border/60 bg-background/75 p-3 backdrop-blur-xl">
-        <p className="px-1 pb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-          Worlds
-        </p>
-        <div className="flex flex-col gap-1">
-          {ZONES.map((z) => (
-            <button
-              key={z.id}
-              type="button"
-              onClick={() => travelTo(z.id)}
-              className={`rounded-xl px-3 py-2 text-left text-sm transition ${
-                z.id === zone
-                  ? "bg-primary/15 font-semibold text-foreground"
-                  : "text-muted-foreground hover:bg-muted/40"
-              }`}
-              style={z.id === zone ? { color: z.accent } : undefined}
-            >
-              {z.name}
-            </button>
-          ))}
+    <div className="class-hud pointer-events-none fixed inset-0 z-20 font-sans">
+      <div className="pointer-events-auto absolute left-5 top-5 w-80 space-y-3">
+        <div className="rounded-2xl border border-cyan-400/30 bg-slate-950/85 px-4 py-2.5 shadow-2xl backdrop-blur-md">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-300">
+            Academy Classroom
+          </p>
+          <p className="text-[11px] font-bold tracking-wider text-slate-400">
+            Nyrava Guardians Academy
+          </p>
         </div>
-        <p className="px-1 pt-2 text-[11px] leading-snug text-muted-foreground">{current.blurb}</p>
+
+        <div className="rounded-3xl border border-slate-700/60 bg-slate-950/90 p-4 text-white shadow-2xl backdrop-blur-xl">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-400">
+            Today's Lesson
+          </p>
+          <h3 className="mt-1 text-lg font-black tracking-tight text-white">
+            {activeLesson.title.en}
+          </h3>
+
+          <ul className="mt-3 space-y-2 text-xs font-semibold text-slate-300">
+            <li className="flex items-center gap-2">
+              {isLessonDone ? (
+                <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
+              ) : (
+                <Circle className="size-4 shrink-0 text-slate-500" />
+              )}
+              <span className={isLessonDone ? "text-slate-100" : ""}>Watch the lesson</span>
+            </li>
+            <li className="flex items-center gap-2">
+              {isQuizDone ? (
+                <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
+              ) : (
+                <Circle className="size-4 shrink-0 text-slate-500" />
+              )}
+              <span className={isQuizDone ? "text-slate-100" : ""}>Complete the quiz</span>
+            </li>
+            <li className="flex items-center gap-2">
+              {isPassed ? (
+                <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
+              ) : (
+                <Circle className="size-4 shrink-0 text-slate-500" />
+              )}
+              <span className={isPassed ? "text-slate-100" : ""}>Earn 75% or higher</span>
+            </li>
+            <li className="flex items-center gap-2">
+              {isCertEarned ? (
+                <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
+              ) : (
+                <Circle className="size-4 shrink-0 text-slate-500" />
+              )}
+              <span className={isCertEarned ? "text-slate-100" : ""}>Earn your certificate</span>
+            </li>
+          </ul>
+
+          <div className="mt-4 border-t border-slate-800 pt-3">
+            <div className="flex items-center justify-between text-xs font-black">
+              <span className="flex items-center gap-1 text-amber-400">★ Your Progress</span>
+              <span className="text-cyan-300">{completedStepsCount} / 4</span>
+            </div>
+            <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-800">
+              <div
+                className="h-full bg-gradient-to-r from-cyan-400 to-amber-400 transition-all duration-500"
+                style={{ width: (completedStepsCount ? Math.max(10, (completedStepsCount / 4) * 100) : 0) + "%" }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Movement */}
-      <div className="absolute bottom-8 left-8">
+      <div className="pointer-events-auto absolute right-5 top-5 flex items-center gap-3 rounded-2xl border border-cyan-400/30 bg-slate-950/85 p-2.5 pr-4 shadow-2xl backdrop-blur-md">
+        <div
+          className="grid size-10 place-items-center rounded-xl font-black text-slate-950 shadow-md"
+          style={{ background: currentGuardian.color }}
+        >
+          {learnerName.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-black text-white">{learnerName}</span>
+            <span className="text-xs font-black text-amber-400">★ {progress.xp}</span>
+          </div>
+          <p className="text-[11px] font-bold text-cyan-300">Level 2 Guardian</p>
+        </div>
+      </div>
+
+      {!hasMoved && (
+        <div className="pointer-events-auto absolute bottom-6 left-6 rounded-2xl border border-slate-700/60 bg-slate-950/90 p-3 shadow-2xl backdrop-blur-md transition-opacity duration-700">
+          <div className="flex items-center gap-4 text-center">
+            <div>
+              <div className="grid grid-cols-3 gap-1 font-mono text-xs font-bold text-white">
+                <div />
+                <span className="rounded bg-slate-800 p-1.5 border border-slate-700">W</span>
+                <div />
+                <span className="rounded bg-slate-800 p-1.5 border border-slate-700">A</span>
+                <span className="rounded bg-slate-800 p-1.5 border border-slate-700">S</span>
+                <span className="rounded bg-slate-800 p-1.5 border border-slate-700">D</span>
+              </div>
+              <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Move</p>
+            </div>
+            <div className="h-10 w-px bg-slate-800" />
+            <div>
+              <div className="grid h-10 w-8 place-items-center rounded border border-slate-700 bg-slate-800 text-xs text-white">
+                🖱️
+              </div>
+              <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Look</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="absolute bottom-6 left-6 block md:hidden">
         <Joystick />
       </div>
-      <p className="absolute bottom-4 left-8 hidden text-[11px] text-muted-foreground md:block">
-        WASD to walk · drag to look around
-      </p>
 
-      {/* Class chat */}
-      <div className="pointer-events-auto absolute bottom-6 right-6 flex w-[min(92vw,26rem)] flex-col gap-3 rounded-3xl border border-border/60 bg-background/80 p-4 backdrop-blur-xl">
+      <div className="pointer-events-auto absolute bottom-6 right-6 flex w-[min(92vw,24rem)] flex-col gap-3 rounded-3xl border border-cyan-500/30 bg-slate-950/90 p-4 shadow-2xl backdrop-blur-xl">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold" style={{ color: active.color }}>
-            {active.name} · {active.role}
-          </span>
+          <div className="flex items-center gap-2">
+            <div
+              className="grid size-7 place-items-center rounded-lg text-xs font-black text-slate-950"
+              style={{ background: sarah.color }}
+            >
+              {sarah.name.charAt(0)}
+            </div>
+            <span className="text-xs font-extrabold text-white">
+              {sarah.name} · {sarah.role}
+            </span>
+          </div>
           <Button
             size="icon"
             variant="ghost"
+            className="size-7 text-slate-400 hover:text-white"
             aria-label={voiceEnabled ? "Mute guardian voice" : "Unmute guardian voice"}
             onClick={() => {
               const nextVoiceEnabled = !voiceEnabled;
@@ -196,18 +292,22 @@ export function ClassHud() {
           </Button>
         </div>
 
-        <div ref={scroller} className="max-h-56 space-y-2 overflow-y-auto pr-1 text-sm">
-          {messages.length === 0 && <p className="text-muted-foreground">{active.greeting}</p>}
+        <div ref={scroller} className="max-h-40 space-y-2 overflow-y-auto pr-1 text-xs">
+          {messages.length === 0 && (
+            <p className="rounded-xl bg-slate-900/80 p-2.5 text-slate-300 leading-relaxed border border-slate-800">
+              Welcome, Guardian! Let's learn how to spot phishing and protect yourself online.
+            </p>
+          )}
           {messages.map((m) => (
             <p
               key={m.id}
-              className={m.from === "you" ? "text-right text-foreground" : "text-muted-foreground"}
+              className={m.from === "you" ? "text-right text-cyan-300 font-semibold" : "text-slate-300"}
             >
-              <span className="font-semibold">{m.name}: </span>
+              <span className="font-bold text-white">{m.name}: </span>
               {m.text}
             </p>
           ))}
-          {thinking && <p className="text-muted-foreground">{active.name} is thinking…</p>}
+          {thinking && <p className="text-cyan-400 italic">{sarah.name} is thinking…</p>}
         </div>
 
         <form
@@ -221,6 +321,7 @@ export function ClassHud() {
             type="button"
             size="icon"
             variant={listening ? "default" : "secondary"}
+            className="size-8 shrink-0"
             aria-label={listening ? "Stop talking" : "Talk to your guardian"}
             onClick={toggleMic}
           >
@@ -229,11 +330,12 @@ export function ClassHud() {
           <Input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder={listening ? "Listening…" : `Talk or type to ${active.name}`}
+            className="h-8 bg-slate-900/90 text-xs text-white border-slate-800"
+            placeholder={listening ? "Listening…" : `Ask ${sarah.name} a question…`}
             aria-label="Message your guardian"
           />
-          <Button type="submit" size="icon" disabled={thinking} aria-label="Send message">
-            <Send className="size-4" />
+          <Button type="submit" size="icon" className="size-8 shrink-0 bg-cyan-500 hover:bg-cyan-400 text-slate-950" disabled={thinking}>
+            <Send className="size-3.5" />
           </Button>
         </form>
       </div>
