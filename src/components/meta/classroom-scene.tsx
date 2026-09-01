@@ -18,7 +18,7 @@ import { TRUTH_SEATS, TRUTH_DOORS } from "./truth-lab-set";
 export type ClassroomRoom = "security" | "builder" | "communication" | "truth";
 
 const PLAYER_SPAWN: [number, number, number] = [0, 0, 5.6];
-const CAMERA_BOUNDS = { minX: -12.3, maxX: 12.3, minY: 1.0, maxY: 4.4, minZ: -9.1, maxZ: 10.45 };
+const CAMERA_BOUNDS = { minX: -12.3, maxX: 12.3, minY: 1.0, maxY: 4.4, minZ: -9.1, maxZ: 14.0 };
 const EMPTY_OPEN_DOORS = new Set<string>();
 
 function Loader() {
