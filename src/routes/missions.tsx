@@ -1,239 +1,162 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, RotateCcw, Star, Swords } from "lucide-react";
-import { Suspense, useState } from "react";
-import { toast } from "sonner";
-import { GUARDIAN_IMAGES } from "@/data/guardians";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Shield, Target, Calendar, Award, ArrowRight, CheckCircle2, MapPin } from "lucide-react";
+import { useState } from "react";
 import { useGuardian } from "@/lib/guardian-context";
-import { cn } from "@/lib/utils";
-import { MissionService } from "@/services/mock";
-import type { Mission, MissionChoice } from "@/types";
+import { Button } from "@/components/ui/button";
+import { missions as domainMissions } from "@/domain/progression/catalog";
 
 export const Route = createFileRoute("/missions")({
   head: () => ({
     meta: [
-      { title: "Mission Hub — Nyrava Guardians" },
-      {
-        name: "description",
-        content:
-          "Take on real online-safety scenarios like The Stranger in DMs. Make the right call, earn XP and grow as a Guardian.",
-      },
-      { property: "og:title", content: "Mission Hub — Nyrava Guardians" },
-      {
-        property: "og:description",
-        content:
-          "Take on real online-safety scenarios, make the right call and earn Guardian XP.",
-      },
+      { title: "Mission Hub Command Center — Nyrava Guardians" },
+      { name: "description", content: "Official Incident Command & Mission Selection Hub." },
     ],
   }),
-  component: MissionsPage,
+  component: MissionHubPage,
 });
 
-const DIFFICULTY_LABEL = { 1: "Rookie", 2: "Guardian", 3: "Master" } as const;
-
-function MissionsPage() {
-  return (
-    <Suspense fallback={<div className="panel h-64 animate-pulse" />}>
-      <MissionsContent />
-    </Suspense>
-  );
-}
-
-function MissionsContent() {
-  const { data: missions } = useSuspenseQuery({
-    queryKey: ["missions"],
-    queryFn: () => MissionService.list(),
-  });
-  const { completedMissions } = useGuardian();
-  const [activeId, setActiveId] = useState<string | null>(
-    missions.find((m) => m.scenario)?.id ?? null,
-  );
-
-  const active = missions.find((m) => m.id === activeId) ?? null;
+function MissionHubPage() {
+  const { guardianName } = useGuardian();
+  const [selectedTab, setSelectedTab] = useState<"story" | "daily" | "weekly">("story");
+  const primaryMission = domainMissions[0]!;
 
   return (
-    <div className="space-y-6 pb-8">
-      <header>
-        <h1 className="text-2xl font-extrabold md:text-3xl">Mission Hub</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Real scenarios. Real choices. Your decisions shape the mission.
-        </p>
-      </header>
-
-      <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
-        {/* Mission list */}
-        <ul className="space-y-3">
-          {missions.map((m) => {
-            const done = completedMissions.includes(m.id);
-            const playable = Boolean(m.scenario);
-            const selected = activeId === m.id;
-            return (
-              <li key={m.id}>
-                <button
-                  onClick={() => playable && setActiveId(m.id)}
-                  disabled={!playable}
-                  className={cn(
-                    "panel w-full p-4 text-left transition",
-                    selected && "border-primary/70 glow-primary",
-                    !playable && "opacity-60",
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-full border border-border px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                      {DIFFICULTY_LABEL[m.difficulty]}
-                    </span>
-                    {done ? (
-                      <CheckCircle2 className="h-4 w-4 text-guardian-lex" />
-                    ) : playable ? (
-                      <Swords className="h-4 w-4 text-primary" />
-                    ) : (
-                      <span className="text-[9px] font-extrabold uppercase text-muted-foreground">
-                        Soon
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-2 text-sm font-extrabold">{m.title}</p>
-                  <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-                    {m.briefing}
-                  </p>
-                  <p className="mt-2 flex items-center gap-1 text-[11px] font-extrabold text-guardian-byte">
-                    <Star className="h-3 w-3" /> +{m.xpReward} XP · {m.zone}
-                  </p>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-
-        {/* Active scenario */}
-        {active?.scenario ? (
-          <ScenarioPanel mission={active} />
-        ) : (
-          <div className="panel flex flex-col items-center justify-center p-10 text-center">
-            <Swords className="h-8 w-8 text-muted-foreground" />
-            <p className="mt-3 text-sm font-bold">Select a mission to begin</p>
-            <p className="text-xs text-muted-foreground">
-              Playable missions have a full interactive scenario.
-            </p>
+    <div className="min-h-screen bg-[#07111f] text-slate-100 p-6 md:p-10 font-sans">
+      <header className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 border-b border-slate-800">
+        <div>
+          <div className="flex items-center gap-2 text-cyan-400 font-black text-xs uppercase tracking-[0.25em] mb-1">
+            <Shield className="size-4" />
+            <span>Incident Command Center</span>
           </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ScenarioPanel({ mission }: { mission: Mission }) {
-  const { addXp, completeMission, completedMissions, guardianId } = useGuardian();
-  const [chosen, setChosen] = useState<MissionChoice | null>(null);
-  const alreadyDone = completedMissions.includes(mission.id);
-  const scenario = mission.scenario!;
-
-  function choose(choice: MissionChoice) {
-    if (chosen) return;
-    setChosen(choice);
-    if (choice.isBest) {
-      addXp(mission.xpReward);
-      completeMission(mission.id);
-      toast.success(`Mission complete! +${mission.xpReward} XP`, {
-        description: choice.feedback,
-      });
-    }
-  }
-
-  return (
-    <section className="panel overflow-hidden">
-      <div className="border-b border-border/60 p-5">
-        <p className="text-[10px] font-extrabold uppercase tracking-widest text-primary">
-          Live scenario · {mission.zone}
-        </p>
-        <h2 className="mt-1 text-lg font-extrabold">{mission.title}</h2>
-        <p className="text-xs text-muted-foreground">{mission.briefing}</p>
-      </div>
-
-      {/* Chat simulation */}
-      <div className="space-y-3 bg-background/40 p-5">
-        {scenario.chat.map((msg, i) => (
-          <div key={i} className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-destructive/40 bg-destructive/15 text-xs font-extrabold text-destructive">
-              ?
-            </div>
-            <div className="max-w-[85%]">
-              <p className="text-[10px] font-bold text-muted-foreground">
-                {msg.from} · {msg.time}
-              </p>
-              <div className="mt-1 rounded-2xl rounded-tl-sm border border-border bg-card px-3.5 py-2 text-sm">
-                {msg.text}
-              </div>
-            </div>
-          </div>
-        ))}
-        {guardianId && (
-          <div className="flex items-center gap-2 pt-1">
-            <img
-              src={GUARDIAN_IMAGES[guardianId]}
-              alt="Your Guardian watches over the chat"
-              className="h-6 w-6 rounded-full object-cover object-top"
-            />
-            <p className="text-[11px] font-bold italic text-primary animate-pulse-glow">
-              Your Guardian is watching — choose wisely.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Choices */}
-      <div className="border-t border-border/60 p-5">
-        <p className="text-sm font-extrabold">{scenario.question}</p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {scenario.choices.map((choice) => {
-            const isPicked = chosen?.id === choice.id;
-            return (
-              <button
-                key={choice.id}
-                onClick={() => choose(choice)}
-                disabled={Boolean(chosen)}
-                className={cn(
-                  "rounded-xl border px-4 py-3 text-left text-xs font-bold transition",
-                  isPicked && choice.isBest
-                    ? "border-guardian-lex bg-guardian-lex/15 text-guardian-lex"
-                    : isPicked
-                      ? "border-destructive bg-destructive/15 text-destructive"
-                      : chosen
-                        ? "border-border opacity-40"
-                        : "border-border hover:border-primary/60 hover:bg-primary/5",
-                )}
-              >
-                {choice.label}
-              </button>
-            );
-          })}
+          <h1 className="text-3xl md:text-4xl font-black text-white">Mission Hub</h1>
+          <p className="text-slate-400 text-sm mt-1">Welcome, {guardianName || "Guardian"}. Select an active mission or assignment.</p>
         </div>
 
-        {chosen && (
-          <div
-            className={cn(
-              "mt-4 rounded-xl border p-4 text-xs leading-relaxed",
-              chosen.isBest
-                ? "border-guardian-lex/50 bg-guardian-lex/10"
-                : "border-destructive/50 bg-destructive/10",
-            )}
-          >
-            <p className="font-bold">{chosen.feedback}</p>
-            {alreadyDone && chosen.isBest && (
-              <p className="mt-1 font-extrabold text-guardian-lex">
-                +{mission.xpReward} XP earned
-              </p>
-            )}
-            <button
-              onClick={() => setChosen(null)}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[11px] font-extrabold text-muted-foreground transition hover:text-foreground"
-            >
-              <RotateCcw className="h-3 w-3" />
-              Try again
-            </button>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/isla">
+            <Button variant="outline" className="border-cyan-500/40 bg-slate-900/80 text-cyan-300 hover:bg-cyan-950 font-bold text-xs">
+              <MapPin className="size-3.5 mr-1.5" /> Isla Central
+            </Button>
+          </Link>
+          <Link to="/classroom">
+            <Button variant="outline" className="border-amber-500/40 bg-slate-900/80 text-amber-300 hover:bg-amber-950 font-bold text-xs">
+              🎓 Academy Classroom
+            </Button>
+          </Link>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 space-y-6">
+          <div className="rounded-3xl border border-cyan-500/30 bg-slate-950/80 p-6 backdrop-blur-xl shadow-2xl space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="grid size-14 place-items-center rounded-2xl bg-cyan-950 border border-cyan-400/50 text-2xl text-cyan-400 shadow-lg">
+                👮‍♀️
+              </div>
+              <div>
+                <span className="rounded-full bg-cyan-950 border border-cyan-400/40 px-3 py-0.5 text-[9px] font-black uppercase tracking-widest text-cyan-300">
+                  Commanding Officer
+                </span>
+                <h3 className="text-lg font-black text-white mt-1">Sarah · Security Specialist</h3>
+              </div>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed rounded-2xl bg-slate-900/80 p-4 border border-slate-800">
+              "Guardian, we have received reports of suspicious phishing messages circulating through Digital City. I need you to investigate the incident and protect affected accounts."
+            </p>
+            <Link to="/classroom" className="block">
+              <Button className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl">
+                Start Phishing Mission <ArrowRight className="size-4 ml-2" />
+              </Button>
+            </Link>
           </div>
-        )}
-      </div>
-    </section>
+        </div>
+
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex gap-3 border-b border-slate-800 pb-3">
+            {[
+              { id: "story", label: "Story Missions", icon: Target },
+              { id: "daily", label: "Daily Challenges", icon: Calendar },
+              { id: "weekly", label: "Weekly Ops", icon: Award },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setSelectedTab(tab.id as any)}
+                  className={
+                    "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition " +
+                    (selectedTab === tab.id
+                      ? "bg-cyan-500 text-slate-950 shadow-lg"
+                      : "text-slate-400 hover:bg-slate-900 hover:text-white")
+                  }
+                >
+                  <Icon className="size-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {selectedTab === "story" && (
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-cyan-500/40 bg-slate-950/80 p-6 backdrop-blur-xl space-y-4 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <span className="rounded-full bg-cyan-950 border border-cyan-400/40 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-cyan-300">
+                    STORY MISSION 1
+                  </span>
+                  <span className="text-xs font-extrabold text-amber-400">+400 XP</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-white">{primaryMission.title.en}</h3>
+                  <p className="text-xs text-slate-300 mt-1 max-w-xl">{primaryMission.summary.en}</p>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                    <CheckCircle2 className="size-4 text-emerald-400" />
+                    <span>Location: Digital City & Academy</span>
+                  </div>
+                  <Link to="/classroom">
+                    <Button size="sm" className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-lg">
+                      Launch Mission
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {selectedTab === "daily" && (
+            <div className="space-y-3">
+              {[
+                { title: "Identify 3 Phishing Messages", xp: "+120 XP", desc: "Inspect sender domains and links." },
+                { title: "Verify Official Domain", xp: "+80 XP", desc: "Check URL safety in Digital City." },
+                { title: "Help NPC with Privacy Settings", xp: "+100 XP", desc: "Assist citizen with account security." },
+              ].map((item, idx) => (
+                <div key={idx} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-black text-white">{item.title}</h4>
+                    <p className="text-xs text-slate-400">{item.desc}</p>
+                  </div>
+                  <span className="text-xs font-black text-amber-400 bg-amber-950/60 border border-amber-500/30 px-3 py-1 rounded-full">
+                    {item.xp}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {selectedTab === "weekly" && (
+            <div className="rounded-3xl border border-slate-800 bg-slate-950/60 p-8 text-center space-y-3">
+              <Award className="size-10 text-cyan-400 mx-auto" />
+              <h3 className="text-lg font-black text-white">Weekly Guardian Op</h3>
+              <p className="text-xs text-slate-400 max-w-md mx-auto">
+                Complete all foundation story missions to unlock weekly operations and exclusive Guardian cosmetics.
+              </p>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }
