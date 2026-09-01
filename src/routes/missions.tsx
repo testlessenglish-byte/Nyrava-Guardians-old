@@ -100,29 +100,34 @@ function MissionHubPage() {
 
           {selectedTab === "story" && (
             <div className="space-y-4">
-              <div className="rounded-3xl border border-cyan-500/40 bg-slate-950/80 p-6 backdrop-blur-xl space-y-4 shadow-xl">
-                <div className="flex items-center justify-between">
-                  <span className="rounded-full bg-cyan-950 border border-cyan-400/40 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-cyan-300">
-                    STORY MISSION 1
-                  </span>
-                  <span className="text-xs font-extrabold text-amber-400">+400 XP</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-white">{primaryMission.title.en}</h3>
-                  <p className="text-xs text-slate-300 mt-1 max-w-xl">{primaryMission.summary.en}</p>
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                  <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-                    <CheckCircle2 className="size-4 text-emerald-400" />
-                    <span>Location: Digital City & Academy</span>
+              {domainMissions.map((mission, index) => (
+                <div
+                  key={mission.id}
+                  className="rounded-3xl border border-cyan-500/40 bg-slate-950/80 p-6 backdrop-blur-xl space-y-4 shadow-xl"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-full bg-cyan-950 border border-cyan-400/40 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-cyan-300">
+                      STORY MISSION {index + 1}
+                    </span>
+                    <span className="text-xs font-extrabold text-amber-400">+{mission.xp} XP</span>
                   </div>
-                  <Link to="/classroom">
-                    <Button size="sm" className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-lg">
-                      Launch Mission
-                    </Button>
-                  </Link>
+                  <div>
+                    <h3 className="text-xl font-black text-white">{mission.title.en}</h3>
+                    <p className="text-xs text-slate-300 mt-1 max-w-xl">{mission.summary.en}</p>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                      <CheckCircle2 className="size-4 text-emerald-400" />
+                      <span>Reward: {mission.badgeId} · {mission.credits} Credits</span>
+                    </div>
+                    <Link to="/classroom">
+                      <Button size="sm" className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-lg">
+                        Launch Mission
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           )}
 
