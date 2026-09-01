@@ -10,14 +10,15 @@ export type BoxCollider = {
 };
 
 /**
- * Allows the player to step through an open doorway without letting them wander
- * indefinitely outside the classroom shell.
+ * Classroom movement is bounded by the visible room shell plus a short landing
+ * outside the main entrance. The player should never hit invisible walls in
+ * the middle of visible floor space.
  */
 export const CLASSROOM_TRAVEL_BOUNDS = {
-  minX: -13.9,
-  maxX: 13.35,
-  minZ: -10.35,
-  maxZ: 11.1,
+  minX: -13.4,
+  maxX: 13.4,
+  minZ: -10.1,
+  maxZ: 14.2,
 };
 
 /** Legacy export name kept so older tests/callers do not break. */
@@ -26,28 +27,29 @@ export const CLASSROOM_BOUNDS = CLASSROOM_TRAVEL_BOUNDS;
 const WALL_X = 12.8;
 const WALL_Z = 9.8;
 const WALL_HALF_THICKNESS = 0.22;
-const MAIN_DOOR_HALF_WIDTH = 1.2;
+const MAIN_DOOR_HALF_WIDTH = 1.35;
 const HALL_DOOR_CENTER_Z = -4.5;
-const HALL_DOOR_HALF_WIDTH = 1.1;
+const HALL_DOOR_HALF_WIDTH = 1.2;
 
 const SECURITY_INTERIOR: BoxCollider[] = [
-  // Front teaching stage.
-  { minX: -7.2, maxX: 7.2, minZ: -9.55, maxZ: -7.45 },
+  // Front teaching stage only. The teaching display itself is wall-mounted and
+  // must not create a separate invisible blocker in the room.
+  { minX: -6.6, maxX: 6.6, minZ: -9.55, maxZ: -8.0 },
   // Actual left/right desk rows used by AcademyClassroomSet.
   { minX: -7.9, maxX: -5.1, minZ: 1.65, maxZ: 3.35 },
   { minX: -7.9, maxX: -5.1, minZ: 5.15, maxZ: 6.85 },
   { minX: 5.1, maxX: 7.9, minZ: 1.65, maxZ: 3.35 },
   { minX: 5.1, maxX: 7.9, minZ: 5.15, maxZ: 6.85 },
-  // Mission portal structure on the right wall.
-  { minX: 10.55, maxX: 12.65, minZ: 0.25, maxZ: 3.75 },
+  // Only the physical base of the Mission Hub portal blocks movement. This
+  // keeps the visible approach area open instead of stopping the player early.
+  { minX: 11.05, maxX: 12.65, minZ: 0.65, maxZ: 3.35 },
 ];
 
 /** Legacy Security-room collider list retained for compatibility. */
 export const CLASSROOM_COLLIDERS = SECURITY_INTERIOR;
 
 const SIMPLE_ROOM_INTERIOR: BoxCollider[] = [
-  // Builder / Communication / Truth currently share the same front stage footprint.
-  { minX: -7.2, maxX: 7.2, minZ: -9.55, maxZ: -7.45 },
+  { minX: -6.6, maxX: 6.6, minZ: -9.55, maxZ: -8.0 },
 ];
 
 const SECURITY_SEATS: Array<[number, number]> = [
@@ -99,7 +101,7 @@ function collidesWithShell(
         : "t-door-main";
 
   const mainDoorOpen = openDoorIds.has(mainDoorId);
-  const inMainOpening = mainDoorOpen && Math.abs(pos.x) < MAIN_DOOR_HALF_WIDTH - Math.min(radius * 0.25, 0.12);
+  const inMainOpening = mainDoorOpen && Math.abs(pos.x) < MAIN_DOOR_HALF_WIDTH - Math.min(radius * 0.15, 0.08);
   const touchingRearWall = pos.z + radius > WALL_Z - WALL_HALF_THICKNESS && pos.z - radius < WALL_Z + WALL_HALF_THICKNESS;
   if (touchingRearWall && !inMainOpening) return true;
 
@@ -107,7 +109,7 @@ function collidesWithShell(
   if (touchingFrontWall) return true;
 
   const hallwayOpen = room === "security" && openDoorIds.has("hallway-door");
-  const inHallOpening = hallwayOpen && Math.abs(pos.z - HALL_DOOR_CENTER_Z) < HALL_DOOR_HALF_WIDTH - Math.min(radius * 0.25, 0.12);
+  const inHallOpening = hallwayOpen && Math.abs(pos.z - HALL_DOOR_CENTER_Z) < HALL_DOOR_HALF_WIDTH - Math.min(radius * 0.15, 0.08);
   const touchingLeftWall = pos.x - radius < -WALL_X + WALL_HALF_THICKNESS && pos.x + radius > -WALL_X - WALL_HALF_THICKNESS;
   if (touchingLeftWall && !inHallOpening) return true;
 
