@@ -13,6 +13,7 @@ interface GuardianState {
   homeDecor: Record<string, string>;
   xp: number;
   completedMissions: string[];
+  hydrated: boolean;
   selectGuardian: (id: GuardianId) => void;
   setGuardianName: (name: string) => void;
   setLocale: (locale: LocaleId) => void;
@@ -74,13 +75,21 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
 
       void loadGuardianCloud()
         .then((cloud) => {
-          if (cancelled) return;
-          if (!cloud) return;
+          if (cancelled || !cloud) return;
           if ((cloud.xp ?? 0) < local.xp) return;
-          setState((s) => ({
-            ...s,
+
+          // The avatar chosen on this device is authoritative for the active play session.
+          // Cloud progress may fill gaps, but it must not replace a local avatar/name with
+          // stale defaults while a route is mounting.
+          setState((current) => ({
+            ...current,
             ...cloud,
-            guardianId: (cloud.guardianId as GuardianId | null) ?? s.guardianId,
+            guardianId: local.guardianId ?? (cloud.guardianId as GuardianId | null) ?? current.guardianId,
+            guardianName:
+              local.guardianName !== DEFAULTS.guardianName
+                ? local.guardianName
+                : (cloud.guardianName ?? current.guardianName),
+            cosmetics: Object.keys(local.cosmetics).length > 0 ? local.cosmetics : (cloud.cosmetics ?? current.cosmetics),
           }));
         })
         .catch(() => console.warn("Cloud progress unavailable; keeping local progress."));
@@ -103,6 +112,7 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
   const value = useMemo<GuardianState>(
     () => ({
       ...state,
+      hydrated,
       selectGuardian: (id) => setState((s) => ({ ...s, guardianId: id })),
       setGuardianName: (name) => setState((s) => ({ ...s, guardianName: name })),
       setLocale: (newLocale) => {
@@ -127,7 +137,7 @@ export function GuardianProvider({ children }: { children: ReactNode }) {
         ),
       reset: () => setState(DEFAULTS),
     }),
-    [state],
+    [state, hydrated],
   );
 
   return <GuardianContext.Provider value={value}>{children}</GuardianContext.Provider>;

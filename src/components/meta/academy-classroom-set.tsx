@@ -1,4 +1,4 @@
-import { Html, useGLTF } from "@react-three/drei";
+import { Text } from "@react-three/drei";
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -6,350 +6,188 @@ import { missions } from "@/domain/progression/catalog";
 import { InteractiveSeat, type SeatData } from "@/components/game/interactive-seat";
 import { InteractiveDoor, type DoorData } from "@/components/game/interactive-door";
 
-function Furniture({
-  url,
-  position,
-  rotation = 0,
-  scale = 1,
-}: {
-  url: string;
-  position: [number, number, number];
-  rotation?: number;
-  scale?: number;
-}) {
-  const model = useGLTF(url);
-  return (
-    <primitive
-      object={model.scene.clone()}
-      position={position}
-      rotation={[0, rotation, 0]}
-      scale={scale}
-    />
-  );
-}
+export const STUDENT_SEATS: SeatData[] = [
+  { id: "seat-left-1", position: [-6.5, 0.05, 3.9], rotation: Math.PI, seatPosition: [-6.5, 0.45, 3.7], seatRotation: Math.PI, standPosition: [-5.0, 0, 3.9] },
+  { id: "seat-left-2", position: [-5.3, 0.05, 3.9], rotation: Math.PI, seatPosition: [-5.3, 0.45, 3.7], seatRotation: Math.PI, standPosition: [-3.8, 0, 3.9] },
+  { id: "seat-left-3", position: [-6.5, 0.05, 7.4], rotation: Math.PI, seatPosition: [-6.5, 0.45, 7.2], seatRotation: Math.PI, standPosition: [-5.0, 0, 7.4] },
+  { id: "seat-left-4", position: [-5.3, 0.05, 7.4], rotation: Math.PI, seatPosition: [-5.3, 0.45, 7.2], seatRotation: Math.PI, standPosition: [-3.8, 0, 7.4] },
+  { id: "seat-right-1", position: [5.3, 0.05, 3.9], rotation: Math.PI, seatPosition: [5.3, 0.45, 3.7], seatRotation: Math.PI, standPosition: [3.8, 0, 3.9] },
+  { id: "seat-right-2", position: [6.5, 0.05, 3.9], rotation: Math.PI, seatPosition: [6.5, 0.45, 3.7], seatRotation: Math.PI, standPosition: [5.0, 0, 3.9] },
+];
 
-function PottedPlant({ position }: { position: [number, number, number] }) {
+export const CLASSROOM_DOORS: DoorData[] = [
+  { id: "main-door", label: { en: "Main Entrance", es: "Entrada Principal" }, position: [0, 0, 9.4], rotation: 0, width: 2.2, height: 3.2 },
+  { id: "hallway-door", label: { en: "Hallway Access", es: "Acceso al Pasillo" }, position: [-12.3, 0, -4.5], rotation: Math.PI / 2, width: 2.0, height: 3.0 },
+];
+
+function Desk({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      <mesh position={[0, 0.4, 0]} castShadow>
-        <cylinderGeometry args={[0.35, 0.25, 0.8, 20]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.5} />
+      <mesh position={[0, 0.78, 0]} castShadow receiveShadow>
+        <boxGeometry args={[2.5, 0.15, 1.15]} />
+        <meshStandardMaterial color="#87522d" roughness={0.48} />
       </mesh>
-      <mesh position={[0, 1.0, 0]} castShadow>
-        <dodecahedronGeometry args={[0.55, 1]} />
-        <meshStandardMaterial color="#15803d" roughness={0.6} />
-      </mesh>
-      <mesh position={[0, 1.4, 0]} castShadow>
-        <dodecahedronGeometry args={[0.4, 1]} />
-        <meshStandardMaterial color="#22c55e" roughness={0.5} />
+      {[-0.95, 0.95].map((x) => (
+        <mesh key={x} position={[x, 0.39, 0]} castShadow>
+          <boxGeometry args={[0.12, 0.78, 0.9]} />
+          <meshStandardMaterial color="#26364a" metalness={0.45} roughness={0.35} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.92, -0.12]} castShadow>
+        <boxGeometry args={[0.9, 0.08, 0.58]} />
+        <meshStandardMaterial color="#14243d" emissive="#0ea5e9" emissiveIntensity={0.25} />
       </mesh>
     </group>
   );
 }
 
-export const STUDENT_SEATS: SeatData[] = [
-  {
-    id: "seat-left-1",
-    position: [-6.5, 0.05, 3.9],
-    rotation: Math.PI,
-    seatPosition: [-6.5, 0.45, 3.7],
-    seatRotation: Math.PI,
-    standPosition: [-5.0, 0, 3.9],
-  },
-  {
-    id: "seat-left-2",
-    position: [-5.3, 0.05, 3.9],
-    rotation: Math.PI,
-    seatPosition: [-5.3, 0.45, 3.7],
-    seatRotation: Math.PI,
-    standPosition: [-3.8, 0, 3.9],
-  },
-  {
-    id: "seat-left-3",
-    position: [-6.5, 0.05, 7.4],
-    rotation: Math.PI,
-    seatPosition: [-6.5, 0.45, 7.2],
-    seatRotation: Math.PI,
-    standPosition: [-5.0, 0, 7.4],
-  },
-  {
-    id: "seat-left-4",
-    position: [-5.3, 0.05, 7.4],
-    rotation: Math.PI,
-    seatPosition: [-5.3, 0.45, 7.2],
-    seatRotation: Math.PI,
-    standPosition: [-3.8, 0, 7.4],
-  },
-  {
-    id: "seat-right-1",
-    position: [5.3, 0.05, 3.9],
-    rotation: Math.PI,
-    seatPosition: [5.3, 0.45, 3.7],
-    seatRotation: Math.PI,
-    standPosition: [3.8, 0, 3.9],
-  },
-  {
-    id: "seat-right-2",
-    position: [6.5, 0.05, 3.9],
-    rotation: Math.PI,
-    seatPosition: [6.5, 0.45, 3.7],
-    seatRotation: Math.PI,
-    standPosition: [5.0, 0, 3.9],
-  },
-];
+function Plant({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.32, 0]} castShadow>
+        <cylinderGeometry args={[0.34, 0.28, 0.64, 18]} />
+        <meshStandardMaterial color="#26364a" roughness={0.45} />
+      </mesh>
+      <mesh position={[0, 1.0, 0]} castShadow>
+        <icosahedronGeometry args={[0.65, 1]} />
+        <meshStandardMaterial color="#22c55e" roughness={0.72} />
+      </mesh>
+    </group>
+  );
+}
 
-export const CLASSROOM_DOORS: DoorData[] = [
-  {
-    id: "main-door",
-    label: { en: "Main Entrance", es: "Entrada Principal" },
-    position: [0, 0, 9.4],
-    rotation: 0,
-    width: 2.2,
-    height: 3.2,
-  },
-  {
-    id: "hallway-door",
-    label: { en: "Hallway Access", es: "Acceso al Pasillo" },
-    position: [-12.3, 0, -4.5],
-    rotation: Math.PI / 2,
-    width: 2.0,
-    height: 3.0,
-  },
-];
+function TeachingBoard({ title }: { title: string }) {
+  return (
+    <group position={[0, 2.8, -9.22]}>
+      <mesh castShadow>
+        <boxGeometry args={[8.5, 2.75, 0.18]} />
+        <meshStandardMaterial color="#0b2a45" emissive="#0ea5e9" emissiveIntensity={0.32} metalness={0.45} roughness={0.25} />
+      </mesh>
+      <mesh position={[0, 0, 0.105]}>
+        <planeGeometry args={[8.08, 2.34]} />
+        <meshStandardMaterial color="#04111f" emissive="#082f49" emissiveIntensity={0.42} />
+      </mesh>
+      <Text position={[0, 0.78, 0.14]} fontSize={0.22} color="#22d3ee" anchorX="center" anchorY="middle" letterSpacing={0.12}>
+        DIGITAL SAFETY FOUNDATIONS
+      </Text>
+      <Text position={[0, 0.25, 0.14]} fontSize={0.5} maxWidth={7.2} color="#f8fafc" anchorX="center" anchorY="middle">
+        {title}
+      </Text>
+      <Text position={[0, -0.22, 0.14]} fontSize={0.18} color="#bae6fd" anchorX="center" anchorY="middle">
+        Be smart. Stay safe. Don't get hooked.
+      </Text>
+      {[
+        { x: -2.45, label: "SPOT THE BAIT", color: "#22d3ee" },
+        { x: 0, label: "GUARDIAN SHIELD", color: "#fbbf24" },
+        { x: 2.45, label: "VERIFY LINKS", color: "#34d399" },
+      ].map((item) => (
+        <group key={item.label} position={[item.x, -0.78, 0.15]}>
+          <mesh>
+            <boxGeometry args={[1.8, 0.48, 0.08]} />
+            <meshStandardMaterial color="#0f172a" emissive={item.color} emissiveIntensity={0.22} />
+          </mesh>
+          <Text position={[0, 0, 0.055]} fontSize={0.12} color={item.color} anchorX="center" anchorY="middle">
+            {item.label}
+          </Text>
+        </group>
+      ))}
+    </group>
+  );
+}
 
-export function AcademyClassroomSet({
-  activeSeatId,
-  openDoorIds,
-}: {
-  activeSeatId?: string | null;
-  openDoorIds?: Set<string>;
-}) {
+export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatId?: string | null; openDoorIds?: Set<string> }) {
   const portalRingRef = useRef<THREE.Mesh>(null);
   const portalVortexRef = useRef<THREE.Mesh>(null);
   const activeLesson = missions[0]!;
 
   useFrame((_, delta) => {
-    if (portalRingRef.current) {
-      portalRingRef.current.rotation.z += delta * 1.2;
-    }
-    if (portalVortexRef.current) {
-      portalVortexRef.current.rotation.z -= delta * 0.8;
-    }
+    if (portalRingRef.current) portalRingRef.current.rotation.z += delta * 1.1;
+    if (portalVortexRef.current) portalVortexRef.current.rotation.z -= delta * 0.7;
   });
-
-  const deskRowsLeft = [
-    [-6.5, 2.5],
-    [-6.5, 6.0],
-  ] as const;
-
-  const deskRowsRight = [
-    [6.5, 2.5],
-    [6.5, 6.0],
-  ] as const;
 
   return (
     <group>
-      {/* 1. ROOM ENCLOSURE & CEILING */}
-      <mesh rotation-x={-Math.PI / 2} position={[0, 0, 0]} receiveShadow>
+      <mesh rotation-x={-Math.PI / 2} receiveShadow>
         <planeGeometry args={[26, 20]} />
-        <meshStandardMaterial color="#422517" roughness={0.28} metalness={0.12} />
+        <meshStandardMaterial color="#5a321c" roughness={0.52} />
       </mesh>
-
       <mesh position={[0, 4.8, 0]} rotation-x={Math.PI / 2}>
         <planeGeometry args={[26, 20]} />
-        <meshStandardMaterial color="#0f172a" roughness={0.8} />
+        <meshStandardMaterial color="#f1f5f9" roughness={0.9} />
       </mesh>
 
-      {/* Front Wall */}
-      <mesh position={[0, 2.4, -9.5]}>
-        <planeGeometry args={[26, 4.8]} />
-        <meshStandardMaterial color="#0f1e36" roughness={0.45} />
-      </mesh>
-      <mesh position={[0, 0.6, -9.4]}>
-        <boxGeometry args={[26, 1.2, 0.1]} />
-        <meshStandardMaterial color="#2d170b" roughness={0.35} />
-      </mesh>
-      <mesh position={[0, 1.2, -9.35]}>
-        <boxGeometry args={[26, 0.08, 0.08]} />
-        <meshStandardMaterial color="#fbbf24" metalness={0.85} roughness={0.2} />
+      {/* Front wall */}
+      <mesh position={[0, 2.4, -9.72]} receiveShadow>
+        <boxGeometry args={[26, 4.8, 0.22]} />
+        <meshStandardMaterial color="#d9e7ef" roughness={0.72} />
       </mesh>
 
-      {/* Rear Wall */}
-      <mesh position={[0, 2.4, 9.5]} rotation-y={Math.PI}>
-        <planeGeometry args={[26, 4.8]} />
-        <meshStandardMaterial color="#0f1e36" roughness={0.45} />
-      </mesh>
+      {/* Rear wall built around the real main-door opening. */}
+      <mesh position={[-7.0, 2.4, 9.72]} receiveShadow><boxGeometry args={[12, 4.8, 0.22]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
+      <mesh position={[7.0, 2.4, 9.72]} receiveShadow><boxGeometry args={[12, 4.8, 0.22]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
+      <mesh position={[0, 4.15, 9.72]} receiveShadow><boxGeometry args={[2.0, 1.3, 0.22]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
 
-      {/* Left Wall */}
-      <mesh position={[-12.5, 2.4, 0]} rotation-y={Math.PI / 2}>
-        <planeGeometry args={[20, 4.8]} />
-        <meshStandardMaterial color="#0f1e36" roughness={0.45} />
-      </mesh>
+      {/* Left wall built around hallway opening at z=-4.5. */}
+      <mesh position={[-12.72, 2.4, 3.0]} receiveShadow><boxGeometry args={[0.22, 4.8, 13.0]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
+      <mesh position={[-12.72, 2.4, -8.0]} receiveShadow><boxGeometry args={[0.22, 4.8, 3.0]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
+      <mesh position={[-12.72, 4.1, -4.5]} receiveShadow><boxGeometry args={[0.22, 1.4, 4.0]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
 
-      {/* Right Wall */}
-      <mesh position={[12.5, 2.4, 0]} rotation-y={-Math.PI / 2}>
-        <planeGeometry args={[20, 4.8]} />
-        <meshStandardMaterial color="#0f1e36" roughness={0.45} />
-      </mesh>
+      <mesh position={[12.72, 2.4, 0]} receiveShadow><boxGeometry args={[0.22, 4.8, 20]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
 
-      {/* 2. CENTER RUG */}
-      <group position={[0, 0.01, 0]}>
-        <mesh rotation-x={-Math.PI / 2} receiveShadow>
-          <circleGeometry args={[4.4, 64]} />
-          <meshStandardMaterial color="#0c1e38" roughness={0.4} metalness={0.2} />
-        </mesh>
-        <mesh rotation-x={-Math.PI / 2} position={[0, 0.005, 0]}>
-          <ringGeometry args={[4.1, 4.35, 64]} />
-          <meshStandardMaterial color="#fbbf24" emissive="#d97706" emissiveIntensity={0.6} metalness={0.8} roughness={0.2} />
-        </mesh>
-        <Html position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]} transform distanceFactor={14} occlude={false}>
-          <div className="select-none text-center font-display text-amber-400">
-            <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border-2 border-amber-400 bg-slate-950/80 font-black text-2xl shadow-2xl text-amber-300">
-              N
-            </div>
-            <div className="mt-1 text-lg font-black tracking-[0.25em] text-amber-300">N Y R A V A</div>
-            <div className="text-[10px] font-extrabold tracking-[0.4em] text-amber-400/90">GUARDIANS ACADEMY</div>
-          </div>
-        </Html>
+      {/* Warm trim and room lighting. */}
+      <mesh position={[0, 1.15, -9.55]}><boxGeometry args={[26, 0.1, 0.12]} /><meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={0.35} /></mesh>
+      <mesh position={[0, 0.13, -8.55]} receiveShadow><boxGeometry args={[12.5, 0.26, 1.6]} /><meshStandardMaterial color="#74401f" roughness={0.48} /></mesh>
+
+      <TeachingBoard title={activeLesson.title.en} />
+
+      {/* Nyrava center rug leaves a clear player lane toward the teaching area. */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.025, 0]} receiveShadow>
+        <circleGeometry args={[3.75, 64]} />
+        <meshStandardMaterial color="#0b2038" roughness={0.55} />
+      </mesh>
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.035, 0]}>
+        <ringGeometry args={[3.45, 3.72, 64]} />
+        <meshStandardMaterial color="#fbbf24" emissive="#d97706" emissiveIntensity={0.5} />
+      </mesh>
+      <Text position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]} fontSize={1.05} color="#fbbf24" anchorX="center" anchorY="middle">N</Text>
+
+      {/* Desks intentionally stay to the sides so the avatar is visible from spawn. */}
+      <Desk position={[-6.5, 0, 2.5]} />
+      <Desk position={[-6.5, 0, 6.0]} />
+      <Desk position={[6.5, 0, 2.5]} />
+      <Desk position={[6.5, 0, 6.0]} />
+
+      <Plant position={[-10.8, 0, -7.8]} />
+      <Plant position={[10.8, 0, -7.8]} />
+
+      {CLASSROOM_DOORS.map((door) => <InteractiveDoor key={door.id} door={door} isOpen={Boolean(openDoorIds?.has(door.id))} />)}
+      {STUDENT_SEATS.map((seat) => <InteractiveSeat key={seat.id} seat={seat} occupied={activeSeatId === seat.id} />)}
+
+      {/* Achievements wall */}
+      <group position={[12.48, 2.9, -4.0]} rotation-y={-Math.PI / 2}>
+        <mesh><boxGeometry args={[4.4, 2.3, 0.12]} /><meshStandardMaterial color="#11283f" /></mesh>
+        <Text position={[0, 0.65, 0.08]} fontSize={0.18} color="#fbbf24" anchorX="center">ACHIEVEMENTS</Text>
+        {[-1.2, -0.6, 0, 0.6, 1.2].map((x, index) => (
+          <mesh key={x} position={[x, -0.15, 0.09]}>
+            <circleGeometry args={[0.23, 24]} />
+            <meshStandardMaterial color={index === 0 ? "#fbbf24" : "#334155"} emissive={index === 0 ? "#d97706" : "#0f172a"} emissiveIntensity={0.5} />
+          </mesh>
+        ))}
       </group>
 
-      {/* 3. FRONT TEACHING STAGE & BOARD (Mounted Flush to Front Wall at z = -9.3m) */}
-      <group position={[0, 0, -9.4]}>
-        <mesh position={[0, 0.2, 0.6]} castShadow receiveShadow>
-          <boxGeometry args={[14, 0.4, 2.2]} />
-          <meshStandardMaterial color="#361c0e" roughness={0.3} metalness={0.4} />
-        </mesh>
-
-        <mesh position={[0, 4.1, 0.05]}>
-          <boxGeometry args={[1.6, 1.6, 0.1]} />
-          <meshStandardMaterial color="#fbbf24" emissive="#f59e0b" emissiveIntensity={0.8} metalness={0.85} roughness={0.2} />
-        </mesh>
-        <Html position={[0, 4.1, 0.12]} transform distanceFactor={15} occlude={false}>
-          <div className="select-none font-black text-xl text-slate-950">N</div>
-        </Html>
-
-        {/* Board Outer Frame */}
-        <mesh position={[0, 2.5, 0.05]}>
-          <boxGeometry args={[10.2, 3.2, 0.1]} />
-          <meshStandardMaterial color="#0284c7" emissive="#38bdf8" emissiveIntensity={1.8} metalness={0.9} />
-        </mesh>
-        {/* Dark Screen Surface */}
-        <mesh position={[0, 2.5, 0.1]}>
-          <planeGeometry args={[9.8, 2.8]} />
-          <meshStandardMaterial color="#051329" emissive="#0369a1" emissiveIntensity={0.35} />
-        </mesh>
-
-        {/* Board HTML Content (Scaled compactly to fit flush inside board) */}
-        <Html position={[0, 2.5, 0.12]} transform distanceFactor={18} occlude={false}>
-          <div className="w-[620px] select-none rounded-3xl border border-cyan-400/50 bg-slate-950/95 p-5 text-center text-white shadow-2xl backdrop-blur-xl">
-            <p className="text-[11px] font-black uppercase tracking-[0.35em] text-cyan-400">Digital Safety Foundation</p>
-            <h2 className="mt-1 text-3xl font-black tracking-tight text-white">
-              {activeLesson.title.en}
-            </h2>
-            <p className="mt-1 text-xs font-semibold text-cyan-200/90">
-              Be smart. Stay safe. Don't get hooked!
-            </p>
-            <div className="mt-3 flex justify-center gap-6">
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-cyan-500/30 bg-cyan-950/60 p-2.5 w-24">
-                <span className="text-2xl">🎣</span>
-                <span className="text-[9px] font-bold text-cyan-300">Detect Phishing</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-amber-500/40 bg-amber-950/60 p-2.5 w-24">
-                <span className="text-2xl">🛡️</span>
-                <span className="text-[9px] font-bold text-amber-300">Guardian Shield</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-emerald-500/40 bg-emerald-950/60 p-2.5 w-24">
-                <span className="text-2xl">🔒</span>
-                <span className="text-[9px] font-bold text-emerald-300">Verify Links</span>
-              </div>
-            </div>
-          </div>
-        </Html>
+      {/* Mission Hub portal */}
+      <group position={[11.45, 0, 2.0]}>
+        <mesh position={[0, 2.15, 0]}><boxGeometry args={[0.35, 4.2, 3.4]} /><meshStandardMaterial color="#23364d" /></mesh>
+        <mesh ref={portalRingRef} position={[-0.2, 2.15, 0]} rotation-y={Math.PI / 2}><torusGeometry args={[1.28, 0.13, 18, 56]} /><meshStandardMaterial color="#60a5fa" emissive="#3b82f6" emissiveIntensity={2.5} /></mesh>
+        <mesh ref={portalVortexRef} position={[-0.16, 2.15, 0]} rotation-y={Math.PI / 2}><circleGeometry args={[1.2, 40]} /><meshStandardMaterial color="#312e81" emissive="#6366f1" emissiveIntensity={1.8} transparent opacity={0.78} /></mesh>
+        <Text position={[-0.38, 3.8, 0]} rotation={[0, -Math.PI / 2, 0]} fontSize={0.2} color="#bae6fd" anchorX="center">MISSION HUB</Text>
       </group>
 
-      {/* 4. INTERACTIVE DOORS */}
-      {CLASSROOM_DOORS.map((door) => (
-        <InteractiveDoor
-          key={door.id}
-          door={door}
-          isOpen={Boolean(openDoorIds?.has(door.id))}
-        />
-      ))}
-
-      {/* 5. USABLE STUDENT SEATS */}
-      {STUDENT_SEATS.map((seat) => (
-        <InteractiveSeat
-          key={seat.id}
-          seat={seat}
-          occupied={activeSeatId === seat.id}
-        />
-      ))}
-
-      {/* 6. DESKS */}
-      {deskRowsLeft.map(([x, z]) => (
-        <Furniture key={`desk-l-${x}-${z}`} url="/models/desk.glb" position={[x, 0.05, z]} rotation={Math.PI} scale={1.2} />
-      ))}
-      {deskRowsRight.map(([x, z]) => (
-        <Furniture key={`desk-r-${x}-${z}`} url="/models/desk.glb" position={[x, 0.05, z]} rotation={Math.PI} scale={1.2} />
-      ))}
-
-      {/* 7. RIGHT WALL: ACHIEVEMENTS & MISSION HUB */}
-      <group position={[12.3, 3.2, -4.0]} rotation-y={-Math.PI / 2}>
-        <mesh position={[0, 0, 0]}>
-          <boxGeometry args={[4.2, 2.2, 0.1]} />
-          <meshStandardMaterial color="#0f1e36" roughness={0.3} />
-        </mesh>
-        <Html position={[0, 0, 0.12]} transform distanceFactor={14} occlude={false}>
-          <div className="w-[300px] select-none text-center text-white">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400">ACHIEVEMENTS</p>
-            <div className="mt-2 flex justify-center gap-2">
-              {['🛡️', '⚔️', '🎓', '👑', '⭐'].map((icon, idx) => (
-                <div key={idx} className="flex size-9 items-center justify-center rounded-xl border border-amber-400/50 bg-slate-950/80 text-base shadow-lg">
-                  {icon}
-                </div>
-              ))}
-            </div>
-          </div>
-        </Html>
-      </group>
-
-      <group position={[11.5, 0, 2.0]}>
-        <mesh position={[0, 2.4, 0]}>
-          <boxGeometry args={[0.4, 4.4, 3.2]} />
-          <meshStandardMaterial color="#2d170b" roughness={0.4} />
-        </mesh>
-        <Html position={[-0.25, 4.3, 0]} rotation={[0, -Math.PI / 2, 0]} transform distanceFactor={12} occlude={false}>
-          <div className="whitespace-nowrap font-black text-sm tracking-[0.25em] text-amber-300 drop-shadow-lg">
-            MISSION HUB
-          </div>
-        </Html>
-        <mesh ref={portalRingRef} position={[-0.1, 2.2, 0]} rotation-y={Math.PI / 2}>
-          <torusGeometry args={[1.35, 0.14, 20, 64]} />
-          <meshStandardMaterial color="#60a5fa" emissive="#3b82f6" emissiveIntensity={3.0} />
-        </mesh>
-        <mesh ref={portalVortexRef} position={[-0.05, 2.2, 0]} rotation-y={Math.PI / 2}>
-          <circleGeometry args={[1.3, 40]} />
-          <meshStandardMaterial color="#1e1b4b" emissive="#6366f1" emissiveIntensity={2.2} transparent opacity={0.9} />
-        </mesh>
-      </group>
-
-      {/* 8. LIGHTING */}
-      <ambientLight intensity={0.8} color="#ffedd5" />
-      <hemisphereLight args={["#bae6fd", "#2d170b", 0.7]} />
-      <directionalLight
-        position={[8, 14, 6]}
-        intensity={2.2}
-        color="#fef08a"
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-      />
-      <pointLight position={[0, 4.2, 0]} color="#fbbf24" intensity={10} distance={14} />
-      <pointLight position={[0, 4.0, -7.5]} color="#38bdf8" intensity={16} distance={15} />
+      <ambientLight intensity={0.9} color="#fff7ed" />
+      <hemisphereLight args={["#dff3ff", "#5a321c", 0.85]} />
+      <directionalLight position={[8, 14, 6]} intensity={1.8} color="#fff7d6" castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} />
+      <pointLight position={[0, 4.1, -6.5]} color="#38bdf8" intensity={7} distance={13} />
+      <pointLight position={[0, 4.2, 4.5]} color="#fbbf24" intensity={4} distance={11} />
     </group>
   );
 }
-
-useGLTF.preload("/models/desk.glb");
-useGLTF.preload("/models/chairDesk.glb");
-useGLTF.preload("/models/bookcaseOpen.glb");
