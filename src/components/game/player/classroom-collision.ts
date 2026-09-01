@@ -20,6 +20,9 @@ export const CLASSROOM_TRAVEL_BOUNDS = {
   maxZ: 11.1,
 };
 
+/** Legacy export name kept so older tests/callers do not break. */
+export const CLASSROOM_BOUNDS = CLASSROOM_TRAVEL_BOUNDS;
+
 const WALL_X = 12.8;
 const WALL_Z = 9.8;
 const WALL_HALF_THICKNESS = 0.22;
@@ -38,6 +41,9 @@ const SECURITY_INTERIOR: BoxCollider[] = [
   // Mission portal structure on the right wall.
   { minX: 10.55, maxX: 12.65, minZ: 0.25, maxZ: 3.75 },
 ];
+
+/** Legacy Security-room collider list retained for compatibility. */
+export const CLASSROOM_COLLIDERS = SECURITY_INTERIOR;
 
 const SIMPLE_ROOM_INTERIOR: BoxCollider[] = [
   // Builder / Communication / Truth currently share the same front stage footprint.
