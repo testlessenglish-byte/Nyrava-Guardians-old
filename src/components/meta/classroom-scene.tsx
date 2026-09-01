@@ -6,10 +6,10 @@ import { Character } from "./character";
 import { CLASS_GUARDIANS, type ClassGuardian } from "@/lib/class-guardians";
 import { PlayerController } from "@/components/game/core/player-controller";
 import { updateThirdPersonCamera } from "@/components/game/core/camera-follower";
-import { type GameInputState } from "@/components/game/core/input-manager";
+import { type InputManager } from "@/components/game/core/input-manager";
 import { type PlayerMode } from "@/components/game/core/player-state-machine";
 import { InteractionManager, type InteractiveTarget } from "@/components/game/core/interaction-manager";
-import { isPositionColliding } from "@/components/game/player/classroom-collision";
+import { CLASSROOM_TRAVEL_BOUNDS, isRoomPositionColliding } from "@/components/game/player/classroom-collision";
 import { STUDENT_SEATS, CLASSROOM_DOORS } from "./academy-classroom-set";
 import { BUILDER_SEATS, BUILDER_DOORS } from "./builder-lab-set";
 import { COMMUNICATION_SEATS, COMMUNICATION_DOORS } from "./communication-studio-set";
@@ -17,8 +17,8 @@ import { TRUTH_SEATS, TRUTH_DOORS } from "./truth-lab-set";
 
 export type ClassroomRoom = "security" | "builder" | "communication" | "truth";
 
-const ROOM_BOUNDS = { minX: -12.15, maxX: 12.15, minZ: -9.15, maxZ: 9.15 };
-const CAMERA_BOUNDS = { minX: -11.8, maxX: 11.8, minY: 0.8, maxY: 4.55, minZ: -8.8, maxZ: 8.8 };
+const CAMERA_BOUNDS = { minX: -13.25, maxX: 13.25, minY: 0.8, maxY: 4.6, minZ: -10.0, maxZ: 10.7 };
+const EMPTY_OPEN_DOORS = new Set<string>();
 
 function Loader() {
   const { progress } = useProgress();
@@ -58,10 +58,7 @@ export function ClassroomScene({
   playerColor = "#f4f7ff",
   playerLabel = "You",
   guardianId = "lex",
-  inputState,
-  playerMode = "idle",
-  cameraYaw = 0,
-  cameraPitch = 0.15,
+  inputManager,
   onStartCourse,
   activeSeatId,
   setActiveSeatId,
@@ -73,10 +70,7 @@ export function ClassroomScene({
   playerColor?: string;
   playerLabel?: string;
   guardianId?: string;
-  inputState: GameInputState;
-  playerMode?: PlayerMode;
-  cameraYaw?: number;
-  cameraPitch?: number;
+  inputManager: InputManager;
   onStartCourse?: () => void;
   activeSeatId?: string | null;
   setActiveSeatId?: (id: string | null) => void;
@@ -96,24 +90,55 @@ export function ClassroomScene({
   }, [room]);
 
   useEffect(() => {
-    if (group.current) group.current.position.set(0, 0, 0);
+    if (group.current) {
+      group.current.position.set(0, 0, 0);
+      group.current.rotation.y = 0;
+    }
+    playerController.velocity.set(0, 0, 0);
+    playerController.rotationY = 0;
+    inputManager.reset();
     lastInteractionKey.current = null;
     setActiveInteraction?.(null);
-  }, [room, setActiveInteraction]);
+  }, [room, inputManager, setActiveInteraction]);
 
   useFrame(({ camera }, rawDelta) => {
     const delta = Math.min(rawDelta, 0.05);
     const player = group.current;
     if (!player) return;
 
-    const collisionCheck = room === "security" ? (nextPos: THREE.Vector3) => isPositionColliding(nextPos, 0.45) : undefined;
-    playerController.update(player.position, camera, inputState, playerMode, delta, ROOM_BOUNDS, collisionCheck);
+    const input = inputManager.getSnapshot();
+    const mode: PlayerMode = activeSeatId
+      ? "seated"
+      : input.moveX !== 0 || input.moveY !== 0
+        ? input.run ? "running" : "walking"
+        : "idle";
+    const currentOpenDoors = openDoorIds ?? EMPTY_OPEN_DOORS;
+
+    playerController.update(
+      player.position,
+      camera,
+      input,
+      mode,
+      delta,
+      CLASSROOM_TRAVEL_BOUNDS,
+      (nextPos) => isRoomPositionColliding(room, nextPos, currentOpenDoors, 0.45),
+    );
 
     if (!activeSeatId) player.rotation.y = playerController.rotationY;
     if (playerController.isMoving !== moving) setMoving(playerController.isMoving);
 
     if (camera instanceof THREE.PerspectiveCamera) {
-      updateThirdPersonCamera(camera, player.position, cameraYaw, cameraPitch, delta, 4.8, 1.55, [], CAMERA_BOUNDS);
+      updateThirdPersonCamera(
+        camera,
+        player.position,
+        inputManager.cameraYaw,
+        inputManager.cameraPitch,
+        delta,
+        4.8,
+        1.55,
+        [],
+        CAMERA_BOUNDS,
+      );
     }
 
     const pPos: [number, number, number] = [player.position.x, player.position.y, player.position.z];
@@ -146,7 +171,7 @@ export function ClassroomScene({
     });
 
     for (const door of roomData.doors) {
-      const isOpen = Boolean(openDoorIds?.has(door.id));
+      const isOpen = currentOpenDoors.has(door.id);
       targets.push({
         id: `door-${door.id}`,
         type: "door",
@@ -202,7 +227,7 @@ export function ClassroomScene({
       lastInteractionKey.current = nextKey;
       setActiveInteraction?.(best ? { id: best.id, type: best.type, label: best.label, action: best.action } : null);
     }
-    if (best && inputState.interactPressed) best.action();
+    if (best && input.interactPressed) best.action();
   });
 
   const teacher = CLASS_GUARDIANS.find((guardian) => guardian.id === roomData.teacherId) ?? CLASS_GUARDIANS[0]!;

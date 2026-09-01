@@ -8,8 +8,8 @@ import { useGuardian } from "@/lib/guardian-context";
 import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
 import { QUALITY, useQuality } from "@/services/game/quality";
 import { useAppActive } from "@/services/platform/lifecycle";
-import { InputManager, type GameInputState } from "@/components/game/core/input-manager";
-import { type PlayerMode } from "@/components/game/core/player-state-machine";
+import { InputManager } from "@/components/game/core/input-manager";
+import { AnalogJoystick, LookPad } from "@/components/game/touch-controls";
 import { Button } from "@/components/ui/button";
 import { PauseMenu } from "@/components/game/pause-menu";
 import { getProgression } from "@/lib/progression.functions";
@@ -28,10 +28,6 @@ function DigitalCityPage() {
   const playerColor = chosen?.color ?? "#f4f7ff";
   const playerLabel = `${guardianName || "You"}${chosen ? ` · ${chosen.name}` : ""}`;
   const inputManager = useMemo(() => new InputManager(), []);
-  const [inputState, setInputState] = useState<GameInputState>(() => inputManager.getSnapshot());
-  const [mode, setMode] = useState<PlayerMode>("idle");
-  const [cameraYaw, setCameraYaw] = useState(0);
-  const [cameraPitch, setCameraPitch] = useState(0.15);
   const [inspecting, setInspecting] = useState(false);
   const [decision, setDecision] = useState<"correct" | "incorrect" | null>(null);
   const [progress, setProgress] = useState<PlayerProgress | null>(null);
@@ -45,25 +41,25 @@ function DigitalCityPage() {
   }, []);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => inputManager.onKeyDown(e);
-    const up = (e: KeyboardEvent) => inputManager.onKeyUp(e);
+    const down = (event: KeyboardEvent) => inputManager.onKeyDown(event);
+    const up = (event: KeyboardEvent) => inputManager.onKeyUp(event);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    const interval = window.setInterval(() => {
-      const snap = inputManager.getSnapshot();
-      setInputState(snap);
-      setMode(snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
-    }, 32);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
-      window.clearInterval(interval);
       inputManager.dispose();
     };
   }, [inputManager]);
 
+  const setInspectingState = (open: boolean) => {
+    inputManager.setEnabled(!open);
+    if (!open) inputManager.reset();
+    setInspecting(open);
+  };
+
   const inspectTerminal = () => {
-    setInspecting(true);
+    setInspectingState(true);
     if (typeof window !== "undefined") window.sessionStorage.setItem("nyrava-selected-mission", "phishing-defense");
     if (getPhishingStoryStep() === "INSPECT_TERMINAL") advancePhishingStory("INSPECT_TERMINAL", "COMPLETE_ACADEMY_LESSON");
     refreshProgress();
@@ -78,20 +74,46 @@ function DigitalCityPage() {
     <div className="game-viewport city-viewport fixed inset-0 bg-background">
       <div
         className="absolute inset-0 touch-none"
-        onPointerDown={(e) => { if (e.pointerType === "mouse") { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); } }}
-        onPointerMove={(e) => { if (dragging.current) { setCameraYaw((prev) => prev - e.movementX * 0.005); setCameraPitch((prev) => Math.min(0.85, Math.max(-0.15, prev + e.movementY * 0.003))); } }}
+        onPointerDown={(event) => {
+          if (event.pointerType !== "mouse" || inspecting || !(event.target instanceof HTMLCanvasElement)) return;
+          dragging.current = true;
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={(event) => {
+          if (dragging.current && !inspecting) inputManager.setCameraLook(event.movementX, event.movementY);
+        }}
         onPointerUp={() => (dragging.current = false)}
-        onPointerCancel={() => (dragging.current = false)}
+        onPointerCancel={() => {
+          dragging.current = false;
+          inputManager.reset();
+        }}
         onLostPointerCapture={() => (dragging.current = false)}
       >
         <GameErrorBoundary>
           <Canvas frameloop={active ? "always" : "never"} shadows={quality.shadows} dpr={quality.dpr} camera={{ position: [0, 3, 5], fov: 58 }}>
-            <DigitalCityScene playerColor={playerColor} playerLabel={playerLabel} guardianId={chosen?.id ?? "lex"} inputState={inputState} playerMode={mode} cameraYaw={cameraYaw} cameraPitch={cameraPitch} onInspectMessage={inspectTerminal} />
+            <DigitalCityScene
+              playerColor={playerColor}
+              playerLabel={playerLabel}
+              guardianId={chosen?.id ?? "lex"}
+              inputManager={inputManager}
+              blocked={inspecting}
+              onInspectMessage={inspectTerminal}
+            />
           </Canvas>
         </GameErrorBoundary>
       </div>
 
       <div className="absolute top-4 left-4 z-40"><Link to="/isla"><Button variant="outline" size="sm" className="border-slate-800 bg-slate-950/80 text-white hover:bg-slate-800 font-bold"><ArrowLeft className="size-4 mr-1" /> Isla Central</Button></Link></div>
+
+      {!inspecting && (
+        <div className="mobile-game-controls pointer-events-none fixed inset-0 z-40">
+          <div className="game-left pointer-events-auto"><AnalogJoystick target={inputManager.joystick} /></div>
+          <div className="game-right pointer-events-auto"><LookPad target={inputManager} /></div>
+          <div className="game-actions pointer-events-auto">
+            <button type="button" className="game-action" aria-label="Interact" onClick={() => inputManager.triggerInteract()}>Use</button>
+          </div>
+        </div>
+      )}
 
       {inspecting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-6 backdrop-blur-md">
@@ -129,7 +151,7 @@ function DigitalCityPage() {
                 <Button onClick={() => setDecision(null)} variant="outline" className="border-slate-700 text-white font-bold text-xs">{es ? "Intentar de nuevo" : "Retry Action"}</Button>
               </div>
             )}
-            <Button onClick={() => { setInspecting(false); setDecision(null); }} variant="ghost" className="w-full text-slate-400">{es ? "Cerrar" : "Close"}</Button>
+            <Button onClick={() => { setInspectingState(false); setDecision(null); }} variant="ghost" className="w-full text-slate-400">{es ? "Cerrar" : "Close"}</Button>
           </div>
         </div>
       )}

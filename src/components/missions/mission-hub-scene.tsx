@@ -6,7 +6,7 @@ import { Character } from "@/components/meta/character";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
 import { PlayerController } from "@/components/game/core/player-controller";
 import { updateThirdPersonCamera } from "@/components/game/core/camera-follower";
-import { type GameInputState } from "@/components/game/core/input-manager";
+import { type InputManager } from "@/components/game/core/input-manager";
 import { type PlayerMode } from "@/components/game/core/player-state-machine";
 
 const playerController = new PlayerController();
@@ -15,19 +15,15 @@ export function MissionHubScene({
   playerColor = "#f4f7ff",
   playerLabel = "You",
   guardianId = "lex",
-  inputState,
-  playerMode = "idle",
-  cameraYaw = 0,
-  cameraPitch = 0.15,
+  inputManager,
+  blocked = false,
   onOpenBoard,
 }: {
   playerColor?: string;
   playerLabel?: string;
   guardianId?: string;
-  inputState: GameInputState;
-  playerMode?: PlayerMode;
-  cameraYaw?: number;
-  cameraPitch?: number;
+  inputManager: InputManager;
+  blocked?: boolean;
   onOpenBoard?: () => void;
 }) {
   const playerRef = useRef<THREE.Group>(null);
@@ -40,11 +36,18 @@ export function MissionHubScene({
     const player = playerRef.current;
     if (!player) return;
 
+    const input = inputManager.getSnapshot();
+    const mode: PlayerMode = blocked
+      ? "interacting"
+      : input.moveX !== 0 || input.moveY !== 0
+        ? input.run ? "running" : "walking"
+        : "idle";
+
     playerController.update(
       player.position,
       camera,
-      inputState,
-      playerMode,
+      input,
+      mode,
       delta,
       { minX: -10.5, maxX: 10.5, minZ: -7.5, maxZ: 7.5 },
     );
@@ -52,7 +55,7 @@ export function MissionHubScene({
     if (playerController.isMoving !== moving) setMoving(playerController.isMoving);
 
     if (camera instanceof THREE.PerspectiveCamera) {
-      updateThirdPersonCamera(camera, player.position, cameraYaw, cameraPitch, delta, 4.8, 1.55, [], {
+      updateThirdPersonCamera(camera, player.position, inputManager.cameraYaw, inputManager.cameraPitch, delta, 4.8, 1.55, [], {
         minX: -11.2,
         maxX: 11.2,
         minY: 0.8,
@@ -65,7 +68,7 @@ export function MissionHubScene({
     const distance = Math.hypot(player.position.x, player.position.z + 5.6);
     const close = distance < 2.8;
     if (close !== nearSarah) setNearSarah(close);
-    if (close && inputState.interactPressed) onOpenBoard?.();
+    if (!blocked && close && input.interactPressed) onOpenBoard?.();
   });
 
   return (
@@ -126,7 +129,7 @@ export function MissionHubScene({
           <Html position={[0, 2.45, 0]} center distanceFactor={12} occlude={false}>
             <div className="pointer-events-none select-none text-center">
               <span className="rounded-full border border-cyan-400/40 bg-slate-950/90 px-3 py-1 text-xs font-black text-cyan-300">Sarah · Security Specialist</span>
-              {nearSarah && <p className="mt-2 rounded-full border border-amber-400/40 bg-slate-950/95 px-4 py-1.5 text-[11px] font-black text-amber-300">Press E to open Mission Board</p>}
+              {nearSarah && !blocked && <p className="mt-2 rounded-full border border-amber-400/40 bg-slate-950/95 px-4 py-1.5 text-[11px] font-black text-amber-300">Press E to open Mission Board</p>}
             </div>
           </Html>
         </group>

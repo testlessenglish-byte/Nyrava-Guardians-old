@@ -11,8 +11,8 @@ import { advancePhishingStory, getPhishingStoryStep, setPhishingStoryStep } from
 import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
 import { QUALITY, useQuality } from "@/services/game/quality";
 import { useAppActive } from "@/services/platform/lifecycle";
-import { InputManager, type GameInputState } from "@/components/game/core/input-manager";
-import { type PlayerMode } from "@/components/game/core/player-state-machine";
+import { InputManager } from "@/components/game/core/input-manager";
+import { AnalogJoystick, LookPad } from "@/components/game/touch-controls";
 import { PauseMenu } from "@/components/game/pause-menu";
 
 export const Route = createFileRoute("/missions")({
@@ -29,48 +29,38 @@ function MissionHubPage() {
   const quality = QUALITY[useQuality()];
   const active = useAppActive();
   const dragging = useRef(false);
-  const boardOpenRef = useRef(false);
   const { guardianId, guardianName, locale } = useGuardian();
   const es = locale.startsWith("es");
   const chosen = CLASS_GUARDIANS.find((guardian) => guardian.id === guardianId);
   const playerColor = chosen?.color ?? "#f4f7ff";
   const playerLabel = `${guardianName || (es ? "Tú" : "You")}${chosen ? ` · ${chosen.name}` : ""}`;
   const inputManager = useMemo(() => new InputManager(), []);
-  const [inputState, setInputState] = useState<GameInputState>(() => inputManager.getSnapshot());
-  const [mode, setMode] = useState<PlayerMode>("idle");
-  const [cameraYaw, setCameraYaw] = useState(0);
-  const [cameraPitch, setCameraPitch] = useState(0.15);
   const [boardOpen, setBoardOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState<"story" | "daily" | "weekly">("story");
-
-  useEffect(() => {
-    boardOpenRef.current = boardOpen;
-    if (boardOpen) inputManager.reset();
-  }, [boardOpen, inputManager]);
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => inputManager.onKeyDown(event);
     const up = (event: KeyboardEvent) => inputManager.onKeyUp(event);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    const interval = window.setInterval(() => {
-      const snap = inputManager.getSnapshot();
-      setInputState(snap);
-      setMode(boardOpenRef.current ? "idle" : snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
-    }, 32);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
-      window.clearInterval(interval);
       inputManager.dispose();
     };
   }, [inputManager]);
+
+  const setBoardState = (open: boolean) => {
+    inputManager.setEnabled(!open);
+    if (!open) inputManager.reset();
+    setBoardOpen(open);
+  };
 
   const openMissionBoardWithSarah = () => {
     const step = getPhishingStoryStep();
     if (step === "GOTO_MISSION_HUB") advancePhishingStory("GOTO_MISSION_HUB", "TALK_SARAH");
     if (step === "RETURN_SARAH") advancePhishingStory("RETURN_SARAH", "MISSION_COMPLETED");
-    setBoardOpen(true);
+    setBoardState(true);
   };
 
   const acceptPhishingMission = () => {
@@ -86,18 +76,18 @@ function MissionHubPage() {
       <div
         className="absolute inset-0 touch-none"
         onPointerDown={(event) => {
-          if (event.pointerType !== "mouse" || boardOpen) return;
+          if (event.pointerType !== "mouse" || boardOpen || !(event.target instanceof HTMLCanvasElement)) return;
           dragging.current = true;
           event.currentTarget.setPointerCapture(event.pointerId);
         }}
         onPointerMove={(event) => {
-          if (dragging.current && !boardOpen) {
-            setCameraYaw((previous) => previous - event.movementX * 0.005);
-            setCameraPitch((previous) => Math.min(0.85, Math.max(-0.15, previous + event.movementY * 0.003)));
-          }
+          if (dragging.current && !boardOpen) inputManager.setCameraLook(event.movementX, event.movementY);
         }}
         onPointerUp={() => (dragging.current = false)}
-        onPointerCancel={() => (dragging.current = false)}
+        onPointerCancel={() => {
+          dragging.current = false;
+          inputManager.reset();
+        }}
         onLostPointerCapture={() => (dragging.current = false)}
       >
         <GameErrorBoundary>
@@ -106,10 +96,8 @@ function MissionHubPage() {
               playerColor={playerColor}
               playerLabel={playerLabel}
               guardianId={chosen?.id ?? "lex"}
-              inputState={boardOpen ? { ...inputState, moveX: 0, moveY: 0, interactPressed: false } : inputState}
-              playerMode={boardOpen ? "idle" : mode}
-              cameraYaw={cameraYaw}
-              cameraPitch={cameraPitch}
+              inputManager={inputManager}
+              blocked={boardOpen}
               onOpenBoard={openMissionBoardWithSarah}
             />
           </Canvas>
@@ -121,9 +109,18 @@ function MissionHubPage() {
       </div>
 
       {!boardOpen && (
-        <div className="pointer-events-none absolute bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-full border border-cyan-400/30 bg-slate-950/80 px-4 py-2 text-[11px] font-bold text-slate-300 backdrop-blur">
-          {es ? "WASD para moverte · arrastra para mirar · acércate a Sarah y presiona E" : "WASD to move · drag to look · walk to Sarah and press E"}
-        </div>
+        <>
+          <div className="pointer-events-none absolute bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-full border border-cyan-400/30 bg-slate-950/80 px-4 py-2 text-[11px] font-bold text-slate-300 backdrop-blur">
+            {es ? "WASD para moverte · arrastra para mirar · acércate a Sarah y presiona E" : "WASD to move · drag to look · walk to Sarah and press E"}
+          </div>
+          <div className="mobile-game-controls pointer-events-none fixed inset-0 z-40">
+            <div className="game-left pointer-events-auto"><AnalogJoystick target={inputManager.joystick} /></div>
+            <div className="game-right pointer-events-auto"><LookPad target={inputManager} /></div>
+            <div className="game-actions pointer-events-auto">
+              <button type="button" className="game-action" aria-label="Interact" onClick={() => inputManager.triggerInteract()}>Use</button>
+            </div>
+          </div>
+        </>
       )}
 
       {boardOpen && (
@@ -131,7 +128,7 @@ function MissionHubPage() {
           <div className="mx-auto max-w-5xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-5">
               <div><p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-400">NYRAVA GUARDIANS</p><h1 className="mt-1 text-3xl font-black text-white">{es ? "Tablero de Misiones" : "Mission Board"}</h1><p className="mt-1 text-sm text-slate-400">Sarah · {es ? "Especialista de Seguridad" : "Security Specialist"}</p></div>
-              <Button variant="outline" size="icon" onClick={() => setBoardOpen(false)} className="border-slate-700 bg-slate-900 text-white"><X className="size-5" /></Button>
+              <Button variant="outline" size="icon" onClick={() => setBoardState(false)} className="border-slate-700 bg-slate-900 text-white"><X className="size-5" /></Button>
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3 border-b border-slate-800 pb-4">

@@ -36,7 +36,14 @@ export class InputManager {
   private prevInteract = false;
   private currentInteract = false;
   private queuedInteract = false;
+  private enabled = true;
 
+  /** Mutable targets consumed directly by touch controls without a React render loop. */
+  readonly joystick = { x: 0, y: 0 };
+  cameraYaw = 0;
+  cameraPitch = 0.15;
+
+  /** Backward-compatible channels kept temporarily for callers not yet migrated. */
   joystickX = 0;
   joystickY = 0;
   lookDeltaX = 0;
@@ -49,14 +56,27 @@ export class InputManager {
     managers.add(this);
   }
 
+  setEnabled(enabled: boolean) {
+    if (this.enabled === enabled) return;
+    this.enabled = enabled;
+    if (!enabled) this.reset();
+  }
+
+  setCameraLook(deltaX: number, deltaY: number, sensitivity = 0.005) {
+    if (!this.enabled || gameInputPaused) return;
+    this.cameraYaw -= deltaX * sensitivity;
+    this.cameraPitch = Math.min(0.85, Math.max(-0.15, this.cameraPitch + deltaY * sensitivity * 0.6));
+    this.inputMethod = "mouse";
+  }
+
   triggerInteract() {
-    if (gameInputPaused) return;
+    if (!this.enabled || gameInputPaused) return;
     this.queuedInteract = true;
     this.inputMethod = "touch";
   }
 
   onKeyDown(e: KeyboardEvent) {
-    if (gameInputPaused || isTypingTarget(e.target)) return;
+    if (!this.enabled || gameInputPaused || isTypingTarget(e.target)) return;
     const key = e.key.toLowerCase();
     if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) {
       if (key.startsWith("arrow")) e.preventDefault();
@@ -64,7 +84,7 @@ export class InputManager {
       this.inputMethod = "keyboard";
     }
     if (key === "shift") this.sprint = true;
-    if (key === "e") {
+    if (key === "e" && !e.repeat) {
       this.currentInteract = true;
       this.inputMethod = "keyboard";
     }
@@ -78,12 +98,17 @@ export class InputManager {
     const key = e.key.toLowerCase();
     this.keys.delete(key);
     if (key === "shift") this.sprint = false;
-    if (key === "e") this.currentInteract = false;
+    if (key === "e") {
+      this.currentInteract = false;
+      this.prevInteract = false;
+    }
     if (e.code === "Space") this.jump = false;
   }
 
   reset() {
     this.keys.clear();
+    this.joystick.x = 0;
+    this.joystick.y = 0;
     this.joystickX = 0;
     this.joystickY = 0;
     this.sprint = false;
@@ -99,7 +124,7 @@ export class InputManager {
   }
 
   getSnapshot(): GameInputState {
-    if (gameInputPaused) {
+    if (!this.enabled || gameInputPaused) {
       return {
         moveX: 0,
         moveY: 0,
@@ -108,7 +133,7 @@ export class InputManager {
         run: false,
         jump: false,
         interactPressed: false,
-        menuPressed: true,
+        menuPressed: gameInputPaused,
         inputMethod: this.inputMethod,
       };
     }
@@ -120,9 +145,11 @@ export class InputManager {
     if (this.keys.has("d") || this.keys.has("arrowright")) moveX += 1;
     if (this.keys.has("a") || this.keys.has("arrowleft")) moveX -= 1;
 
-    if (Math.hypot(this.joystickX, this.joystickY) > 0.08) {
-      moveX += this.joystickX;
-      moveY += -this.joystickY;
+    const touchX = this.joystick.x + this.joystickX;
+    const touchY = this.joystick.y + this.joystickY;
+    if (Math.hypot(touchX, touchY) > 0.08) {
+      moveX += touchX;
+      moveY += -touchY;
       this.inputMethod = "touch";
     }
 
