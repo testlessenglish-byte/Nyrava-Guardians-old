@@ -5,6 +5,7 @@ import { ClassroomScene } from "@/components/meta/classroom-scene";
 import { AcademyClassroomSet } from "@/components/meta/academy-classroom-set";
 import { ClassHud } from "@/components/meta/class-hud";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
+import { controls } from "@/lib/class-store";
 import { useGuardian } from "@/lib/guardian-context";
 import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
 import { LookPad } from "@/components/game/touch-controls";
@@ -129,7 +130,7 @@ function ClassroomPage() {
       />
 
       <div className="mobile-game-controls game-right z-40">
-        <LookPad target={{ cameraYaw, cameraPitch, joystick: { x: 0, y: 0 } }} />
+        <LookPad target={controls} />
       </div>
       <WorldLoading />
       <GameSettings />

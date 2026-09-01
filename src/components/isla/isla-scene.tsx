@@ -1462,14 +1462,25 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
 
 /* --------------------------------------------------------------------- scene */
 
+import { type GameInputState } from "@/components/game/core/input-manager";
+import { type PlayerMode } from "@/components/game/core/player-state-machine";
+
 export function IslaScene({
   playerColor,
   playerName,
   playerGuardian = "lex",
+  inputState,
+  playerMode,
+  cameraYaw,
+  cameraPitch,
 }: {
   playerColor: string;
   playerName: string;
   playerGuardian?: string;
+  inputState?: GameInputState;
+  playerMode?: PlayerMode;
+  cameraYaw?: number;
+  cameraPitch?: number;
 }) {
   const found = getIsla();
   const quality = QUALITY[useQuality()];
