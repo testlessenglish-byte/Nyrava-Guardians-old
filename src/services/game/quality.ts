@@ -13,10 +13,14 @@ const subscribe = (fn: () => void) => {
   listeners.add(fn);
   return () => listeners.delete(fn);
 };
-export function initialQuality(memory: number, cores: number, touch: boolean): Quality {
+
+export function initialQuality(memory: number, cores: number, _touch: boolean): Quality {
+  // Fast startup and stable frame time matter more than auto-selecting the heaviest
+  // preset. High remains available in Settings for players who explicitly want it.
   if (memory <= 4 || cores <= 4) return "LOW";
-  return touch ? "MEDIUM" : "HIGH";
+  return "MEDIUM";
 }
+
 export function initializeQuality() {
   const saved = readLocal("nyrava-quality");
   const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 4;
@@ -26,11 +30,13 @@ export function initializeQuality() {
       : initialQuality(memory, navigator.hardwareConcurrency || 4, navigator.maxTouchPoints > 0);
   listeners.forEach((fn) => fn());
 }
+
 export function setQuality(next: Quality) {
   quality = next;
   writeLocal("nyrava-quality", next);
   listeners.forEach((fn) => fn());
 }
+
 export function useQuality() {
   return useSyncExternalStore(
     subscribe,
