@@ -1,17 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Canvas } from "@react-three/fiber";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { ClassroomScene } from "@/components/meta/classroom-scene";
 import { AcademyClassroomSet } from "@/components/meta/academy-classroom-set";
 import { ClassHud } from "@/components/meta/class-hud";
-import { controls } from "@/lib/class-store";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
 import { useGuardian } from "@/lib/guardian-context";
 import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
 import { LookPad } from "@/components/game/touch-controls";
 import { QUALITY, useQuality } from "@/services/game/quality";
 import { useAppActive } from "@/services/platform/lifecycle";
-import { isTypingTarget } from "@/services/game/input";
+import { InputManager, type GameInputState } from "@/components/game/core/input-manager";
+import { type PlayerMode } from "@/components/game/core/player-state-machine";
 import { FullViewportCourseExperience } from "@/components/progression/full-course-experience";
 
 export const Route = createFileRoute("/classroom")({
@@ -28,53 +28,48 @@ function ClassroomPage() {
   const playerColor = chosen?.color ?? "#f4f7ff";
   const playerLabel = `${guardianName || "You"}${chosen ? ` · ${chosen.name}` : ""}`;
 
-  const [mode, setMode] = useState<"classroom" | "course">("classroom");
+  const inputManager = useMemo(() => new InputManager(), []);
+  const [inputState, setInputState] = useState<GameInputState>(() => inputManager.getSnapshot());
+
+  const [mode, setMode] = useState<PlayerMode>("idle");
+  const [cameraYaw, setCameraYaw] = useState(0);
+  const [cameraPitch, setCameraPitch] = useState(0.15);
   const [activeSeatId, setActiveSeatId] = useState<string | null>(null);
   const [openDoorIds, setOpenDoorIds] = useState<Set<string>>(new Set());
   const [activeInteraction, setActiveInteraction] = useState<{
+    id: string;
     type: string;
     label: { en: string; es: string };
     action: () => void;
   } | null>(null);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target)) return;
-      if (mode === "course") return; // Disable movement in course mode
-      if (e.key.startsWith("Arrow")) e.preventDefault();
-      const key = e.key.toLowerCase();
-      if (["w", "a", "s", "d"].includes(key)) controls.keys.add(key);
-      if (key === "arrowup") controls.keys.add("w");
-      if (key === "arrowdown") controls.keys.add("s");
-      if (key === "arrowleft") controls.keys.add("a");
-      if (key === "arrowright") controls.keys.add("d");
-    };
-    const up = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      controls.keys.delete(key);
-      if (key === "arrowup") controls.keys.delete("w");
-      if (key === "arrowdown") controls.keys.delete("s");
-      if (key === "arrowleft") controls.keys.delete("a");
-      if (key === "arrowright") controls.keys.delete("d");
-    };
-    const blur = () => controls.keys.clear();
+    const down = (e: KeyboardEvent) => inputManager.onKeyDown(e);
+    const up = (e: KeyboardEvent) => inputManager.onKeyUp(e);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    window.addEventListener("blur", blur);
+
+    const interval = setInterval(() => {
+      const snap = inputManager.getSnapshot();
+      setInputState(snap);
+      if (mode !== "course") {
+        setMode(activeSeatId ? "seated" : snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
+      }
+    }, 16);
+
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
-      window.removeEventListener("blur", blur);
-      controls.keys.clear();
+      clearInterval(interval);
+      inputManager.reset();
     };
-  }, [mode]);
+  }, [inputManager, mode, activeSeatId]);
 
-  // DEDICATED FULL-SCREEN OPAQUE COURSE MODE
   if (mode === "course") {
     return (
       <FullViewportCourseExperience
-        onExit={() => setMode("classroom")}
-        onComplete={() => setMode("classroom")}
+        onExit={() => setMode("idle")}
+        onComplete={() => setMode("idle")}
       />
     );
   }
@@ -89,9 +84,9 @@ function ClassroomPage() {
           e.currentTarget.setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
-          if (dragging.current && mode === "classroom") {
-            controls.cameraYaw -= e.movementX * 0.005;
-            controls.cameraPitch += e.movementY * 0.003;
+          if (dragging.current && mode !== "course") {
+            setCameraYaw((prev) => prev - e.movementX * 0.005);
+            setCameraPitch((prev) => Math.min(0.85, Math.max(-0.15, prev + e.movementY * 0.003)));
           }
         }}
         onPointerUp={() => (dragging.current = false)}
@@ -109,6 +104,10 @@ function ClassroomPage() {
               playerColor={playerColor}
               playerLabel={playerLabel}
               guardianId={chosen?.id ?? "lex"}
+              inputState={inputState}
+              playerMode={mode}
+              cameraYaw={cameraYaw}
+              cameraPitch={cameraPitch}
               onStartCourse={() => setMode("course")}
               activeSeatId={activeSeatId}
               setActiveSeatId={setActiveSeatId}
@@ -130,7 +129,7 @@ function ClassroomPage() {
       />
 
       <div className="mobile-game-controls game-right z-40">
-        <LookPad target={controls} />
+        <LookPad target={{ cameraYaw, cameraPitch, joystick: { x: 0, y: 0 } }} />
       </div>
       <WorldLoading />
       <GameSettings />

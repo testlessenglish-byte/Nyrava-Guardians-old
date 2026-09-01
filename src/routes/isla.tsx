@@ -1,41 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
-import { Component, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { Component, Suspense, useEffect, useRef, useState, useMemo } from "react";
 
 import { IslaScene } from "@/components/isla/isla-scene";
 import { IslaHud } from "@/components/isla/isla-hud";
 import { IslaControls } from "@/components/isla/isla-controls";
-import { hydrateIsla, islaControls, toggleIslaView } from "@/lib/isla-store";
+import { hydrateIsla, toggleIslaView } from "@/lib/isla-store";
 import { useGuardian } from "@/lib/guardian-context";
 import { CLASS_GUARDIANS } from "@/lib/class-guardians";
 import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
 import { QUALITY, useQuality } from "@/services/game/quality";
 import { useAppActive } from "@/services/platform/lifecycle";
-import { isTypingTarget } from "@/services/game/input";
-import { resetIslaControls } from "@/lib/isla-store";
 import { GuardianJourney } from "@/components/progression/guardian-journey";
+import { InputManager, type GameInputState } from "@/components/game/core/input-manager";
+import { type PlayerMode } from "@/components/game/core/player-state-machine";
 
 export const Route = createFileRoute("/isla")({
   ssr: false,
-  head: () => ({
-    meta: [
-      { title: "World 1: Isla Central | Nyrava Guardians" },
-      {
-        name: "description",
-        content:
-          "Walk into Isla Central, the first playable Nyrava Guardians world. Explore forests, mountains, ruins, deserts and beaches, follow your Guardian's clues and find the 5 Knowledge Crystals.",
-      },
-      { property: "og:title", content: "World 1: Isla Central | Nyrava Guardians" },
-      {
-        property: "og:description",
-        content:
-          "Explore a real walkable island, solve challenges and complete Class 1 with your Guardian.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
   component: IslaCentral,
 });
 
@@ -51,63 +33,36 @@ function IslaCentral() {
   const dragDist = useRef(0);
   const [mounted, setMounted] = useState(false);
 
+  const inputManager = useMemo(() => new InputManager(), []);
+  const [inputState, setInputState] = useState<GameInputState>(() => inputManager.getSnapshot());
+  const [cameraYaw, setCameraYaw] = useState(0);
+  const [cameraPitch, setCameraPitch] = useState(0.2);
+  const [playerMode, setPlayerMode] = useState<PlayerMode>("idle");
+
   useEffect(() => {
     setMounted(true);
     hydrateIsla();
-    return resetIslaControls;
   }, []);
 
   useEffect(() => {
-    const ARROW_MAP: Record<string, string> = {
-      arrowup: "w",
-      arrowdown: "s",
-      arrowleft: "a",
-      arrowright: "d",
-    };
-    const down = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target)) return;
-      const key = e.key.toLowerCase();
-      const moveKey = ARROW_MAP[key] ?? (["w", "a", "s", "d"].includes(key) ? key : null);
-      if (moveKey) {
-        if (ARROW_MAP[key]) e.preventDefault();
-        islaControls.keys.add(moveKey);
-      }
-      if (key === "shift") islaControls.sprint = true;
-      if (key === "e") islaControls.interact = true;
-      if (key === "v" && !e.repeat) toggleIslaView();
-      if (e.code === "Space") {
-        e.preventDefault();
-        islaControls.jump = true;
-      }
-    };
-    const up = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      islaControls.keys.delete(ARROW_MAP[key] ?? key);
-      if (key === "shift") islaControls.sprint = false;
-    };
+    const down = (e: KeyboardEvent) => inputManager.onKeyDown(e);
+    const up = (e: KeyboardEvent) => inputManager.onKeyUp(e);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
+
+    const interval = setInterval(() => {
+      const snap = inputManager.getSnapshot();
+      setInputState(snap);
+      setPlayerMode(snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
+    }, 16);
+
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
-      resetIslaControls();
+      clearInterval(interval);
+      inputManager.reset();
     };
-  }, []);
-
-  useEffect(() => {
-    const el = wrap.current;
-    if (!el) return;
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
-      const next = islaControls.camDistance * Math.exp(dy * 0.0015);
-      islaControls.camDistance = Math.min(34, Math.max(3.5, next));
-      if (islaControls.camDistance <= 4 && islaControls.view === "third") toggleIslaView();
-      if (islaControls.camDistance > 5 && islaControls.view === "first") toggleIslaView();
-    };
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, []);
+  }, [inputManager]);
 
   return (
     <div
@@ -118,20 +73,16 @@ function IslaCentral() {
         e.currentTarget.setPointerCapture(e.pointerId);
         dragging.current = true;
         dragDist.current = 0;
-        islaControls.dragged = false;
       }}
       onPointerUp={() => {
         dragging.current = false;
-        window.setTimeout(() => {
-          islaControls.dragged = false;
-        }, 0);
       }}
       onPointerLeave={() => {
         dragging.current = false;
       }}
       onPointerCancel={() => {
         dragging.current = false;
-        resetIslaControls();
+        inputManager.reset();
       }}
       onLostPointerCapture={() => {
         dragging.current = false;
@@ -139,12 +90,8 @@ function IslaCentral() {
       onPointerMove={(e) => {
         if (!dragging.current) return;
         dragDist.current += Math.abs(e.movementX) + Math.abs(e.movementY);
-        if (dragDist.current > 6) islaControls.dragged = true;
-        islaControls.cameraYaw -= e.movementX * 0.005;
-        islaControls.cameraPitch = Math.min(
-          0.85,
-          Math.max(-0.15, islaControls.cameraPitch + e.movementY * 0.003),
-        );
+        setCameraYaw((prev) => prev - e.movementX * 0.005);
+        setCameraPitch((prev) => Math.min(0.85, Math.max(-0.15, prev + e.movementY * 0.003)));
       }}
     >
       {mounted && (
@@ -152,33 +99,26 @@ function IslaCentral() {
           <Canvas
             frameloop={active ? "always" : "never"}
             shadows={quality.shadows}
-            camera={{ position: [0, 26, 52], fov: 58, near: 0.1, far: 5000 }}
             dpr={quality.dpr}
-            gl={{
-              antialias: quality.dpr > 1,
-              powerPreference: "high-performance",
-            }}
-            onCreated={({ gl }) => {
-              gl.outputColorSpace = THREE.SRGBColorSpace;
-              gl.toneMapping = THREE.ACESFilmicToneMapping;
-              gl.toneMappingExposure = 1.08;
-            }}
+            camera={{ position: [0, 8, 24], fov: 58 }}
           >
-            <Suspense fallback={null}>
-              <IslaScene
-                playerColor={guardian.color}
-                playerName={guardianName || "Guardian"}
-                playerGuardian={guardian.id}
-              />
-            </Suspense>
+            <IslaScene
+              playerColor={guardian.color}
+              playerName={guardianName || "Alex"}
+              playerGuardian={guardian.id}
+              inputState={inputState}
+              playerMode={playerMode}
+              cameraYaw={cameraYaw}
+              cameraPitch={cameraPitch}
+            />
           </Canvas>
+          <IslaHud />
+          <IslaControls />
+          <GuardianJourney />
+          <WorldLoading />
+          <GameSettings />
         </GameErrorBoundary>
       )}
-      <IslaHud guardianName={guardian.name} />
-      <IslaControls />
-      <GuardianJourney />
-      <WorldLoading />
-      <GameSettings />
     </div>
   );
 }
