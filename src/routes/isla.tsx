@@ -113,7 +113,7 @@ function IslaCentral() {
             />
           </Canvas>
           <IslaHud />
-          <IslaControls />
+          <IslaControls guardianName={guardianName || "Alex"} />
           <GuardianJourney />
           <WorldLoading />
           <GameSettings />
