@@ -202,62 +202,65 @@ export function AcademyClassroomSet({
           <ringGeometry args={[4.1, 4.35, 64]} />
           <meshStandardMaterial color="#fbbf24" emissive="#d97706" emissiveIntensity={0.6} metalness={0.8} roughness={0.2} />
         </mesh>
-        <Html position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]} transform distanceFactor={6.8} occlude={false}>
+        <Html position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]} transform distanceFactor={14} occlude={false}>
           <div className="select-none text-center font-display text-amber-400">
-            <div className="mx-auto flex size-20 items-center justify-center rounded-2xl border-2 border-amber-400 bg-slate-950/80 font-black text-4xl shadow-2xl text-amber-300">
+            <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border-2 border-amber-400 bg-slate-950/80 font-black text-2xl shadow-2xl text-amber-300">
               N
             </div>
-            <div className="mt-2 text-2xl font-black tracking-[0.25em] text-amber-300">N Y R A V A</div>
-            <div className="text-xs font-extrabold tracking-[0.4em] text-amber-400/90">GUARDIANS ACADEMY</div>
+            <div className="mt-1 text-lg font-black tracking-[0.25em] text-amber-300">N Y R A V A</div>
+            <div className="text-[10px] font-extrabold tracking-[0.4em] text-amber-400/90">GUARDIANS ACADEMY</div>
           </div>
         </Html>
       </group>
 
-      {/* 3. FRONT TEACHING STAGE & BOARD */}
-      <group position={[0, 0, -9.0]}>
+      {/* 3. FRONT TEACHING STAGE & BOARD (Mounted Flush to Front Wall at z = -9.3m) */}
+      <group position={[0, 0, -9.4]}>
         <mesh position={[0, 0.2, 0.6]} castShadow receiveShadow>
           <boxGeometry args={[14, 0.4, 2.2]} />
           <meshStandardMaterial color="#361c0e" roughness={0.3} metalness={0.4} />
         </mesh>
 
-        <mesh position={[0, 4.0, 0.1]}>
-          <boxGeometry args={[1.8, 1.8, 0.2]} />
+        <mesh position={[0, 4.1, 0.05]}>
+          <boxGeometry args={[1.6, 1.6, 0.1]} />
           <meshStandardMaterial color="#fbbf24" emissive="#f59e0b" emissiveIntensity={0.8} metalness={0.85} roughness={0.2} />
         </mesh>
-        <Html position={[0, 4.0, 0.25]} transform distanceFactor={6} occlude={false}>
-          <div className="select-none font-black text-3xl text-slate-950">N</div>
+        <Html position={[0, 4.1, 0.12]} transform distanceFactor={15} occlude={false}>
+          <div className="select-none font-black text-xl text-slate-950">N</div>
         </Html>
 
-        <mesh position={[0, 2.4, 0.1]}>
-          <boxGeometry args={[9.8, 3.4, 0.15]} />
+        {/* Board Outer Frame */}
+        <mesh position={[0, 2.5, 0.05]}>
+          <boxGeometry args={[10.2, 3.2, 0.1]} />
           <meshStandardMaterial color="#0284c7" emissive="#38bdf8" emissiveIntensity={1.8} metalness={0.9} />
         </mesh>
-        <mesh position={[0, 2.4, 0.2]}>
-          <planeGeometry args={[9.4, 3.0]} />
+        {/* Dark Screen Surface */}
+        <mesh position={[0, 2.5, 0.1]}>
+          <planeGeometry args={[9.8, 2.8]} />
           <meshStandardMaterial color="#051329" emissive="#0369a1" emissiveIntensity={0.35} />
         </mesh>
 
-        <Html position={[0, 2.4, 0.25]} transform distanceFactor={7.2} occlude={false}>
-          <div className="w-[680px] select-none rounded-3xl border border-cyan-400/50 bg-slate-950/95 p-6 text-center text-white shadow-2xl backdrop-blur-xl">
-            <p className="text-xs font-black uppercase tracking-[0.35em] text-cyan-400">Digital Safety Foundation</p>
-            <h2 className="mt-1 text-4xl font-black tracking-tight text-white">
+        {/* Board HTML Content (Scaled compactly to fit flush inside board) */}
+        <Html position={[0, 2.5, 0.12]} transform distanceFactor={18} occlude={false}>
+          <div className="w-[620px] select-none rounded-3xl border border-cyan-400/50 bg-slate-950/95 p-5 text-center text-white shadow-2xl backdrop-blur-xl">
+            <p className="text-[11px] font-black uppercase tracking-[0.35em] text-cyan-400">Digital Safety Foundation</p>
+            <h2 className="mt-1 text-3xl font-black tracking-tight text-white">
               {activeLesson.title.en}
             </h2>
-            <p className="mt-1 text-sm font-semibold text-cyan-200/90">
+            <p className="mt-1 text-xs font-semibold text-cyan-200/90">
               Be smart. Stay safe. Don't get hooked!
             </p>
-            <div className="mt-4 flex justify-center gap-8">
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-cyan-500/30 bg-cyan-950/60 p-3 w-28">
-                <span className="text-3xl">🎣</span>
-                <span className="text-[10px] font-bold text-cyan-300">Detect Phishing</span>
+            <div className="mt-3 flex justify-center gap-6">
+              <div className="flex flex-col items-center gap-1 rounded-2xl border border-cyan-500/30 bg-cyan-950/60 p-2.5 w-24">
+                <span className="text-2xl">🎣</span>
+                <span className="text-[9px] font-bold text-cyan-300">Detect Phishing</span>
               </div>
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-amber-500/40 bg-amber-950/60 p-3 w-28">
-                <span className="text-3xl">🛡️</span>
-                <span className="text-[10px] font-bold text-amber-300">Guardian Shield</span>
+              <div className="flex flex-col items-center gap-1 rounded-2xl border border-amber-500/40 bg-amber-950/60 p-2.5 w-24">
+                <span className="text-2xl">🛡️</span>
+                <span className="text-[9px] font-bold text-amber-300">Guardian Shield</span>
               </div>
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-emerald-500/40 bg-emerald-950/60 p-3 w-28">
-                <span className="text-3xl">🔒</span>
-                <span className="text-[10px] font-bold text-emerald-300">Verify Links</span>
+              <div className="flex flex-col items-center gap-1 rounded-2xl border border-emerald-500/40 bg-emerald-950/60 p-2.5 w-24">
+                <span className="text-2xl">🔒</span>
+                <span className="text-[9px] font-bold text-emerald-300">Verify Links</span>
               </div>
             </div>
           </div>
@@ -269,7 +272,7 @@ export function AcademyClassroomSet({
         <InteractiveDoor
           key={door.id}
           door={door}
-          isOpen={openDoorIds?.has(door.id)}
+          isOpen={Boolean(openDoorIds?.has(door.id))}
         />
       ))}
 
@@ -296,12 +299,12 @@ export function AcademyClassroomSet({
           <boxGeometry args={[4.2, 2.2, 0.1]} />
           <meshStandardMaterial color="#0f1e36" roughness={0.3} />
         </mesh>
-        <Html position={[0, 0, 0.12]} transform distanceFactor={7} occlude={false}>
-          <div className="w-[360px] select-none text-center text-white">
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-400">ACHIEVEMENTS</p>
-            <div className="mt-3 flex justify-center gap-3">
+        <Html position={[0, 0, 0.12]} transform distanceFactor={14} occlude={false}>
+          <div className="w-[300px] select-none text-center text-white">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-400">ACHIEVEMENTS</p>
+            <div className="mt-2 flex justify-center gap-2">
               {['🛡️', '⚔️', '🎓', '👑', '⭐'].map((icon, idx) => (
-                <div key={idx} className="flex size-11 items-center justify-center rounded-xl border border-amber-400/50 bg-slate-950/80 text-xl shadow-lg">
+                <div key={idx} className="flex size-9 items-center justify-center rounded-xl border border-amber-400/50 bg-slate-950/80 text-base shadow-lg">
                   {icon}
                 </div>
               ))}
@@ -315,8 +318,8 @@ export function AcademyClassroomSet({
           <boxGeometry args={[0.4, 4.4, 3.2]} />
           <meshStandardMaterial color="#2d170b" roughness={0.4} />
         </mesh>
-        <Html position={[-0.25, 4.3, 0]} rotation={[0, -Math.PI / 2, 0]} transform distanceFactor={6.5} occlude={false}>
-          <div className="whitespace-nowrap font-black text-lg tracking-[0.25em] text-amber-300 drop-shadow-lg">
+        <Html position={[-0.25, 4.3, 0]} rotation={[0, -Math.PI / 2, 0]} transform distanceFactor={12} occlude={false}>
+          <div className="whitespace-nowrap font-black text-sm tracking-[0.25em] text-amber-300 drop-shadow-lg">
             MISSION HUB
           </div>
         </Html>

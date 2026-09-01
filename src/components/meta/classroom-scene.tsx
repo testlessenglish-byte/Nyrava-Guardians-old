@@ -24,18 +24,20 @@ function Loader() {
 function TeacherNpc({
   guardian,
   position,
+  rotation = 0.3,
 }: {
   guardian: ClassGuardian;
   position: [number, number, number];
+  rotation?: number;
 }) {
   return (
-    <group position={position}>
+    <group position={position} rotation-y={rotation}>
       <Character color={guardian.color} clip="idle" guardianId={guardian.id} />
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
         <ringGeometry args={[0.9, 1.15, 48]} />
         <meshStandardMaterial color={guardian.color} emissive={guardian.color} emissiveIntensity={1.2} transparent opacity={0.85} />
       </mesh>
-      <Html position={[0, 2.5, 0]} center distanceFactor={10} occlude={false}>
+      <Html position={[0, 2.5, 0]} center distanceFactor={14} occlude={false}>
         <div className="pointer-events-none select-none text-center">
           <span
             className="rounded-full px-3 py-1 text-xs font-black uppercase tracking-widest shadow-lg"
@@ -229,7 +231,6 @@ export function ClassroomScene({
       return;
     }
 
-    // No interaction nearby
     setActiveInteraction?.(null);
   });
 
@@ -241,7 +242,8 @@ export function ClassroomScene({
       <fog attach="fog" args={["#0f172a", 20, 50]} />
 
       <Suspense fallback={<Loader />}>
-        <TeacherNpc guardian={teacher} position={[0, 0.55, -6.6]} />
+        {/* Teacher NPC Standing on Stage to Left of Screen */}
+        <TeacherNpc guardian={teacher} position={[-4.5, 0.4, -8.2]} rotation={0.3} />
 
         <group ref={group} position={[0, 0, 0]}>
           <Character color={playerColor} clip={moving ? "walk" : "idle"} guardianId={guardianId} />
@@ -250,7 +252,7 @@ export function ClassroomScene({
             <meshStandardMaterial color={playerColor} emissive={playerColor} emissiveIntensity={1.5} transparent opacity={0.85} />
           </mesh>
           <pointLight position={[0, 1.7, 0]} color={playerColor} intensity={4} distance={5} />
-          <Html position={[0, 2.35, 0]} center distanceFactor={10}>
+          <Html position={[0, 2.35, 0]} center distanceFactor={14}>
             <span className="pointer-events-none select-none rounded-full border border-cyan-400/30 bg-slate-950/80 px-3 py-1 text-xs font-black uppercase tracking-widest text-cyan-300 backdrop-blur">
               {playerLabel}
             </span>
