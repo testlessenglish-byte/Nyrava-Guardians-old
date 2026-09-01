@@ -1,8 +1,10 @@
-import { FOUNDATION_MISSIONS, missions, shields } from "./catalog.ts";
+import { FOUNDATION_CERTIFICATE, FOUNDATION_MISSIONS, missions, shields } from "./catalog.ts";
 import type {
   AllowedObject,
   BuildAction,
+  Certificate,
   LearningStatus,
+  MasterySkill,
   PlayerProgress,
   ProgressionResult,
   RewardGrant,
@@ -78,6 +80,41 @@ export function startMission(progress: PlayerProgress, missionId: string, now = 
   };
 }
 
+const skillForMission = (missionId: string): MasterySkill | null => {
+  if (missionId === "phishing-defense") return "phishing";
+  if (missionId === "password-safety") return "passwords";
+  if (missionId === "personal-information") return "privacy";
+  return null;
+};
+
+function maybeIssueFoundationCertificate(progress: PlayerProgress, now: string) {
+  const already = progress.certificates.some((item) => item.course === FOUNDATION_CERTIFICATE.id);
+  if (already || !FOUNDATION_MISSIONS.every((id) => hasMission(progress, id))) {
+    return { progress, certificates: [] as Certificate[] };
+  }
+  const passedScores = FOUNDATION_MISSIONS.map((id) => progress.missions[id]?.bestScore ?? 0);
+  if (passedScores.some((score) => score < 75)) {
+    return { progress, certificates: [] as Certificate[] };
+  }
+  const certificate: Certificate = {
+    id: crypto.randomUUID(),
+    course: FOUNDATION_CERTIFICATE.id,
+    level: levelFor(progress.xp),
+    skills: ["phishing", "passwords", "privacy"],
+    completedAt: now,
+    curriculumVersion: FOUNDATION_CERTIFICATE.curriculumVersion,
+    displayName: null,
+    verificationId: `NYR-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+    verificationUrl: null,
+    qrPayload: null,
+    verificationStatus: "demo",
+  };
+  return {
+    progress: { ...progress, certificates: [...progress.certificates, certificate] },
+    certificates: [certificate],
+  };
+}
+
 export function completeMission(
   progress: PlayerProgress,
   attemptId: string,
@@ -102,6 +139,7 @@ export function completeMission(
     completedAt: passed ? (previous?.completedAt ?? now) : (previous?.completedAt ?? null),
     attempts: (previous?.attempts ?? 0) + 1,
   };
+  const masterySkill = skillForMission(mission.id);
   let next: PlayerProgress = {
     ...progress,
     missions: { ...progress.missions, [mission.id]: missionProgress },
@@ -110,7 +148,9 @@ export function completeMission(
     ),
     mastery: {
       ...progress.mastery,
-      ...(score >= 80 ? { phishing: Math.max(progress.mastery.phishing ?? 0, score) } : {}),
+      ...(masterySkill && score >= 80
+        ? { [masterySkill]: Math.max(progress.mastery[masterySkill] ?? 0, score) }
+        : {}),
     },
   };
   const grants: RewardGrant[] = [];
@@ -173,7 +213,15 @@ export function completeMission(
       },
     };
   }
-  return { progress: next, grants, shields: shieldEvents, certificates: [], score };
+  const certificateResult = maybeIssueFoundationCertificate(next, now);
+  next = certificateResult.progress;
+  return {
+    progress: next,
+    grants,
+    shields: shieldEvents,
+    certificates: certificateResult.certificates,
+    score,
+  };
 }
 
 export function equipShield(progress: PlayerProgress, id: string) {
@@ -211,7 +259,8 @@ export function shieldRequirement(progress: PlayerProgress, id: string) {
   return { current: hasMission(progress, "guardian-capstone") ? 1 : 0, target: 1 };
 }
 export function certificateProgress(progress: PlayerProgress) {
-  return FOUNDATION_MISSIONS.filter((id) => hasMission(progress, id)).length * 15;
+  const completed = FOUNDATION_MISSIONS.filter((id) => hasMission(progress, id)).length;
+  return Math.round((completed / FOUNDATION_MISSIONS.length) * 100);
 }
 export function validateBuild(object: AllowedObject, x: number, z: number, scale: number) {
   return (
