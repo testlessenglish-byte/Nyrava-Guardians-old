@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Billboard, Text } from "@react-three/drei";
+import { Billboard, Html, Text } from "@react-three/drei";
 import worldFont from "@fontsource/nunito/files/nunito-latin-400-normal.woff?url";
 import * as THREE from "three";
 import { Character } from "@/components/meta/character";
