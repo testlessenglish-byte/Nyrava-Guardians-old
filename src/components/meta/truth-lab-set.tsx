@@ -1,4 +1,5 @@
 import { Text } from "@react-three/drei";
+import { InteractivePortal } from "@/components/game/interactive-portal";
 import { InteractiveSeat, type SeatData } from "@/components/game/interactive-seat";
 import { InteractiveDoor, type DoorData } from "@/components/game/interactive-door";
 
@@ -49,6 +50,8 @@ export function TruthLabSet({ activeSeatId, openDoorIds }: { activeSeatId?: stri
       {TRUTH_SEATS.map((seat) => (
         <InteractiveSeat key={seat.id} seat={seat} occupied={activeSeatId === seat.id} />
       ))}
+
+      <InteractivePortal position={[11.45, 0, 2.0]} />
 
       <ambientLight intensity={0.7} color="#e0f2fe" />
       <pointLight position={[0, 4.2, 0]} color="#38bdf8" intensity={12} distance={15} />

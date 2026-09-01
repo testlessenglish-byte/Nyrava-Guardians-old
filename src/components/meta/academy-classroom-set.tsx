@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { missions } from "@/domain/progression/catalog";
 import { InteractiveSeat, type SeatData } from "@/components/game/interactive-seat";
+import { InteractivePortal } from "@/components/game/interactive-portal";
 import { InteractiveDoor, type DoorData } from "@/components/game/interactive-door";
 
 export const STUDENT_SEATS: SeatData[] = [
@@ -185,12 +186,7 @@ export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatI
         ))}
       </group>
 
-      <group position={[11.45, 0, 2.0]}>
-        <mesh position={[0, 2.15, 0]}><boxGeometry args={[0.35, 4.2, 3.4]} /><meshStandardMaterial color="#23364d" /></mesh>
-        <mesh ref={portalRingRef} position={[-0.2, 2.15, 0]} rotation-y={Math.PI / 2}><torusGeometry args={[1.28, 0.13, 18, 56]} /><meshStandardMaterial color="#60a5fa" emissive="#3b82f6" emissiveIntensity={2.5} /></mesh>
-        <mesh ref={portalVortexRef} position={[-0.16, 2.15, 0]} rotation-y={Math.PI / 2}><circleGeometry args={[1.2, 40]} /><meshStandardMaterial color="#312e81" emissive="#6366f1" emissiveIntensity={1.8} transparent opacity={0.78} /></mesh>
-        <Text position={[-0.38, 3.8, 0]} rotation={[0, -Math.PI / 2, 0]} fontSize={0.2} color="#bae6fd" anchorX="center">MISSION HUB</Text>
-      </group>
+      <InteractivePortal position={[11.45, 0, 2.0]} />
 
       <ambientLight intensity={0.9} color="#fff7ed" />
       <hemisphereLight args={["#dff3ff", "#5a321c", 0.85]} />

@@ -218,7 +218,7 @@ export function ClassroomScene({
       position: [11.2, 0, 2.0],
       range: 2.5,
       priority: 20,
-      label: { en: "Press E to Enter Mission Hub", es: "Presiona E para entrar al Centro de Misiones" },
+      label: { en: "Press E / Tap to Enter Mission Hub", es: "Presiona E / Toca para entrar al Centro de Misiones" },
       action: () => {
         if (typeof window !== "undefined") window.location.assign("/missions");
       },
