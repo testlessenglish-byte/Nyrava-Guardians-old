@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PauseMenu } from "@/components/game/pause-menu";
 import { StoryTrackerHud } from "@/components/mission/story-tracker-hud";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
@@ -119,6 +120,7 @@ function IslaCentral() {
           <GuardianJourney />
           <WorldLoading />
           <GameSettings />
+          <PauseMenu />
         </GameErrorBoundary>
       )}
     </div>
