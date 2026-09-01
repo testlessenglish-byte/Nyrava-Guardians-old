@@ -37,16 +37,20 @@ export default defineConfig(({ command, mode }) => {
       react(),
       ...(!mobile && !vercel ? [sites()] : []),
     ],
+    build: {
+      rolldownOptions: { external: ["cloudflare:workers"] },
+      ...(mobile ? { outDir: ".mobile-build" } : {}),
+    },
     ...(mobile
       ? {
-          build: { outDir: ".mobile-build" },
           environments: { client: { build: { outDir: "dist-mobile" } } },
         }
-      : {
-          build: { rolldownOptions: { external: ["cloudflare:workers"] } },
-        }),
+      : {}),
     server: { host: "127.0.0.1", port: 8080, strictPort: true },
     resolve: {
+      alias: {
+        ...(mobile ? { "cloudflare:workers": "data:text/javascript,export const env = {};" } : {}),
+      },
       dedupe: ["react", "react-dom", "@tanstack/react-query", "@tanstack/query-core"],
     },
   };

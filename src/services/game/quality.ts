@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { readLocal, writeLocal } from "@/services/platform/storage";
+import { readLocal, writeLocal } from "../platform/storage.ts";
 
 export const QUALITY = {
   LOW: { dpr: 1, shadows: false, shadowSize: 512, terrainSegments: 100, scatter: 0.35 },
