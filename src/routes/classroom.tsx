@@ -20,10 +20,7 @@ import { FullViewportCourseExperience } from "@/components/progression/full-cour
 import { PauseMenu } from "@/components/game/pause-menu";
 import { missions } from "@/domain/progression/catalog";
 
-export const Route = createFileRoute("/classroom")({
-  ssr: false,
-  component: ClassroomPage,
-});
+export const Route = createFileRoute("/classroom")({ ssr: false, component: ClassroomPage });
 
 function readSelectedMission() {
   if (typeof window === "undefined") return missions[0]!.id;
@@ -39,7 +36,6 @@ function ClassroomPage() {
   const chosen = CLASS_GUARDIANS.find((g) => g.id === guardianId);
   const playerColor = chosen?.color ?? "#f4f7ff";
   const playerLabel = `${guardianName || "You"}${chosen ? ` · ${chosen.name}` : ""}`;
-
   const inputManager = useMemo(() => new InputManager(), []);
   const [inputState, setInputState] = useState<GameInputState>(() => inputManager.getSnapshot());
   const [mode, setMode] = useState<PlayerMode>("idle");
@@ -61,7 +57,6 @@ function ClassroomPage() {
     const up = (e: KeyboardEvent) => inputManager.onKeyUp(e);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-
     const interval = window.setInterval(() => {
       const snap = inputManager.getSnapshot();
       setInputState(snap);
@@ -69,7 +64,6 @@ function ClassroomPage() {
         setMode(activeSeatId ? "seated" : snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
       }
     }, 32);
-
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
@@ -85,13 +79,7 @@ function ClassroomPage() {
   };
 
   if (mode === "course") {
-    return (
-      <FullViewportCourseExperience
-        missionId={selectedMissionId}
-        onExit={() => setMode("idle")}
-        onComplete={() => undefined}
-      />
-    );
+    return <FullViewportCourseExperience missionId={selectedMissionId} onExit={() => setMode("idle")} onComplete={() => undefined} />;
   }
 
   return (
@@ -154,15 +142,14 @@ function ClassroomPage() {
               setActiveSeatId(null);
               setOpenDoorIds(new Set());
             }}
-            className={"rounded-xl px-3 py-1.5 text-xs font-black transition " +
-              (currentRoom === room.id ? "bg-cyan-500 text-slate-950 shadow-md" : "text-slate-300 hover:bg-slate-800 hover:text-white")}
+            className={"rounded-xl px-3 py-1.5 text-xs font-black transition " + (currentRoom === room.id ? "bg-cyan-500 text-slate-950 shadow-md" : "text-slate-300 hover:bg-slate-800 hover:text-white")}
           >
             {room.label}
           </button>
         ))}
       </div>
 
-      <ClassHud activeInteraction={activeInteraction} activeSeatId={activeSeatId} />
+      <ClassHud room={currentRoom} activeInteraction={activeInteraction} activeSeatId={activeSeatId} />
       <div className="mobile-game-controls game-right z-40"><LookPad target={controls} /></div>
       <WorldLoading />
       <GameSettings />
