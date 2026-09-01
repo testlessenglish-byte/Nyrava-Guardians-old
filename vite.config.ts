@@ -8,9 +8,10 @@ import { sites } from "@openai/sites-vite-plugin";
 
 // No editor/devtools instrumentation is injected into the Three.js scene.
 export default defineConfig(({ command, mode }) => {
-  // Start's prerender preview reloads this config without forwarding --mode.
-  // TSS_PRERENDERING is set by Start in that build process only.
-  const mobile = mode === "mobile" || process.env["TSS_PRERENDERING"] === "true";
+  // Do not use TSS_PRERENDERING to decide that a production Sites build is a
+  // mobile SPA. TanStack Start sets it during its own build lifecycle, and that
+  // previously caused the config to switch output modes mid-build.
+  const mobile = mode === "mobile" || process.env["npm_lifecycle_event"] === "build:mobile";
   const vercel = process.env["VERCEL"] === "1";
 
   return {

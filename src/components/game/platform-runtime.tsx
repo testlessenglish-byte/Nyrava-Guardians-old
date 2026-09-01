@@ -8,6 +8,7 @@ import { audioEngine } from "@/services/audio/audio-engine";
 import { conversationalVoiceEngine } from "@/services/ai/conversational-voice-engine";
 import { resetIslaControls } from "@/lib/isla-store";
 import { controls } from "@/lib/class-store";
+import { isImmersiveGameRoute } from "@/lib/game-route";
 
 export function resetGameInput() {
   resetIslaControls();
@@ -20,7 +21,8 @@ export function resetGameInput() {
 export function PlatformRuntime() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const online = useNetworkAvailable();
-  const gameplay = path === "/isla" || path === "/classroom";
+  const gameplay = isImmersiveGameRoute(path);
+
   useEffect(() => {
     void hydrateNativeProgress().then(() => {
       initializeQuality();
@@ -45,6 +47,7 @@ export function PlatformRuntime() {
       blur();
     };
   }, []);
+
   useEffect(() => {
     document.body.classList.toggle("gameplay-active", gameplay);
     preferGameplayOrientation(gameplay);
@@ -64,6 +67,7 @@ export function PlatformRuntime() {
       audioEngine.pause();
     };
   }, [gameplay, path]);
+
   return !online ? (
     <div role="status" className="network-status">
       Offline · exploration remains available; cloud features need internet.
