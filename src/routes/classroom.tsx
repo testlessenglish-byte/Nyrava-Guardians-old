@@ -30,8 +30,8 @@ function ClassroomPage() {
   const quality = QUALITY[useQuality()];
   const active = useAppActive();
   const dragging = useRef(false);
-  const { guardianId, guardianName } = useGuardian();
-  const chosen = CLASS_GUARDIANS.find((g) => g.id === guardianId);
+  const { guardianId, guardianName, hydrated } = useGuardian();
+  const chosen = guardianId ? CLASS_GUARDIANS.find((g) => g.id === guardianId) : undefined;
   const playerColor = chosen?.color ?? "#f4f7ff";
   const playerLabel = `${guardianName || "You"}${chosen ? ` · ${chosen.name}` : ""}`;
   const inputManager = useMemo(() => new InputManager(), []);
@@ -69,8 +69,32 @@ function ClassroomPage() {
   const exitCourse = () => {
     inputManager.setEnabled(true);
     inputManager.reset();
+    inputManager.cameraYaw = 0;
+    inputManager.cameraPitch = 0.12;
     setCourseOpen(false);
   };
+
+  if (!hydrated) {
+    return (
+      <div className="fixed inset-0 grid place-items-center bg-slate-950 text-cyan-300">
+        <div className="rounded-2xl border border-cyan-400/30 bg-slate-900/80 px-6 py-4 text-sm font-black tracking-wide shadow-2xl">
+          Loading your Guardian…
+        </div>
+      </div>
+    );
+  }
+
+  if (!chosen) {
+    return (
+      <div className="fixed inset-0 grid place-items-center bg-slate-950 p-6 text-white">
+        <div className="max-w-md rounded-3xl border border-amber-400/30 bg-slate-900/90 p-6 text-center shadow-2xl">
+          <h1 className="text-xl font-black">Choose your Guardian first</h1>
+          <p className="mt-2 text-sm text-slate-300">Your classroom will not substitute a different avatar. Return to the world, select your Guardian, then enter class again.</p>
+          <button type="button" onClick={() => window.location.assign("/isla")} className="mt-5 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950">Return to Isla Central</button>
+        </div>
+      </div>
+    );
+  }
 
   if (courseOpen) {
     return <FullViewportCourseExperience missionId={selectedMissionId} onExit={exitCourse} onComplete={() => undefined} />;
@@ -97,12 +121,12 @@ function ClassroomPage() {
         onLostPointerCapture={() => (dragging.current = false)}
       >
         <GameErrorBoundary>
-          <Canvas frameloop={active ? "always" : "never"} shadows={quality.shadows} dpr={quality.dpr} camera={{ position: [0, 2.5, 4.5], fov: 58 }}>
+          <Canvas frameloop={active ? "always" : "never"} shadows={quality.shadows} dpr={quality.dpr} camera={{ position: [0, 3.1, 10.3], fov: 56 }}>
             <ClassroomScene
               room={currentRoom}
               playerColor={playerColor}
               playerLabel={playerLabel}
-              guardianId={chosen?.id ?? "lex"}
+              guardianId={chosen.id}
               inputManager={inputManager}
               onStartCourse={startCourse}
               activeSeatId={activeSeatId}
@@ -134,6 +158,8 @@ function ClassroomPage() {
               setActiveSeatId(null);
               setOpenDoorIds(new Set());
               inputManager.reset();
+              inputManager.cameraYaw = 0;
+              inputManager.cameraPitch = 0.12;
             }}
             className={"rounded-xl px-3 py-1.5 text-xs font-black transition " + (currentRoom === room.id ? "bg-cyan-500 text-slate-950 shadow-md" : "text-slate-300 hover:bg-slate-800 hover:text-white")}
           >
