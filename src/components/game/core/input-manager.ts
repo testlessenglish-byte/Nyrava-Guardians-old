@@ -15,7 +15,10 @@ const managers = new Set<InputManager>();
 
 export function setGameInputPaused(paused: boolean) {
   gameInputPaused = paused;
-  if (paused) managers.forEach((manager) => manager.reset());
+  if (paused) {
+    managers.forEach((manager) => manager.reset());
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("nyrava-input-reset"));
+  }
 }
 
 export function isGameInputPaused() {
