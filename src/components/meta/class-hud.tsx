@@ -7,16 +7,26 @@ import { FOUNDATION_CERTIFICATE, missions } from "@/domain/progression/catalog";
 import { levelFor } from "@/domain/progression/engine";
 import type { PlayerProgress } from "@/domain/progression/types";
 import { getProgression } from "@/lib/progression.functions";
+import type { ClassroomRoom } from "./classroom-scene";
 
 function selectedMissionId() {
   if (typeof window === "undefined") return missions[0]!.id;
   return window.sessionStorage.getItem("nyrava-selected-mission") ?? missions[0]!.id;
 }
 
+const ROOM_TEACHERS: Record<ClassroomRoom, string> = {
+  security: "sarah",
+  builder: "jacob",
+  communication: "dayana",
+  truth: "nova",
+};
+
 export function ClassHud({
+  room = "security",
   activeInteraction,
   activeSeatId,
 }: {
+  room?: ClassroomRoom;
   activeInteraction?: { type: string; label: { en: string; es: string }; action: () => void } | null;
   activeSeatId?: string | null;
 }) {
@@ -27,7 +37,7 @@ export function ClassHud({
   const es = locale.startsWith("es");
   const learnerName = guardianName || "Guardian";
   const currentGuardian = CLASS_GUARDIANS.find((g) => g.id === guardianId) ?? CLASS_GUARDIANS[0]!;
-  const teacher = CLASS_GUARDIANS.find((g) => g.id === "sarah") ?? CLASS_GUARDIANS[0]!;
+  const teacher = CLASS_GUARDIANS.find((g) => g.id === ROOM_TEACHERS[room]) ?? CLASS_GUARDIANS[0]!;
   const activeLesson = missions.find((mission) => mission.id === selectedMissionId()) ?? missions[0]!;
   const missionData = progress?.missions[activeLesson.id];
   const isLessonDone = Boolean(missionData?.completedAt);
@@ -52,7 +62,7 @@ export function ClassHud({
       <div className="pointer-events-auto absolute left-5 top-5 w-80 space-y-3">
         <div className="rounded-2xl border border-slate-700/60 bg-slate-950/90 px-4 py-2.5 shadow-2xl backdrop-blur-md">
           <h1 className="text-base font-black uppercase tracking-wider text-white">{es ? "AULA DE LA ACADEMIA" : "ACADEMY CLASSROOM"}</h1>
-          <p className="text-[10px] font-bold tracking-[0.2em] text-slate-400">NYRAVA GUARDIANS ACADEMY</p>
+          <p className="text-[10px] font-bold tracking-[0.2em] text-slate-400">{teacher.name} · {teacher.role}</p>
         </div>
 
         <div className="rounded-3xl border border-slate-700/70 bg-slate-950/95 p-4 text-white shadow-2xl backdrop-blur-xl">
@@ -73,18 +83,12 @@ export function ClassHud({
 
       <div className="pointer-events-auto absolute right-5 top-5 flex items-center gap-3 rounded-2xl border border-slate-700/60 bg-slate-950/90 p-2 pr-4 shadow-2xl backdrop-blur-md">
         <div className="grid size-11 place-items-center rounded-xl font-black text-slate-950 shadow-md text-base" style={{ background: currentGuardian.color }}>{learnerName.charAt(0).toUpperCase()}</div>
-        <div>
-          <span className="text-sm font-black text-white">{learnerName}</span>
-          <p className="text-[11px] font-bold text-cyan-300">{es ? "Guardián" : "Guardian"} · {progress ? `Level ${levelFor(progress.xp)}` : "…"}</p>
-          <p className="text-[10px] font-black text-amber-400">★ {progress?.xp ?? 0} XP</p>
-        </div>
+        <div><span className="text-sm font-black text-white">{learnerName}</span><p className="text-[11px] font-bold text-cyan-300">{es ? "Guardián" : "Guardian"} · {progress ? `Level ${levelFor(progress.xp)}` : "…"}</p><p className="text-[10px] font-black text-amber-400">★ {progress?.xp ?? 0} XP</p></div>
       </div>
 
       {activeInteraction && (
         <div className="pointer-events-auto absolute left-1/2 bottom-28 z-30 -translate-x-1/2">
-          <button type="button" onClick={activeInteraction.action} className="rounded-full border border-cyan-400/60 bg-slate-950/95 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-cyan-200 shadow-2xl backdrop-blur-xl hover:bg-cyan-950">
-            {es ? activeInteraction.label.es : activeInteraction.label.en}
-          </button>
+          <button type="button" onClick={activeInteraction.action} className="rounded-full border border-cyan-400/60 bg-slate-950/95 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-cyan-200 shadow-2xl backdrop-blur-xl hover:bg-cyan-950">{es ? activeInteraction.label.es : activeInteraction.label.en}</button>
         </div>
       )}
 
@@ -99,7 +103,7 @@ export function ClassHud({
       )}
 
       <div className="pointer-events-auto absolute bottom-6 right-6 flex w-[min(92vw,24rem)] flex-col gap-3 rounded-3xl border border-slate-700/60 bg-slate-950/95 p-4 shadow-2xl backdrop-blur-xl">
-        <div className="flex items-center gap-3"><div className="grid size-9 place-items-center rounded-xl text-sm font-black text-slate-950" style={{ background: teacher.color }}>{teacher.name.charAt(0)}</div><div><span className="block text-xs font-extrabold text-white">{teacher.name}</span><span className="block text-[10px] font-bold text-cyan-300">{es ? "Guía Guardiana" : "Guardian Guide"}</span></div></div>
+        <div className="flex items-center gap-3"><div className="grid size-9 place-items-center rounded-xl text-sm font-black text-slate-950" style={{ background: teacher.color }}>{teacher.name.charAt(0)}</div><div><span className="block text-xs font-extrabold text-white">{teacher.name}</span><span className="block text-[10px] font-bold text-cyan-300">{es ? "Guía Guardián" : "Guardian Guide"}</span></div></div>
         <div className="max-h-40 space-y-2 overflow-y-auto pr-1 text-xs">
           {messages.length === 0 && <p className="rounded-2xl bg-slate-900/90 p-3 text-slate-200 leading-relaxed border border-slate-800">{es ? "Acércate a la pantalla de clase y presiona E cuando estés listo." : "Walk to the class screen and press E when you are ready."}</p>}
           {messages.map((message) => <p key={message.id} className={message.from === "you" ? "text-right text-cyan-300 font-semibold" : "text-slate-300"}><span className="font-bold text-white">{message.name}: </span>{message.text}</p>)}
