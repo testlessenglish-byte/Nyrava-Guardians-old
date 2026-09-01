@@ -99,7 +99,7 @@ function ClassroomPage() {
             frameloop={active ? "always" : "never"}
             shadows={quality.shadows}
             dpr={quality.dpr}
-            camera={{ position: [0, 5, 13], fov: 58 }}
+            camera={{ position: [0, 2.5, 4.5], fov: 58 }}
           >
             <ClassroomScene
               playerColor={playerColor}

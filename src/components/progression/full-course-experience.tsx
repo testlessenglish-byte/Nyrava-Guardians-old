@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, ArrowRight, Award, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { missions } from "@/domain/progression/catalog";
@@ -15,6 +15,13 @@ export function FullViewportCourseExperience({
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+    }
+  }, [stepIndex]);
 
   const lessonSteps = activeMission.lesson;
   const questions = activeMission.questions;
@@ -82,7 +89,7 @@ export function FullViewportCourseExperience({
       </div>
 
       {/* CENTER CONTENT */}
-      <div className="flex-1 overflow-y-auto p-8 flex flex-col items-center justify-center">
+      <div ref={containerRef} className="flex-1 overflow-y-auto p-6 md:p-8 flex flex-col items-center justify-start">
         <div className="w-full max-w-3xl rounded-3xl border border-slate-800 bg-slate-950/90 p-8 shadow-2xl backdrop-blur-xl">
           {stepIndex === 0 && (
             <div className="space-y-6 text-center">

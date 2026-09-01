@@ -124,7 +124,11 @@ export function ClassroomScene({
         player.position,
         cameraYaw,
         cameraPitch,
-        delta
+        delta,
+        4.5,
+        1.5,
+        [],
+        { minX: -11.0, maxX: 11.0, minY: 0.8, maxY: 4.4, minZ: -8.0, maxZ: 8.0 }
       );
     }
 
