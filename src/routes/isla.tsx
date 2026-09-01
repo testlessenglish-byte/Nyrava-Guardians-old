@@ -62,7 +62,7 @@ function IslaCentral() {
         islaControls.keys.add(key);
       }
       if (raw === "shift") islaControls.sprint = true;
-      if (raw === "e") islaControls.interact = true;
+      if (raw === "e" && !event.repeat) islaControls.interact = true;
       if (event.code === "Space") {
         event.preventDefault();
         islaControls.jump = true;
