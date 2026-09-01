@@ -10,6 +10,8 @@ const tempCameraRight = new THREE.Vector3();
 const tempDesiredDirection = new THREE.Vector3();
 const tempUp = new THREE.Vector3(0, 1, 0);
 
+export type PlayerState = "walking" | "seated" | "course" | "interacting";
+
 export type MovementInput = {
   forward: boolean;
   backward: boolean;
@@ -29,6 +31,7 @@ export class PlayerController {
   velocity = new THREE.Vector3();
   rotationY = 0;
   isMoving = false;
+  playerState: PlayerState = "walking";
 
   update(
     playerPosition: THREE.Vector3,
@@ -38,6 +41,12 @@ export class PlayerController {
     bounds: { minX: number; maxX: number; minZ: number; maxZ: number },
     checkCollision?: (nextPos: THREE.Vector3) => boolean
   ) {
+    if (this.playerState !== "walking") {
+      this.velocity.set(0, 0, 0);
+      this.isMoving = false;
+      return;
+    }
+
     camera.getWorldDirection(tempCameraForward);
     tempCameraForward.y = 0;
     if (tempCameraForward.lengthSq() > 0.0001) {

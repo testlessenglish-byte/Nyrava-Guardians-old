@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Canvas } from "@react-three/fiber";
-import { useRef } from "react";
-import { useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ClassroomScene } from "@/components/meta/classroom-scene";
 import { AcademyClassroomSet } from "@/components/meta/academy-classroom-set";
 import { ClassHud } from "@/components/meta/class-hud";
@@ -13,27 +12,10 @@ import { LookPad } from "@/components/game/touch-controls";
 import { QUALITY, useQuality } from "@/services/game/quality";
 import { useAppActive } from "@/services/platform/lifecycle";
 import { isTypingTarget } from "@/services/game/input";
-import { GuardianJourney } from "@/components/progression/guardian-journey";
+import { FullViewportCourseExperience } from "@/components/progression/full-course-experience";
 
 export const Route = createFileRoute("/classroom")({
   ssr: false,
-  head: () => ({
-    meta: [
-      { title: "Live 3D Class | Nyrava Guardians Metaverse Academy" },
-      {
-        name: "description",
-        content:
-          "Enter the Nyrava Guardians 3D academy, complete guided digital-safety classes, pass assessments, and earn Guardian certificates.",
-      },
-      { property: "og:title", content: "Live 3D Class | Nyrava Guardians" },
-      {
-        property: "og:description",
-        content: "Learn, test your skills, and earn Guardian achievements inside the Nyrava Academy classroom.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
   component: ClassroomPage,
 });
 
@@ -46,9 +28,19 @@ function ClassroomPage() {
   const playerColor = chosen?.color ?? "#f4f7ff";
   const playerLabel = `${guardianName || "You"}${chosen ? ` · ${chosen.name}` : ""}`;
 
+  const [mode, setMode] = useState<"classroom" | "course">("classroom");
+  const [activeSeatId, setActiveSeatId] = useState<string | null>(null);
+  const [openDoorIds, setOpenDoorIds] = useState<Set<string>>(new Set());
+  const [activeInteraction, setActiveInteraction] = useState<{
+    type: string;
+    label: { en: string; es: string };
+    action: () => void;
+  } | null>(null);
+
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target)) return;
+      if (mode === "course") return; // Disable movement in course mode
       if (e.key.startsWith("Arrow")) e.preventDefault();
       const key = e.key.toLowerCase();
       if (["w", "a", "s", "d"].includes(key)) controls.keys.add(key);
@@ -75,17 +67,17 @@ function ClassroomPage() {
       window.removeEventListener("blur", blur);
       controls.keys.clear();
     };
-  }, []);
+  }, [mode]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.sessionStorage.getItem("nyrava-open-journey-on-load") !== "1") return;
-    window.sessionStorage.removeItem("nyrava-open-journey-on-load");
-    const timer = window.setTimeout(() => {
-      window.dispatchEvent(new Event("nyrava-open-journey"));
-    }, 450);
-    return () => window.clearTimeout(timer);
-  }, []);
+  // DEDICATED FULL-SCREEN OPAQUE COURSE MODE
+  if (mode === "course") {
+    return (
+      <FullViewportCourseExperience
+        onExit={() => setMode("classroom")}
+        onComplete={() => setMode("classroom")}
+      />
+    );
+  }
 
   return (
     <div className="game-viewport classroom-viewport fixed inset-0 bg-background">
@@ -97,7 +89,7 @@ function ClassroomPage() {
           e.currentTarget.setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
-          if (dragging.current) {
+          if (dragging.current && mode === "classroom") {
             controls.cameraYaw -= e.movementX * 0.005;
             controls.cameraPitch += e.movementY * 0.003;
           }
@@ -117,30 +109,29 @@ function ClassroomPage() {
               playerColor={playerColor}
               playerLabel={playerLabel}
               guardianId={chosen?.id ?? "lex"}
+              onStartCourse={() => setMode("course")}
+              activeSeatId={activeSeatId}
+              setActiveSeatId={setActiveSeatId}
+              openDoorIds={openDoorIds}
+              setOpenDoorIds={setOpenDoorIds}
+              setActiveInteraction={setActiveInteraction}
             />
-            <AcademyClassroomSet />
+            <AcademyClassroomSet
+              activeSeatId={activeSeatId}
+              openDoorIds={openDoorIds}
+            />
           </Canvas>
         </GameErrorBoundary>
       </div>
-      <ClassHud />
-      <div className="pointer-events-auto absolute left-1/2 top-5 z-40 -translate-x-1/2 rounded-2xl border border-cyan-300/35 bg-slate-950/85 px-3 py-2 shadow-2xl backdrop-blur-md sm:px-4">
-        <button
-          type="button"
-          onClick={() => window.dispatchEvent(new Event("nyrava-open-journey"))}
-          className="flex items-center gap-3 text-left"
-        >
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-cyan-300 to-violet-500 text-sm font-black text-slate-950">N</span>
-          <span>
-            <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">Digital Safety Class</span>
-            <span className="block text-xs font-black text-white sm:text-sm">Lessons · Tests · Certificates</span>
-          </span>
-          <span className="rounded-full bg-cyan-300 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-950">Open Class</span>
-        </button>
-      </div>
+
+      <ClassHud
+        activeInteraction={activeInteraction}
+        activeSeatId={activeSeatId}
+      />
+
       <div className="mobile-game-controls game-right z-40">
         <LookPad target={controls} />
       </div>
-      <GuardianJourney />
       <WorldLoading />
       <GameSettings />
     </div>
