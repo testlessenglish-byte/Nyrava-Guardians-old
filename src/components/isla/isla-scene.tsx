@@ -1465,6 +1465,56 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
 import { type GameInputState } from "@/components/game/core/input-manager";
 import { type PlayerMode } from "@/components/game/core/player-state-machine";
 
+function CentralGuardianPlaza() {
+  return (
+    <group position={[0, 0, 0]}>
+      {/* CENTRAL GUARDIAN EMBLEM RUG */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.08, 0]}>
+        <ringGeometry args={[4.5, 5.2, 64]} />
+        <meshStandardMaterial color="#fbbf24" emissive="#f59e0b" emissiveIntensity={1.2} />
+      </mesh>
+
+      {/* WAYFINDER SIGNPOST */}
+      <group position={[0, 0, -4]}>
+        <mesh position={[0, 2.5, 0]}>
+          <cylinderGeometry args={[0.12, 0.15, 5, 16]} />
+          <meshStandardMaterial color="#334155" roughness={0.3} metalness={0.8} />
+        </mesh>
+        <Html position={[0, 4.2, 0]} transform distanceFactor={14} occlude={false}>
+          <div className="w-64 rounded-2xl border border-cyan-400/40 bg-slate-950/90 p-3 text-center text-white shadow-2xl backdrop-blur-md">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400">ISLA CENTRAL WAYFINDER</p>
+            <div className="mt-2 space-y-1 text-[11px] font-extrabold">
+              <p className="text-amber-300">← Academy District</p>
+              <p className="text-cyan-300">→ Mission Hub</p>
+              <p className="text-emerald-300">↑ Digital City</p>
+              <p className="text-purple-300">↙ Builder District</p>
+              <p className="text-pink-300">↘ Home HQ Route</p>
+            </div>
+          </div>
+        </Html>
+      </group>
+
+      {/* EVENT & MISSION BOARD */}
+      <group position={[6, 0, -2]} rotation-y={-Math.PI / 6}>
+        <mesh position={[0, 2.0, 0]}>
+          <boxGeometry args={[3.6, 2.2, 0.15]} />
+          <meshStandardMaterial color="#0f172a" roughness={0.4} />
+        </mesh>
+        <Html position={[0, 2.0, 0.1]} transform distanceFactor={14} occlude={false}>
+          <div className="w-[280px] select-none rounded-xl border border-amber-500/40 bg-slate-950/90 p-3 text-white backdrop-blur">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+              <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">WORLD EVENT</span>
+              <span className="rounded-full bg-amber-950 px-2 py-0.5 text-[8px] font-extrabold text-amber-300">ACTIVE</span>
+            </div>
+            <p className="mt-2 text-xs font-black text-white">Safer Internet Week</p>
+            <p className="mt-1 text-[10px] font-medium text-slate-300">Suspicious phishing messages reported in Digital City. Talk to Sarah at Mission Hub!</p>
+          </div>
+        </Html>
+      </group>
+    </group>
+  );
+}
+
 export function IslaScene({
   playerColor,
   playerName,
@@ -1511,6 +1561,7 @@ export function IslaScene({
       <Ocean />
       <Sky />
       <GroundCover />
+      <CentralGuardianPlaza />
       <CentralCity />
       <Forest />
       <Mountains />
