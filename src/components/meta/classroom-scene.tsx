@@ -17,7 +17,8 @@ import { TRUTH_SEATS, TRUTH_DOORS } from "./truth-lab-set";
 
 export type ClassroomRoom = "security" | "builder" | "communication" | "truth";
 
-const CAMERA_BOUNDS = { minX: -13.25, maxX: 13.25, minY: 0.8, maxY: 4.6, minZ: -10.0, maxZ: 10.7 };
+const PLAYER_SPAWN: [number, number, number] = [0, 0, 5.6];
+const CAMERA_BOUNDS = { minX: -12.3, maxX: 12.3, minY: 1.0, maxY: 4.4, minZ: -9.1, maxZ: 10.45 };
 const EMPTY_OPEN_DOORS = new Set<string>();
 
 function Loader() {
@@ -39,9 +40,9 @@ function TeacherNpc({ guardian, position, rotation = 0.3 }: { guardian: ClassGua
         <ringGeometry args={[0.9, 1.15, 48]} />
         <meshStandardMaterial color={guardian.color} emissive={guardian.color} emissiveIntensity={1.2} transparent opacity={0.85} />
       </mesh>
-      <Html position={[0, 2.5, 0]} center distanceFactor={14} occlude={false}>
+      <Html position={[0, 2.35, 0]} center distanceFactor={9} occlude={false}>
         <div className="pointer-events-none select-none text-center">
-          <span className="rounded-full px-3 py-1 text-xs font-black uppercase tracking-widest shadow-lg" style={{ color: guardian.color, background: "rgba(2,6,23,0.85)", border: `1px solid ${guardian.color}40` }}>
+          <span className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider shadow-lg" style={{ color: guardian.color, background: "rgba(2,6,23,0.88)", border: `1px solid ${guardian.color}40` }}>
             {guardian.name} · {guardian.role}
           </span>
         </div>
@@ -91,12 +92,14 @@ export function ClassroomScene({
 
   useEffect(() => {
     if (group.current) {
-      group.current.position.set(0, 0, 0);
-      group.current.rotation.y = 0;
+      group.current.position.set(...PLAYER_SPAWN);
+      group.current.rotation.y = Math.PI;
     }
     playerController.velocity.set(0, 0, 0);
-    playerController.rotationY = 0;
+    playerController.rotationY = Math.PI;
     inputManager.reset();
+    inputManager.cameraYaw = 0;
+    inputManager.cameraPitch = 0.12;
     lastInteractionKey.current = null;
     setActiveInteraction?.(null);
   }, [room, inputManager, setActiveInteraction]);
@@ -134,8 +137,8 @@ export function ClassroomScene({
         inputManager.cameraYaw,
         inputManager.cameraPitch,
         delta,
-        4.8,
-        1.55,
+        5.7,
+        1.35,
         [],
         CAMERA_BOUNDS,
       );
@@ -163,10 +166,10 @@ export function ClassroomScene({
     targets.push({
       id: `board-${room}`,
       type: "lesson",
-      position: [0, 0, -6.5],
-      range: 3.2,
+      position: [0, 0, -6.8],
+      range: 3.0,
       priority: 80,
-      label: { en: "Press E to View Class", es: "Presiona E para ver la clase" },
+      label: { en: "Press E to Start Class", es: "Presiona E para iniciar la clase" },
       action: () => onStartCourse?.(),
     });
 
@@ -235,18 +238,18 @@ export function ClassroomScene({
   return (
     <>
       <color attach="background" args={["#0f172a"]} />
-      <fog attach="fog" args={["#0f172a", 20, 50]} />
+      <fog attach="fog" args={["#0f172a", 22, 52]} />
       <Suspense fallback={<Loader />}>
-        <TeacherNpc guardian={teacher} position={[-4.5, 0.4, -8.2]} rotation={0.3} />
-        <group ref={group} position={[0, 0, 0]}>
-          <Character color={playerColor} clip={moving ? "walk" : "idle"} guardianId={guardianId} />
+        <TeacherNpc guardian={teacher} position={[-4.6, 0.25, -7.0]} rotation={0.15} />
+        <group ref={group} position={PLAYER_SPAWN} rotation-y={Math.PI}>
+          <Character color={playerColor} clip={moving ? "walk" : "idle"} guardianId={guardianId} height={1.7} />
           <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
             <ringGeometry args={[0.55, 0.72, 40]} />
             <meshStandardMaterial color={playerColor} emissive={playerColor} emissiveIntensity={1.5} transparent opacity={0.85} />
           </mesh>
           <pointLight position={[0, 1.7, 0]} color={playerColor} intensity={4} distance={5} />
-          <Html position={[0, 2.35, 0]} center distanceFactor={14}>
-            <span className="pointer-events-none select-none rounded-full border border-cyan-400/30 bg-slate-950/80 px-3 py-1 text-xs font-black uppercase tracking-widest text-cyan-300 backdrop-blur">{playerLabel}</span>
+          <Html position={[0, 2.25, 0]} center distanceFactor={9}>
+            <span className="pointer-events-none select-none rounded-full border border-cyan-400/30 bg-slate-950/85 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-cyan-300 backdrop-blur">{playerLabel}</span>
           </Html>
         </group>
       </Suspense>
