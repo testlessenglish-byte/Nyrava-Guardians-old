@@ -151,56 +151,69 @@ export function ClassHud() {
 
   return (
     <div className="class-hud pointer-events-none fixed inset-0 z-20 font-sans">
+      {/* TOP LEFT: TITLE CARD + TODAY'S LESSON CARD (Pixel-Matched to Concept Image) */}
       <div className="pointer-events-auto absolute left-5 top-5 w-80 space-y-3">
-        <div className="rounded-2xl border border-cyan-400/30 bg-slate-950/85 px-4 py-2.5 shadow-2xl backdrop-blur-md">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-300">
-            Academy Classroom
-          </p>
-          <p className="text-[11px] font-bold tracking-wider text-slate-400">
-            Nyrava Guardians Academy
+        <div className="rounded-2xl border border-slate-700/60 bg-slate-950/90 px-4 py-2.5 shadow-2xl backdrop-blur-md">
+          <h1 className="text-base font-black uppercase tracking-wider text-white">
+            ACADEMY CLASSROOM
+          </h1>
+          <p className="text-[10px] font-bold tracking-[0.2em] text-slate-400">
+            NYRAVA GUARDIANS ACADEMY
           </p>
         </div>
 
-        <div className="rounded-3xl border border-slate-700/60 bg-slate-950/90 p-4 text-white shadow-2xl backdrop-blur-xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-400">
-            Today's Lesson
+        <div className="rounded-3xl border border-slate-700/70 bg-slate-950/95 p-4 text-white shadow-2xl backdrop-blur-xl">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+            TODAY'S LESSON
           </p>
-          <h3 className="mt-1 text-lg font-black tracking-tight text-white">
+          <h3 className="mt-0.5 text-lg font-black tracking-tight text-white">
             {activeLesson.title.en}
           </h3>
 
           <ul className="mt-3 space-y-2 text-xs font-semibold text-slate-300">
-            <li className="flex items-center gap-2">
+            <li className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-cyan-400" />
+                Watch the lesson
+              </span>
               {isLessonDone ? (
                 <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
               ) : (
                 <Circle className="size-4 shrink-0 text-slate-500" />
               )}
-              <span className={isLessonDone ? "text-slate-100" : ""}>Watch the lesson</span>
             </li>
-            <li className="flex items-center gap-2">
+            <li className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-cyan-400" />
+                Complete the quiz
+              </span>
               {isQuizDone ? (
                 <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
               ) : (
                 <Circle className="size-4 shrink-0 text-slate-500" />
               )}
-              <span className={isQuizDone ? "text-slate-100" : ""}>Complete the quiz</span>
             </li>
-            <li className="flex items-center gap-2">
+            <li className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-cyan-400" />
+                Earn 75% or higher
+              </span>
               {isPassed ? (
                 <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
               ) : (
                 <Circle className="size-4 shrink-0 text-slate-500" />
               )}
-              <span className={isPassed ? "text-slate-100" : ""}>Earn 75% or higher</span>
             </li>
-            <li className="flex items-center gap-2">
+            <li className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-cyan-400" />
+                Earn your certificate
+              </span>
               {isCertEarned ? (
                 <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
               ) : (
                 <Circle className="size-4 shrink-0 text-slate-500" />
               )}
-              <span className={isCertEarned ? "text-slate-100" : ""}>Earn your certificate</span>
             </li>
           </ul>
 
@@ -209,9 +222,9 @@ export function ClassHud() {
               <span className="flex items-center gap-1 text-amber-400">★ Your Progress</span>
               <span className="text-cyan-300">{completedStepsCount} / 4</span>
             </div>
-            <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-800">
+            <div className="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-slate-800 p-0.5">
               <div
-                className="h-full bg-gradient-to-r from-cyan-400 to-amber-400 transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-amber-400 transition-all duration-500"
                 style={{ width: (completedStepsCount ? Math.max(10, (completedStepsCount / 4) * 100) : 0) + "%" }}
               />
             </div>
@@ -219,9 +232,10 @@ export function ClassHud() {
         </div>
       </div>
 
-      <div className="pointer-events-auto absolute right-5 top-5 flex items-center gap-3 rounded-2xl border border-cyan-400/30 bg-slate-950/85 p-2.5 pr-4 shadow-2xl backdrop-blur-md">
+      {/* TOP RIGHT: AVATAR CARD (Matching Concept Image) */}
+      <div className="pointer-events-auto absolute right-5 top-5 flex items-center gap-3 rounded-2xl border border-slate-700/60 bg-slate-950/90 p-2 pr-4 shadow-2xl backdrop-blur-md">
         <div
-          className="grid size-10 place-items-center rounded-xl font-black text-slate-950 shadow-md"
+          className="grid size-11 place-items-center rounded-xl font-black text-slate-950 shadow-md text-base"
           style={{ background: currentGuardian.color }}
         >
           {learnerName.charAt(0).toUpperCase()}
@@ -229,53 +243,61 @@ export function ClassHud() {
         <div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-black text-white">{learnerName}</span>
-            <span className="text-xs font-black text-amber-400">★ {progress.xp}</span>
           </div>
           <p className="text-[11px] font-bold text-cyan-300">Level 2 Guardian</p>
+          <p className="text-[10px] font-black text-amber-400">★ 125</p>
         </div>
       </div>
 
+      {/* BOTTOM LEFT: CONTROL OVERLAY CARD (Matching Concept Image) */}
       {!hasMoved && (
-        <div className="pointer-events-auto absolute bottom-6 left-6 rounded-2xl border border-slate-700/60 bg-slate-950/90 p-3 shadow-2xl backdrop-blur-md transition-opacity duration-700">
-          <div className="flex items-center gap-4 text-center">
+        <div className="pointer-events-auto absolute bottom-6 left-6 rounded-2xl border border-slate-700/60 bg-slate-950/90 p-4 shadow-2xl backdrop-blur-md transition-opacity duration-700">
+          <div className="flex items-center gap-5 text-center">
             <div>
               <div className="grid grid-cols-3 gap-1 font-mono text-xs font-bold text-white">
                 <div />
-                <span className="rounded bg-slate-800 p-1.5 border border-slate-700">W</span>
+                <span className="rounded-md bg-slate-800 px-2 py-1 border border-slate-700">W</span>
                 <div />
-                <span className="rounded bg-slate-800 p-1.5 border border-slate-700">A</span>
-                <span className="rounded bg-slate-800 p-1.5 border border-slate-700">S</span>
-                <span className="rounded bg-slate-800 p-1.5 border border-slate-700">D</span>
+                <span className="rounded-md bg-slate-800 px-2 py-1 border border-slate-700">A</span>
+                <span className="rounded-md bg-slate-800 px-2 py-1 border border-slate-700">S</span>
+                <span className="rounded-md bg-slate-800 px-2 py-1 border border-slate-700">D</span>
               </div>
-              <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Move</p>
+              <p className="mt-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Move</p>
             </div>
-            <div className="h-10 w-px bg-slate-800" />
+            <div className="h-12 w-px bg-slate-800" />
             <div>
-              <div className="grid h-10 w-8 place-items-center rounded border border-slate-700 bg-slate-800 text-xs text-white">
+              <div className="grid h-12 w-9 place-items-center rounded-md border border-slate-700 bg-slate-800 text-sm text-white">
                 🖱️
               </div>
-              <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Look</p>
+              <p className="mt-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Look</p>
             </div>
           </div>
         </div>
       )}
 
+      {/* Mobile Joystick */}
       <div className="absolute bottom-6 left-6 block md:hidden">
         <Joystick />
       </div>
 
-      <div className="pointer-events-auto absolute bottom-6 right-6 flex w-[min(92vw,24rem)] flex-col gap-3 rounded-3xl border border-cyan-500/30 bg-slate-950/90 p-4 shadow-2xl backdrop-blur-xl">
+      {/* BOTTOM RIGHT: SARAH GUARDIAN CHAT CARD (Matching Concept Image) */}
+      <div className="pointer-events-auto absolute bottom-6 right-6 flex w-[min(92vw,24rem)] flex-col gap-3 rounded-3xl border border-slate-700/60 bg-slate-950/95 p-4 shadow-2xl backdrop-blur-xl">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <div
-              className="grid size-7 place-items-center rounded-lg text-xs font-black text-slate-950"
+              className="grid size-9 place-items-center rounded-xl text-sm font-black text-slate-950 shadow-md"
               style={{ background: sarah.color }}
             >
               {sarah.name.charAt(0)}
             </div>
-            <span className="text-xs font-extrabold text-white">
-              {sarah.name} · {sarah.role}
-            </span>
+            <div>
+              <span className="block text-xs font-extrabold text-white">
+                {sarah.name}
+              </span>
+              <span className="block text-[10px] font-bold text-cyan-300">
+                Guardian AI Teacher
+              </span>
+            </div>
           </div>
           <Button
             size="icon"
@@ -294,7 +316,7 @@ export function ClassHud() {
 
         <div ref={scroller} className="max-h-40 space-y-2 overflow-y-auto pr-1 text-xs">
           {messages.length === 0 && (
-            <p className="rounded-xl bg-slate-900/80 p-2.5 text-slate-300 leading-relaxed border border-slate-800">
+            <p className="rounded-2xl bg-slate-900/90 p-3 text-slate-200 leading-relaxed border border-slate-800">
               Welcome, Guardian! Let's learn how to spot phishing and protect yourself online.
             </p>
           )}
