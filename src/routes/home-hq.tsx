@@ -8,8 +8,8 @@ import { useGuardian } from "@/lib/guardian-context";
 import { GameErrorBoundary, GameSettings, WorldLoading } from "@/components/game/game-feedback";
 import { QUALITY, useQuality } from "@/services/game/quality";
 import { useAppActive } from "@/services/platform/lifecycle";
-import { InputManager, type GameInputState } from "@/components/game/core/input-manager";
-import { type PlayerMode } from "@/components/game/core/player-state-machine";
+import { InputManager } from "@/components/game/core/input-manager";
+import { AnalogJoystick, LookPad } from "@/components/game/touch-controls";
 import { Button } from "@/components/ui/button";
 import { PauseMenu } from "@/components/game/pause-menu";
 import { getProgression } from "@/lib/progression.functions";
@@ -28,10 +28,6 @@ function HomeHqPage() {
   const playerColor = chosen?.color ?? "#f4f7ff";
   const playerLabel = `${guardianName || "You"}${chosen ? ` · ${chosen.name}` : ""}`;
   const inputManager = useMemo(() => new InputManager(), []);
-  const [inputState, setInputState] = useState<GameInputState>(() => inputManager.getSnapshot());
-  const [mode, setMode] = useState<PlayerMode>("idle");
-  const [cameraYaw, setCameraYaw] = useState(0);
-  const [cameraPitch, setCameraPitch] = useState(0.15);
   const [progress, setProgress] = useState<PlayerProgress | null>(null);
 
   useEffect(() => {
@@ -39,19 +35,13 @@ function HomeHqPage() {
   }, []);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => inputManager.onKeyDown(e);
-    const up = (e: KeyboardEvent) => inputManager.onKeyUp(e);
+    const down = (event: KeyboardEvent) => inputManager.onKeyDown(event);
+    const up = (event: KeyboardEvent) => inputManager.onKeyUp(event);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    const interval = window.setInterval(() => {
-      const snap = inputManager.getSnapshot();
-      setInputState(snap);
-      setMode(snap.moveX !== 0 || snap.moveY !== 0 ? (snap.run ? "running" : "walking") : "idle");
-    }, 32);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
-      window.clearInterval(interval);
       inputManager.dispose();
     };
   }, [inputManager]);
@@ -67,10 +57,36 @@ function HomeHqPage() {
 
   return (
     <div className="game-viewport hq-viewport fixed inset-0 bg-background font-sans text-slate-100">
-      <div className="absolute inset-0 touch-none" onPointerDown={(e) => { if (e.pointerType === "mouse") { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); } }} onPointerMove={(e) => { if (dragging.current) { setCameraYaw((prev) => prev - e.movementX * 0.005); setCameraPitch((prev) => Math.min(0.85, Math.max(-0.15, prev + e.movementY * 0.003))); } }} onPointerUp={() => (dragging.current = false)} onPointerCancel={() => (dragging.current = false)} onLostPointerCapture={() => (dragging.current = false)}>
+      <div
+        className="absolute inset-0 touch-none"
+        onPointerDown={(event) => {
+          if (event.pointerType !== "mouse" || !(event.target instanceof HTMLCanvasElement)) return;
+          dragging.current = true;
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={(event) => {
+          if (dragging.current) inputManager.setCameraLook(event.movementX, event.movementY);
+        }}
+        onPointerUp={() => (dragging.current = false)}
+        onPointerCancel={() => {
+          dragging.current = false;
+          inputManager.reset();
+        }}
+        onLostPointerCapture={() => (dragging.current = false)}
+      >
         <GameErrorBoundary>
           <Canvas frameloop={active ? "always" : "never"} shadows={quality.shadows} dpr={quality.dpr} camera={{ position: [0, 2.5, 4.5], fov: 58 }}>
-            <HomeHqScene playerColor={playerColor} playerLabel={playerLabel} guardianId={chosen?.id ?? "lex"} inputState={inputState} playerMode={mode} cameraYaw={cameraYaw} cameraPitch={cameraPitch} level={level} xp={xp} trophyCount={trophyCount} certificateCount={certificateCount} itemCount={itemCount} />
+            <HomeHqScene
+              playerColor={playerColor}
+              playerLabel={playerLabel}
+              guardianId={chosen?.id ?? "lex"}
+              inputManager={inputManager}
+              level={level}
+              xp={xp}
+              trophyCount={trophyCount}
+              certificateCount={certificateCount}
+              itemCount={itemCount}
+            />
           </Canvas>
         </GameErrorBoundary>
       </div>
@@ -90,6 +106,10 @@ function HomeHqPage() {
         </div>
       </div>
 
+      <div className="mobile-game-controls pointer-events-none fixed inset-0 z-40">
+        <div className="game-left pointer-events-auto"><AnalogJoystick target={inputManager.joystick} /></div>
+        <div className="game-right pointer-events-auto"><LookPad target={inputManager} /></div>
+      </div>
       <WorldLoading />
       <GameSettings />
       <PauseMenu />
