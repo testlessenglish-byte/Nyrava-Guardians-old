@@ -11,6 +11,8 @@ export default defineConfig(({ command, mode }) => {
   // Start's prerender preview reloads this config without forwarding --mode.
   // TSS_PRERENDERING is set by Start in that build process only.
   const mobile = mode === "mobile" || process.env["TSS_PRERENDERING"] === "true";
+  const vercel = process.env["VERCEL"] === "1";
+
   return {
     plugins: [
       tsconfigPaths(),
@@ -21,16 +23,18 @@ export default defineConfig(({ command, mode }) => {
       }),
       ...(command === "build" && !mobile
         ? [
-            nitro({
-              preset: "cloudflare-module",
-              output: { dir: "dist", serverDir: "dist/server", publicDir: "dist/client" },
-              rollupConfig: { output: { entryFileNames: "index.js" } },
-              cloudflare: { nodeCompat: true },
-            }),
+            vercel
+              ? nitro()
+              : nitro({
+                  preset: "cloudflare-module",
+                  output: { dir: "dist", serverDir: "dist/server", publicDir: "dist/client" },
+                  rollupConfig: { output: { entryFileNames: "index.js" } },
+                  cloudflare: { nodeCompat: true },
+                }),
           ]
         : []),
       react(),
-      ...(mobile ? [] : [sites()]),
+      ...(!mobile && !vercel ? [sites()] : []),
     ],
     ...(mobile
       ? {
