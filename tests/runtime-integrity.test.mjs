@@ -63,6 +63,27 @@ test("wall remains solid beside an open classroom door", () => {
   assert.equal(isRoomPositionColliding("security", position, new Set(["main-door"])), true);
 });
 
+test("open main door allows the player onto the rendered entrance landing", () => {
+  const position = new THREE.Vector3(0, 0, 12.0);
+  assert.equal(isRoomPositionColliding("security", position, new Set(["main-door"])), false);
+});
+
+test("player cannot walk behind the classroom rear wall from the landing", () => {
+  const position = new THREE.Vector3(6.0, 0, 12.0);
+  assert.equal(isRoomPositionColliding("security", position, new Set(["main-door"])), true);
+});
+
+test("player cannot leave the classroom through a wall into empty space", () => {
+  const position = new THREE.Vector3(12.95, 0, 6.0);
+  assert.equal(isRoomPositionColliding("security", position, new Set()), true);
+});
+
+test("security hallway opening only allows the small intended doorway landing", () => {
+  const openDoors = new Set(["hallway-door"]);
+  assert.equal(isRoomPositionColliding("security", new THREE.Vector3(-12.9, 0, -4.5), openDoors), false);
+  assert.equal(isRoomPositionColliding("security", new THREE.Vector3(-12.9, 0, 0), openDoors), true);
+});
+
 test("non-security rooms use their own stage and seat collision instead of Security desk rows", () => {
   assert.equal(isRoomPositionColliding("builder", new THREE.Vector3(0, 0, -8.8), new Set()), true);
   assert.equal(isRoomPositionColliding("builder", new THREE.Vector3(-6.5, 0, 3.9), new Set()), true);
