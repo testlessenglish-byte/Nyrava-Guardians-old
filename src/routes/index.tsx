@@ -1,27 +1,18 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Sparkles, MapPin, GraduationCap, Shield, Building2, Home } from "lucide-react";
 import { GUARDIANS, GUARDIAN_IMAGES } from "@/data/guardians";
 import { GUARDIAN_STYLES } from "@/lib/guardian-colors";
 import { useGuardian } from "@/lib/guardian-context";
 import { cn } from "@/lib/utils";
 import robotImg from "@/assets/guardians/robot.png";
 import logo from "@/assets/guardians/logo.png";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Nyrava Guardians — Choose Your Guardian" },
-      {
-        name: "description",
-        content:
-          "Enter Nyrava: choose one of five Guardian heroes and start your interactive journey through digital safety, AI literacy and creativity.",
-      },
-      { property: "og:title", content: "Nyrava Guardians — Choose Your Guardian" },
-      {
-        property: "og:description",
-        content:
-          "Enter Nyrava: choose one of five Guardian heroes and start your interactive journey through digital safety, AI literacy and creativity.",
-      },
+      { title: "Nyrava Guardians — Choose Your Guardian & Enter World" },
+      { name: "description", content: "Enter Nyrava: Choose your hero and explore the 3D educational world." },
     ],
   }),
   component: WelcomePage,
@@ -32,7 +23,44 @@ function WelcomePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="starfield space-y-10 pb-8">
+    <div className="starfield space-y-8 pb-8 font-sans text-slate-100 p-4 md:p-8">
+      {/* DIRECT 3D WORLD NAV BAR */}
+      <div className="max-w-6xl mx-auto rounded-3xl border border-cyan-500/40 bg-slate-950/90 p-4 shadow-2xl backdrop-blur-md">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
+          <span className="text-xs font-black uppercase tracking-[0.25em] text-cyan-400">DIRECT 3D WORLD LOCATIONS</span>
+          <span className="rounded-full bg-cyan-950 px-2.5 py-0.5 text-[9px] font-black text-cyan-300 border border-cyan-500/30">
+            PLAYABLE ENGINE ACTIVE
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          <Link to="/isla">
+            <Button className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs rounded-xl shadow-lg">
+              <MapPin className="size-3.5 mr-1.5" /> Isla Central
+            </Button>
+          </Link>
+          <Link to="/classroom">
+            <Button className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-lg">
+              <GraduationCap className="size-3.5 mr-1.5" /> Classrooms
+            </Button>
+          </Link>
+          <Link to="/missions">
+            <Button className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-black text-xs rounded-xl shadow-lg">
+              <Shield className="size-3.5 mr-1.5" /> Mission Hub
+            </Button>
+          </Link>
+          <Link to="/city">
+            <Button className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow-lg">
+              <Building2 className="size-3.5 mr-1.5" /> Digital City
+            </Button>
+          </Link>
+          <Link to="/home-hq">
+            <Button className="w-full bg-purple-500 hover:bg-purple-400 text-white font-black text-xs rounded-xl shadow-lg">
+              <Home className="size-3.5 mr-1.5" /> Home HQ
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       {/* Hero */}
       <section className="panel relative overflow-hidden px-6 py-10 text-center md:px-12">
         <div className="pointer-events-none absolute -right-8 top-4 hidden md:block">
@@ -52,7 +80,7 @@ function WelcomePage() {
         </p>
         <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary">
           <Sparkles className="h-3.5 w-3.5" />
-          Step 1: Choose your Guardian
+          Choose your Guardian or click any location above to enter!
         </div>
       </section>
 
