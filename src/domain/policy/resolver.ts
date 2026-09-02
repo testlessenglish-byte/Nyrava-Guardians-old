@@ -82,9 +82,9 @@ export const DEFAULT_PARENTAL_CONTROLS: ParentalControlsData = {
   allowAcademy: true,
   allowWorld: true,
   allowMissions: true,
-  allowAiBuilder: true,
-  allowVoice: true,
-  allowMicrophone: true,
+  allowAiBuilder: false,
+  allowVoice: false,
+  allowMicrophone: false,
   allowExternalLinks: false,
   allowMultiplayer: false,
   dailyLimitMinutes: 120,
@@ -123,7 +123,7 @@ export type ResolvedChildPolicy = {
 };
 
 export function resolveChildPolicy({
-  tier = "family",
+  tier = "free",
   parentalControls = DEFAULT_PARENTAL_CONTROLS,
   systemPolicy = SYSTEM_SAFETY_POLICY,
   currentMinutesPlayed = 0,
