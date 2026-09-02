@@ -10,15 +10,15 @@ import { type InputManager } from "@/components/game/core/input-manager";
 import { type PlayerMode } from "@/components/game/core/player-state-machine";
 import { InteractionManager, type InteractiveTarget } from "@/components/game/core/interaction-manager";
 import { CLASSROOM_TRAVEL_BOUNDS, isRoomPositionColliding } from "@/components/game/player/classroom-collision";
-import { STUDENT_SEATS, CLASSROOM_DOORS } from "./academy-classroom-set";
-import { BUILDER_SEATS, BUILDER_DOORS } from "./builder-lab-set";
-import { COMMUNICATION_SEATS, COMMUNICATION_DOORS } from "./communication-studio-set";
-import { TRUTH_SEATS, TRUTH_DOORS } from "./truth-lab-set";
+import { STUDENT_SEATS } from "./academy-classroom-set";
+import { BUILDER_SEATS } from "./builder-lab-set";
+import { COMMUNICATION_SEATS } from "./communication-studio-set";
+import { TRUTH_SEATS } from "./truth-lab-set";
 
 export type ClassroomRoom = "security" | "builder" | "communication" | "truth";
 
-const PLAYER_SPAWN: [number, number, number] = [0, 0, 5.2];
-const CAMERA_BOUNDS = { minX: -12.3, maxX: 12.3, minY: 1.0, maxY: 4.4, minZ: -9.1, maxZ: 14.0 };
+const PLAYER_SPAWN: [number, number, number] = [0, 0, 5.0];
+const CAMERA_BOUNDS = { minX: -12.0, maxX: 12.0, minY: 1.0, maxY: 4.4, minZ: -9.0, maxZ: 9.0 };
 const EMPTY_OPEN_DOORS = new Set<string>();
 
 function Loader() {
@@ -34,9 +34,9 @@ function Loader() {
 
 /**
  * Authoritative Teacher NPC (Sarah)
- * Anchored to world position [-4.2, 0, -6.8] with 3D text label.
+ * Anchored to world position [-4.0, 0.2, -6.0] with 3D text label.
  */
-function TeacherNpc({ guardian, position, rotation = 0.2 }: { guardian: ClassGuardian; position: [number, number, number]; rotation?: number }) {
+function TeacherNpc({ guardian, position, rotation = 0.3 }: { guardian: ClassGuardian; position: [number, number, number]; rotation?: number }) {
   return (
     <group position={position} rotation-y={rotation}>
       <Character color={guardian.color} clip="idle" guardianId={guardian.id} />
@@ -67,7 +67,6 @@ export function ClassroomScene({
   activeSeatId,
   setActiveSeatId,
   openDoorIds,
-  setOpenDoorIds,
   setActiveInteraction,
 }: {
   room?: ClassroomRoom;
@@ -87,19 +86,19 @@ export function ClassroomScene({
   const [moving, setMoving] = useState(false);
 
   const roomData = useMemo(() => {
-    if (room === "builder") return { seats: BUILDER_SEATS, doors: BUILDER_DOORS, teacherId: "jacob" };
-    if (room === "communication") return { seats: COMMUNICATION_SEATS, doors: COMMUNICATION_DOORS, teacherId: "dayana" };
-    if (room === "truth") return { seats: TRUTH_SEATS, doors: TRUTH_DOORS, teacherId: "nova" };
-    return { seats: STUDENT_SEATS, doors: CLASSROOM_DOORS, teacherId: "sarah" };
+    if (room === "builder") return { seats: BUILDER_SEATS, teacherId: "jacob" };
+    if (room === "communication") return { seats: COMMUNICATION_SEATS, teacherId: "dayana" };
+    if (room === "truth") return { seats: TRUTH_SEATS, teacherId: "nova" };
+    return { seats: STUDENT_SEATS, teacherId: "sarah" };
   }, [room]);
 
   useEffect(() => {
     if (group.current) {
       group.current.position.set(...PLAYER_SPAWN);
-      group.current.rotation.y = Math.PI;
+      group.current.rotation.y = 0;
     }
     playerController.velocity.set(0, 0, 0);
-    playerController.rotationY = Math.PI;
+    playerController.rotationY = 0;
     inputManager.reset();
     inputManager.cameraYaw = 0;
     inputManager.cameraPitch = 0.12;
@@ -169,32 +168,12 @@ export function ClassroomScene({
     targets.push({
       id: `board-${room}`,
       type: "lesson",
-      position: [0, 0, -6.8],
-      range: 3.0,
+      position: [-4.0, 0, -6.0],
+      range: 3.5,
       priority: 80,
       label: { en: "Press E to Talk to Sarah / Start Class", es: "Presiona E para hablar con Sarah / Iniciar clase" },
       action: () => onStartCourse?.(),
     });
-
-    for (const door of roomData.doors) {
-      const isOpen = currentOpenDoors.has(door.id);
-      targets.push({
-        id: `door-${door.id}`,
-        type: "door",
-        position: door.position,
-        range: 2.5,
-        priority: 60,
-        label: isOpen
-          ? { en: "Press E to Close Door", es: "Presiona E para cerrar la puerta" }
-          : { en: "Press E to Open Door", es: "Presiona E para abrir la puerta" },
-        action: () => setOpenDoorIds?.((prev) => {
-          const next = new Set(prev);
-          if (next.has(door.id)) next.delete(door.id);
-          else next.add(door.id);
-          return next;
-        }),
-      });
-    }
 
     for (const seat of roomData.seats) {
       targets.push({
@@ -243,11 +222,11 @@ export function ClassroomScene({
       <color attach="background" args={["#0f172a"]} />
       <fog attach="fog" args={["#0f172a", 22, 52]} />
       <Suspense fallback={<Loader />}>
-        {/* Sarah standing cleanly near front teaching area */}
-        <TeacherNpc guardian={teacher} position={[-4.2, 0.25, -6.8]} rotation={0.2} />
+        {/* Sarah standing welcomingly at podium */}
+        <TeacherNpc guardian={teacher} position={[-4.0, 0.2, -6.0]} rotation={0.3} />
 
         {/* Player Avatar */}
-        <group ref={group} position={PLAYER_SPAWN} rotation-y={Math.PI}>
+        <group ref={group} position={PLAYER_SPAWN} rotation-y={0}>
           <Character color={playerColor} clip={moving ? "walk" : "idle"} guardianId={guardianId} height={1.7} />
           <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
             <ringGeometry args={[0.55, 0.72, 40]} />
