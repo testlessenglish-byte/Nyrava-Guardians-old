@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html, useProgress } from "@react-three/drei";
+import { Html, Text, useProgress } from "@react-three/drei";
 import * as THREE from "three";
 import { Character } from "./character";
 import { CLASS_GUARDIANS, type ClassGuardian } from "@/lib/class-guardians";
@@ -17,7 +17,7 @@ import { TRUTH_SEATS, TRUTH_DOORS } from "./truth-lab-set";
 
 export type ClassroomRoom = "security" | "builder" | "communication" | "truth";
 
-const PLAYER_SPAWN: [number, number, number] = [0, 0, 5.6];
+const PLAYER_SPAWN: [number, number, number] = [0, 0, 5.2];
 const CAMERA_BOUNDS = { minX: -12.3, maxX: 12.3, minY: 1.0, maxY: 4.4, minZ: -9.1, maxZ: 14.0 };
 const EMPTY_OPEN_DOORS = new Set<string>();
 
@@ -32,21 +32,24 @@ function Loader() {
   );
 }
 
-function TeacherNpc({ guardian, position, rotation = 0.3 }: { guardian: ClassGuardian; position: [number, number, number]; rotation?: number }) {
+/**
+ * Authoritative Teacher NPC (Sarah)
+ * Anchored to world position [-4.2, 0, -6.8] with 3D text label.
+ */
+function TeacherNpc({ guardian, position, rotation = 0.2 }: { guardian: ClassGuardian; position: [number, number, number]; rotation?: number }) {
   return (
     <group position={position} rotation-y={rotation}>
       <Character color={guardian.color} clip="idle" guardianId={guardian.id} />
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
-        <ringGeometry args={[0.9, 1.15, 48]} />
+        <ringGeometry args={[0.7, 0.95, 36]} />
         <meshStandardMaterial color={guardian.color} emissive={guardian.color} emissiveIntensity={1.2} transparent opacity={0.85} />
       </mesh>
-      <Html position={[0, 2.35, 0]} center distanceFactor={9} occlude={false}>
-        <div className="pointer-events-none select-none text-center">
-          <span className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider shadow-lg" style={{ color: guardian.color, background: "rgba(2,6,23,0.88)", border: `1px solid ${guardian.color}40` }}>
-            {guardian.name} · {guardian.role}
-          </span>
-        </div>
-      </Html>
+      {/* 3D World Space Label anchored to Sarah's head */}
+      <group position={[0, 2.15, 0]}>
+        <Text fontSize={0.16} color={guardian.color} anchorX="center" anchorY="middle" letterSpacing={0.06}>
+          {`${guardian.name} · ${guardian.role}`}
+        </Text>
+      </group>
     </group>
   );
 }
@@ -169,7 +172,7 @@ export function ClassroomScene({
       position: [0, 0, -6.8],
       range: 3.0,
       priority: 80,
-      label: { en: "Press E to Start Class", es: "Presiona E para iniciar la clase" },
+      label: { en: "Press E to Talk to Sarah / Start Class", es: "Presiona E para hablar con Sarah / Iniciar clase" },
       action: () => onStartCourse?.(),
     });
 
@@ -240,7 +243,10 @@ export function ClassroomScene({
       <color attach="background" args={["#0f172a"]} />
       <fog attach="fog" args={["#0f172a", 22, 52]} />
       <Suspense fallback={<Loader />}>
-        <TeacherNpc guardian={teacher} position={[-4.6, 0.25, -7.0]} rotation={0.15} />
+        {/* Sarah standing cleanly near front teaching area */}
+        <TeacherNpc guardian={teacher} position={[-4.2, 0.25, -6.8]} rotation={0.2} />
+
+        {/* Player Avatar */}
         <group ref={group} position={PLAYER_SPAWN} rotation-y={Math.PI}>
           <Character color={playerColor} clip={moving ? "walk" : "idle"} guardianId={guardianId} height={1.7} />
           <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
@@ -248,9 +254,12 @@ export function ClassroomScene({
             <meshStandardMaterial color={playerColor} emissive={playerColor} emissiveIntensity={1.5} transparent opacity={0.85} />
           </mesh>
           <pointLight position={[0, 1.7, 0]} color={playerColor} intensity={4} distance={5} />
-          <Html position={[0, 2.25, 0]} center distanceFactor={9}>
-            <span className="pointer-events-none select-none rounded-full border border-cyan-400/30 bg-slate-950/85 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-cyan-300 backdrop-blur">{playerLabel}</span>
-          </Html>
+          {/* 3D World Space Player Label anchored to player head */}
+          <group position={[0, 2.15, 0]}>
+            <Text fontSize={0.16} color="#38bdf8" anchorX="center" anchorY="middle" letterSpacing={0.05}>
+              {playerLabel}
+            </Text>
+          </group>
         </group>
       </Suspense>
     </>

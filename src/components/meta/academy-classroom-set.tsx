@@ -1,11 +1,9 @@
 import { Text } from "@react-three/drei";
-import { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
 import { missions } from "@/domain/progression/catalog";
 import { InteractiveSeat, type SeatData } from "@/components/game/interactive-seat";
 import { InteractivePortal } from "@/components/game/interactive-portal";
 import { InteractiveDoor, type DoorData } from "@/components/game/interactive-door";
+import { WorldLogoMark } from "@/components/brand/world-logo-mark";
 
 export const STUDENT_SEATS: SeatData[] = [
   { id: "seat-left-1", position: [-6.5, 0.05, 3.9], rotation: Math.PI, seatPosition: [-6.5, 0.45, 3.7], seatRotation: Math.PI, standPosition: [-5.0, 0, 3.9] },
@@ -57,37 +55,46 @@ function Plant({ position }: { position: [number, number, number] }) {
   );
 }
 
-function TeachingBoard({ title }: { title: string }) {
+/**
+ * ONE authoritative wall-mounted lesson board.
+ * Mounted flush against the front wall at y = 3.2, z = -9.62.
+ */
+function LessonBoard({ title }: { title: string }) {
   return (
-    <group position={[-12.55, 2.7, 2.0]} rotation-y={Math.PI / 2}>
+    <group position={[0, 3.15, -9.64]}>
+      {/* Outer frame */}
       <mesh position={[0, 0, -0.02]} castShadow receiveShadow>
-        <boxGeometry args={[3.6, 1.4, 0.05]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.5} metalness={0.4} />
+        <boxGeometry args={[6.2, 2.1, 0.06]} />
+        <meshStandardMaterial color="#1e293b" roughness={0.4} metalness={0.5} />
       </mesh>
+      {/* Screen surface */}
       <mesh position={[0, 0, 0.02]}>
-        <planeGeometry args={[3.45, 1.3]} />
-        <meshStandardMaterial color="#04111f" emissive="#082f49" emissiveIntensity={0.28} />
+        <planeGeometry args={[6.0, 1.95]} />
+        <meshStandardMaterial color="#04111f" emissive="#082f49" emissiveIntensity={0.3} />
       </mesh>
-      <Text position={[0, 0.42, 0.03]} fontSize={0.1} color="#22d3ee" anchorX="center" anchorY="middle" letterSpacing={0.08}>
+
+      <Text position={[0, 0.62, 0.04]} fontSize={0.14} color="#22d3ee" anchorX="center" anchorY="middle" letterSpacing={0.08}>
         DIGITAL SAFETY FOUNDATIONS
       </Text>
-      <Text position={[0, 0.12, 0.03]} fontSize={0.22} maxWidth={3.2} color="#f8fafc" anchorX="center" anchorY="middle">
+      <Text position={[0, 0.22, 0.04]} fontSize={0.34} maxWidth={5.5} color="#f8fafc" anchorX="center" anchorY="middle">
         {title}
       </Text>
-      <Text position={[0, -0.16, 0.03]} fontSize={0.09} maxWidth={3.2} color="#bae6fd" anchorX="center" anchorY="middle">
-        Be smart. Stay safe. Don't get hooked.
+      <Text position={[0, -0.15, 0.04]} fontSize={0.13} maxWidth={5.2} color="#bae6fd" anchorX="center" anchorY="middle">
+        Stay smart. Stay safe. Don't get hooked.
       </Text>
+
+      {/* Action Badges */}
       {[
-        { x: -1.0, label: "SPOT THE BAIT", color: "#22d3ee" },
-        { x: 0, label: "GUARDIAN SHIELD", color: "#fbbf24" },
-        { x: 1.0, label: "VERIFY LINKS", color: "#34d399" },
+        { x: -1.7, label: "Detect Phishing", color: "#22d3ee" },
+        { x: 0, label: "Think Before You Click", color: "#fbbf24" },
+        { x: 1.7, label: "Verify Links", color: "#34d399" },
       ].map((item) => (
-        <group key={item.label} position={[item.x, -0.42, 0.035]}>
+        <group key={item.label} position={[item.x, -0.55, 0.045]}>
           <mesh>
-            <boxGeometry args={[0.85, 0.2, 0.02]} />
-            <meshStandardMaterial color="#0f172a" emissive={item.color} emissiveIntensity={0.18} />
+            <boxGeometry args={[1.5, 0.32, 0.02]} />
+            <meshStandardMaterial color="#0f172a" emissive={item.color} emissiveIntensity={0.2} />
           </mesh>
-          <Text position={[0, 0, 0.015]} fontSize={0.055} color={item.color} anchorX="center" anchorY="middle">
+          <Text position={[0, 0, 0.015]} fontSize={0.085} color={item.color} anchorX="center" anchorY="middle">
             {item.label}
           </Text>
         </group>
@@ -97,74 +104,68 @@ function TeachingBoard({ title }: { title: string }) {
 }
 
 export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatId?: string | null; openDoorIds?: Set<string> }) {
-  const portalRingRef = useRef<THREE.Mesh>(null);
-  const portalVortexRef = useRef<THREE.Mesh>(null);
   const activeLesson = missions[0]!;
-
-  useFrame((_, delta) => {
-    if (portalRingRef.current) portalRingRef.current.rotation.z += delta * 1.1;
-    if (portalVortexRef.current) portalVortexRef.current.rotation.z -= delta * 0.7;
-  });
 
   return (
     <group>
+      {/* Floor */}
       <mesh rotation-x={-Math.PI / 2} receiveShadow>
         <planeGeometry args={[26, 20]} />
         <meshStandardMaterial color="#5a321c" roughness={0.52} />
       </mesh>
-      {/* Walkable landing beyond the main entrance so visible floor is never blocked by an invisible boundary. */}
+
+      {/* Entrance Landing */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.005, 11.8]} receiveShadow>
         <planeGeometry args={[6.5, 5.2]} />
         <meshStandardMaterial color="#64748b" roughness={0.78} />
       </mesh>
+
+      {/* Ceiling */}
       <mesh position={[0, 4.8, 0]} rotation-x={Math.PI / 2}>
         <planeGeometry args={[26, 20]} />
         <meshStandardMaterial color="#f1f5f9" roughness={0.9} />
       </mesh>
 
-      {/* Clean front wall. */}
+      {/* Clean Front Wall */}
       <mesh position={[0, 2.4, -9.72]} receiveShadow>
         <boxGeometry args={[26, 4.8, 0.28]} />
         <meshStandardMaterial color="#d9e7ef" roughness={0.72} />
       </mesh>
 
-      {/* Rear wall built around the real main-door opening. */}
+      {/* Rear Wall */}
       <mesh position={[-7.0, 2.4, 9.72]} receiveShadow><boxGeometry args={[12, 4.8, 0.22]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
       <mesh position={[7.0, 2.4, 9.72]} receiveShadow><boxGeometry args={[12, 4.8, 0.22]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
       <mesh position={[0, 4.15, 9.72]} receiveShadow><boxGeometry args={[2.0, 1.3, 0.22]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
 
-      {/* Left wall built around hallway opening at z=-4.5. */}
+      {/* Left Wall */}
       <mesh position={[-12.72, 2.4, 3.0]} receiveShadow><boxGeometry args={[0.22, 4.8, 13.0]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
       <mesh position={[-12.72, 2.4, -8.0]} receiveShadow><boxGeometry args={[0.22, 4.8, 3.0]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
       <mesh position={[-12.72, 4.1, -4.5]} receiveShadow><boxGeometry args={[0.22, 1.4, 4.0]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
+
+      {/* Right Wall */}
       <mesh position={[12.72, 2.4, 0]} receiveShadow><boxGeometry args={[0.22, 4.8, 20]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
 
-      <mesh position={[0, 1.15, -9.55]}><boxGeometry args={[26, 0.1, 0.12]} /><meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={0.35} /></mesh>
-      <mesh position={[0, 0.13, -8.55]} receiveShadow><boxGeometry args={[12.5, 0.26, 1.6]} /><meshStandardMaterial color="#74401f" roughness={0.48} /></mesh>
+      {/* Single Authoritative Wall-Mounted Lesson Board */}
+      <LessonBoard title={activeLesson.title.en} />
 
-      <TeachingBoard title={activeLesson.title.en} />
+      {/* Integrated Floor Branding (Appropriately Scaled Official Nyrava Seal) */}
+      <WorldLogoMark position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} size={1.8} />
 
-      <mesh rotation-x={-Math.PI / 2} position={[0, 0.025, 0]} receiveShadow>
-        <circleGeometry args={[3.75, 64]} />
-        <meshStandardMaterial color="#0b2038" roughness={0.55} />
-      </mesh>
-      <mesh rotation-x={-Math.PI / 2} position={[0, 0.035, 0]}>
-        <ringGeometry args={[3.45, 3.72, 64]} />
-        <meshStandardMaterial color="#fbbf24" emissive="#d97706" emissiveIntensity={0.5} />
-      </mesh>
-      <Text position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]} fontSize={1.05} color="#fbbf24" anchorX="center" anchorY="middle">N</Text>
-
+      {/* Desks */}
       <Desk position={[-6.5, 0, 2.5]} />
       <Desk position={[-6.5, 0, 6.0]} />
       <Desk position={[6.5, 0, 2.5]} />
       <Desk position={[6.5, 0, 6.0]} />
 
+      {/* Plants */}
       <Plant position={[-10.8, 0, -7.8]} />
       <Plant position={[10.8, 0, -7.8]} />
 
+      {/* Doors & Seats */}
       {CLASSROOM_DOORS.map((door) => <InteractiveDoor key={door.id} door={door} isOpen={Boolean(openDoorIds?.has(door.id))} />)}
       {STUDENT_SEATS.map((seat) => <InteractiveSeat key={seat.id} seat={seat} occupied={activeSeatId === seat.id} />)}
 
+      {/* Achievements Plaque on Right Wall */}
       <group position={[12.48, 2.9, -4.0]} rotation-y={-Math.PI / 2}>
         <mesh><boxGeometry args={[4.4, 2.3, 0.12]} /><meshStandardMaterial color="#11283f" /></mesh>
         <Text position={[0, 0.65, 0.08]} fontSize={0.18} color="#fbbf24" anchorX="center">ACHIEVEMENTS</Text>
@@ -176,8 +177,10 @@ export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatI
         ))}
       </group>
 
+      {/* Mission Hub Portal */}
       <InteractivePortal position={[11.45, 0, 2.0]} />
 
+      {/* Lighting */}
       <ambientLight intensity={0.9} color="#fff7ed" />
       <hemisphereLight args={["#dff3ff", "#5a321c", 0.85]} />
       <directionalLight position={[8, 14, 6]} intensity={1.8} color="#fff7d6" castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} />

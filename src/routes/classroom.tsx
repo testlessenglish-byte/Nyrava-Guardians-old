@@ -3,7 +3,6 @@ import { Canvas } from "@react-three/fiber";
 import { useRef, useState, useEffect, useMemo, Suspense } from "react";
 import { ClassroomScene } from "@/components/meta/classroom-scene";
 import { AcademyClassroomSet } from "@/components/meta/academy-classroom-set";
-import { SecurityClassroomCorrection } from "@/components/meta/security-classroom-correction";
 import { BuilderLabSet } from "@/components/meta/builder-lab-set";
 import { CommunicationStudioSet } from "@/components/meta/communication-studio-set";
 import { TruthLabSet } from "@/components/meta/truth-lab-set";
@@ -35,7 +34,7 @@ function ClassroomPage() {
   const { guardianId, guardianName, hydrated } = useGuardian();
   const chosen = guardianId ? CLASS_GUARDIANS.find((g) => g.id === guardianId) : undefined;
   const playerColor = chosen?.color ?? "#f4f7ff";
-  const playerLabel = `${guardianName || "You"}${chosen ? ` · ${chosen.name}` : ""}`;
+  const playerLabel = guardianName || "Guardian";
   const inputManager = useMemo(() => new InputManager(), []);
   const currentRoom = useMemo(() => readSelectedClassroom(), []);
   const [courseOpen, setCourseOpen] = useState(false);
@@ -140,12 +139,7 @@ function ClassroomPage() {
                 setOpenDoorIds={setOpenDoorIds}
                 setActiveInteraction={setActiveInteraction}
               />
-              {currentRoom === "security" && (
-                <>
-                  <AcademyClassroomSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
-                  <SecurityClassroomCorrection />
-                </>
-              )}
+              {currentRoom === "security" && <AcademyClassroomSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
               {currentRoom === "builder" && <BuilderLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
               {currentRoom === "communication" && <CommunicationStudioSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
               {currentRoom === "truth" && <TruthLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
