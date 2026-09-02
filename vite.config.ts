@@ -31,6 +31,9 @@ export default defineConfig(({ command, mode }) => {
                   output: { dir: "dist", serverDir: "dist/server", publicDir: "dist/client" },
                   rollupConfig: { output: { entryFileNames: "index.js" } },
                   cloudflare: { nodeCompat: true },
+                  routeRules: {
+                    "/**": { headers: { "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0" } },
+                  },
                 }),
           ]
         : []),
