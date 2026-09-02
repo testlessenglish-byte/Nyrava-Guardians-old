@@ -59,44 +59,38 @@ function Plant({ position }: { position: [number, number, number] }) {
 
 function TeachingBoard({ title }: { title: string }) {
   return (
-    <group position={[0, 2.72, -9.56]}>
+    <group position={[0, 3.45, -9.64]}>
       <mesh position={[0, 0, -0.02]} castShadow receiveShadow>
-        <boxGeometry args={[7.4, 2.45, 0.1]} />
+        <boxGeometry args={[4.2, 1.25, 0.05]} />
         <meshStandardMaterial color="#1e293b" roughness={0.5} metalness={0.4} />
       </mesh>
-      <mesh position={[0, 0, 0.04]}>
-        <planeGeometry args={[7.08, 2.12]} />
+      <mesh position={[0, 0, 0.02]}>
+        <planeGeometry args={[4.05, 1.15]} />
         <meshStandardMaterial color="#04111f" emissive="#082f49" emissiveIntensity={0.28} />
       </mesh>
-      <Text position={[0, 0.7, 0.07]} fontSize={0.17} color="#22d3ee" anchorX="center" anchorY="middle" letterSpacing={0.1}>
+      <Text position={[0, 0.35, 0.03]} fontSize={0.11} color="#22d3ee" anchorX="center" anchorY="middle" letterSpacing={0.08}>
         DIGITAL SAFETY FOUNDATIONS
       </Text>
-      <Text position={[0, 0.2, 0.07]} fontSize={0.42} maxWidth={6.25} color="#f8fafc" anchorX="center" anchorY="middle">
+      <Text position={[0, 0.08, 0.03]} fontSize={0.22} maxWidth={3.8} color="#f8fafc" anchorX="center" anchorY="middle">
         {title}
       </Text>
-      <Text position={[0, -0.2, 0.07]} fontSize={0.15} color="#bae6fd" anchorX="center" anchorY="middle">
+      <Text position={[0, -0.15, 0.03]} fontSize={0.09} color="#bae6fd" anchorX="center" anchorY="middle">
         Be smart. Stay safe. Don't get hooked.
       </Text>
       {[
-        { x: -2.0, label: "SPOT THE BAIT", color: "#22d3ee" },
+        { x: -1.2, label: "SPOT THE BAIT", color: "#22d3ee" },
         { x: 0, label: "GUARDIAN SHIELD", color: "#fbbf24" },
-        { x: 2.0, label: "VERIFY LINKS", color: "#34d399" },
+        { x: 1.2, label: "VERIFY LINKS", color: "#34d399" },
       ].map((item) => (
-        <group key={item.label} position={[item.x, -0.72, 0.075]}>
+        <group key={item.label} position={[item.x, -0.38, 0.035]}>
           <mesh>
-            <boxGeometry args={[1.5, 0.4, 0.045]} />
+            <boxGeometry args={[0.95, 0.22, 0.02]} />
             <meshStandardMaterial color="#0f172a" emissive={item.color} emissiveIntensity={0.18} />
           </mesh>
-          <Text position={[0, 0, 0.032]} fontSize={0.1} color={item.color} anchorX="center" anchorY="middle">
+          <Text position={[0, 0, 0.015]} fontSize={0.065} color={item.color} anchorX="center" anchorY="middle">
             {item.label}
           </Text>
         </group>
-      ))}
-      {[-3.35, 3.35].map((x) => (
-        <mesh key={x} position={[x, -1.34, -0.03]}>
-          <boxGeometry args={[0.13, 0.28, 0.18]} />
-          <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.3} />
-        </mesh>
       ))}
     </group>
   );

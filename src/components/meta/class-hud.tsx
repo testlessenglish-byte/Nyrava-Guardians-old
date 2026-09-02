@@ -59,24 +59,21 @@ export function ClassHud({
 
   return (
     <div className="class-hud pointer-events-none fixed inset-0 z-20 font-sans">
-      <div className="pointer-events-auto absolute left-5 top-5 w-80 space-y-3">
-        <div className="rounded-2xl border border-slate-700/60 bg-slate-950/90 px-4 py-2.5 shadow-2xl backdrop-blur-md">
-          <h1 className="text-base font-black uppercase tracking-wider text-white">{es ? "AULA DE LA ACADEMIA" : "ACADEMY CLASSROOM"}</h1>
-          <p className="text-[10px] font-bold tracking-[0.2em] text-slate-400">{teacher.name} · {teacher.role}</p>
+      <div className="pointer-events-auto absolute left-5 top-5 w-64 space-y-2">
+        <div className="rounded-2xl border border-slate-700/60 bg-slate-950/85 px-3 py-2 shadow-xl backdrop-blur-md">
+          <h1 className="text-xs font-black uppercase tracking-wider text-white">{es ? "AULA DE LA ACADEMIA" : "ACADEMY CLASSROOM"}</h1>
+          <p className="text-[9px] font-bold tracking-[0.15em] text-slate-400">{teacher.name} · {teacher.role}</p>
         </div>
 
-        <div className="rounded-3xl border border-slate-700/70 bg-slate-950/95 p-4 text-white shadow-2xl backdrop-blur-xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">{es ? "CLASE ACTUAL" : "CURRENT CLASS"}</p>
-          <h3 className="mt-0.5 text-lg font-black tracking-tight text-white">{es ? activeLesson.title.es : activeLesson.title.en}</h3>
-          <ul className="mt-3 space-y-2 text-xs font-semibold text-slate-300">
-            <li className="flex items-center justify-between"><span>{es ? "Completar la clase" : "Complete the class"}</span>{isLessonDone ? <CheckCircle2 className="size-4 text-emerald-400" /> : <Circle className="size-4 text-slate-500" />}</li>
-            <li className="flex items-center justify-between"><span>{es ? "Aprobar la evaluación" : "Pass the assessment"}</span>{isQuizDone ? <CheckCircle2 className="size-4 text-emerald-400" /> : <Circle className="size-4 text-slate-500" />}</li>
-            <li className="flex items-center justify-between"><span>75%+</span>{isPassed ? <CheckCircle2 className="size-4 text-emerald-400" /> : <Circle className="size-4 text-slate-500" />}</li>
-            <li className="flex items-center justify-between"><span>{es ? "Certificado de Fundamentos (3 clases)" : "Foundations certificate (3 classes)"}</span>{isCertEarned ? <CheckCircle2 className="size-4 text-emerald-400" /> : <Circle className="size-4 text-slate-500" />}</li>
-          </ul>
-          <div className="mt-4 border-t border-slate-800 pt-3">
-            <div className="flex items-center justify-between text-xs font-black"><span className="text-amber-400">★ {es ? "Progreso" : "Progress"}</span><span className="text-cyan-300">{completedStepsCount} / 4</span></div>
-            <div className="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-slate-800 p-0.5"><div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-amber-400" style={{ width: `${(completedStepsCount / 4) * 100}%` }} /></div>
+        <div className="rounded-2xl border border-slate-700/70 bg-slate-950/90 p-3 text-white shadow-xl backdrop-blur-xl">
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">{es ? "CLASE ACTUAL" : "CURRENT CLASS"}</p>
+          <h3 className="mt-0.5 text-sm font-black tracking-tight text-white">{es ? activeLesson.title.es : activeLesson.title.en}</h3>
+          <div className="mt-2.5 flex items-center justify-between text-xs font-black">
+            <span className="text-amber-400 text-[11px]">★ {es ? "Progreso" : "Progress"}</span>
+            <span className="text-cyan-300 text-[11px]">{completedStepsCount} / 4</span>
+          </div>
+          <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-slate-800">
+            <div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-amber-400" style={{ width: `${(completedStepsCount / 4) * 100}%` }} />
           </div>
         </div>
       </div>
