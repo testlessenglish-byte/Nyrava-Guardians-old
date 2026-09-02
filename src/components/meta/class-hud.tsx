@@ -102,7 +102,7 @@ export function ClassHud({
       <div className="pointer-events-auto absolute bottom-6 right-6 flex w-[min(92vw,24rem)] flex-col gap-3 rounded-3xl border border-slate-700/60 bg-slate-950/95 p-4 shadow-2xl backdrop-blur-xl">
         <div className="flex items-center gap-3"><div className="grid size-9 place-items-center rounded-xl text-sm font-black text-slate-950" style={{ background: teacher.color }}>{teacher.name.charAt(0)}</div><div><span className="block text-xs font-extrabold text-white">{teacher.name}</span><span className="block text-[10px] font-bold text-cyan-300">{es ? "Guía Guardián" : "Guardian Guide"}</span></div></div>
         <div className="max-h-40 space-y-2 overflow-y-auto pr-1 text-xs">
-          {messages.length === 0 && <p className="rounded-2xl bg-slate-900/90 p-3 text-slate-200 leading-relaxed border border-slate-800">{es ? "Acércate a la pantalla de clase y presiona E cuando estés listo." : "Walk to the class screen and press E when you are ready."}</p>}
+          {messages.length === 0 && <p className="rounded-2xl bg-slate-900/90 p-3 text-slate-200 leading-relaxed border border-slate-800">{es ? "Acércate a Sarah y presiona E cuando estés listo." : "Walk up to Sarah and press E when you are ready to start."}</p>}
           {messages.map((message) => <p key={message.id} className={message.from === "you" ? "text-right text-cyan-300 font-semibold" : "text-slate-300"}><span className="font-bold text-white">{message.name}: </span>{message.text}</p>)}
         </div>
       </div>
