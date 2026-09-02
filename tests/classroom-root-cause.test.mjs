@@ -15,6 +15,12 @@ test("only one authoritative classroom scene renders and SecurityClassroomCorrec
   assert.equal(routeContent.includes("SecurityClassroomCorrection"), false, "classroom.tsx must not import SecurityClassroomCorrection.");
 });
 
+test("digital safety foundations sign is completely removed from classroom set", () => {
+  const setPath = path.resolve("src/components/meta/academy-classroom-set.tsx");
+  const content = fs.readFileSync(setPath, "utf8");
+  assert.equal(content.includes("DIGITAL SAFETY FOUNDATIONS"), false, "DIGITAL SAFETY FOUNDATIONS sign must be completely removed.");
+});
+
 test("classroom scene renders 3D world-space text for teacher and player labels without 2D HTML occlusion", () => {
   const scenePath = path.resolve("src/components/meta/classroom-scene.tsx");
   const content = fs.readFileSync(scenePath, "utf8");

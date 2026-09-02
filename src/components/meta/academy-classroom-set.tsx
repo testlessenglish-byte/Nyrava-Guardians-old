@@ -59,53 +59,7 @@ function Plant({ position }: { position: [number, number, number] }) {
  * ONE authoritative wall-mounted lesson board.
  * Mounted flush against the front wall at y = 3.2, z = -9.62.
  */
-function LessonBoard({ title }: { title: string }) {
-  return (
-    <group position={[0, 3.15, -9.64]}>
-      {/* Outer frame */}
-      <mesh position={[0, 0, -0.02]} castShadow receiveShadow>
-        <boxGeometry args={[6.2, 2.1, 0.06]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.4} metalness={0.5} />
-      </mesh>
-      {/* Screen surface */}
-      <mesh position={[0, 0, 0.02]}>
-        <planeGeometry args={[6.0, 1.95]} />
-        <meshStandardMaterial color="#04111f" emissive="#082f49" emissiveIntensity={0.3} />
-      </mesh>
-
-      <Text position={[0, 0.62, 0.04]} fontSize={0.14} color="#22d3ee" anchorX="center" anchorY="middle" letterSpacing={0.08}>
-        DIGITAL SAFETY FOUNDATIONS
-      </Text>
-      <Text position={[0, 0.22, 0.04]} fontSize={0.34} maxWidth={5.5} color="#f8fafc" anchorX="center" anchorY="middle">
-        {title}
-      </Text>
-      <Text position={[0, -0.15, 0.04]} fontSize={0.13} maxWidth={5.2} color="#bae6fd" anchorX="center" anchorY="middle">
-        Stay smart. Stay safe. Don't get hooked.
-      </Text>
-
-      {/* Action Badges */}
-      {[
-        { x: -1.7, label: "Detect Phishing", color: "#22d3ee" },
-        { x: 0, label: "Think Before You Click", color: "#fbbf24" },
-        { x: 1.7, label: "Verify Links", color: "#34d399" },
-      ].map((item) => (
-        <group key={item.label} position={[item.x, -0.55, 0.045]}>
-          <mesh>
-            <boxGeometry args={[1.5, 0.32, 0.02]} />
-            <meshStandardMaterial color="#0f172a" emissive={item.color} emissiveIntensity={0.2} />
-          </mesh>
-          <Text position={[0, 0, 0.015]} fontSize={0.085} color={item.color} anchorX="center" anchorY="middle">
-            {item.label}
-          </Text>
-        </group>
-      ))}
-    </group>
-  );
-}
-
 export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatId?: string | null; openDoorIds?: Set<string> }) {
-  const activeLesson = missions[0]!;
-
   return (
     <group>
       {/* Floor */}
@@ -144,9 +98,6 @@ export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatI
 
       {/* Right Wall */}
       <mesh position={[12.72, 2.4, 0]} receiveShadow><boxGeometry args={[0.22, 4.8, 20]} /><meshStandardMaterial color="#d9e7ef" roughness={0.72} /></mesh>
-
-      {/* Single Authoritative Wall-Mounted Lesson Board */}
-      <LessonBoard title={activeLesson.title.en} />
 
       {/* Integrated Floor Branding (Appropriately Scaled Official Nyrava Seal) */}
       <WorldLogoMark position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} size={1.8} />
