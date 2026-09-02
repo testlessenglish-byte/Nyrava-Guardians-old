@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bot, Compass, Cpu, GraduationCap, Home, Map, Sparkles, Swords, Users } from "lucide-react";
+import { Bot, Compass, Cpu, GraduationCap, Home, Map, Shield, Sparkles, Swords, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import logo from "@/assets/guardians/logo.png";
 import { useGuardian } from "@/lib/guardian-context";
@@ -16,7 +16,7 @@ const NAV = [
   { to: "/classroom", label: "Live Class", icon: Users },
   { to: "/missions", label: "Missions", icon: Swords },
   { to: "/builder", label: "AI Builder", icon: Bot },
-  { to: "/core", label: "Core", icon: Cpu },
+  { to: "/parent", label: "Parent Portal", icon: Shield },
 ] as const;
 
 function GuardianChip() {
@@ -72,6 +72,13 @@ function GuardianChip() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { roles } = useAuth();
+  const isParentOrAdmin = roles.includes("guardian") || roles.includes("admin");
+
+  const visibleNav = NAV.filter((item) => {
+    if (item.to === "/parent") return isParentOrAdmin;
+    return true;
+  });
 
   // Every real-time 3D route must own the full viewport. Running these scenes
   // inside the standard header/sidebar shell changes their layout and pointer area.
@@ -107,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 gap-6 px-4 pb-24 pt-6 md:pb-10">
         <aside className="sticky top-20 hidden h-fit w-48 shrink-0 flex-col gap-1 md:flex">
-          {NAV.map(({ to, label, icon: Icon }) => {
+          {visibleNav.map(({ to, label, icon: Icon }) => {
             const active = pathname.startsWith(to);
             return (
               <Link
@@ -132,7 +139,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <nav className="fixed inset-x-0 bottom-0 z-40 overflow-x-auto border-t border-border/60 bg-background/90 backdrop-blur-md md:hidden">
         <div className="flex min-w-max justify-center">
-          {NAV.map(({ to, label, icon: Icon }) => {
+          {visibleNav.map(({ to, label, icon: Icon }) => {
             const active = pathname.startsWith(to);
             return (
               <Link

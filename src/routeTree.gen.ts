@@ -22,6 +22,7 @@ import { Route as HomeHqRouteImport } from './routes/home-hq'
 import { Route as IslaRouteImport } from './routes/isla'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MissionsRouteImport } from './routes/missions'
+import { Route as ParentRouteImport } from './routes/parent'
 import { Route as PersonalizeRouteImport } from './routes/personalize'
 import { Route as WorldRouteImport } from './routes/world'
 
@@ -90,6 +91,11 @@ const MissionsRoute = MissionsRouteImport.update({
   path: '/missions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParentRoute = ParentRouteImport.update({
+  id: '/parent',
+  path: '/parent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PersonalizeRoute = PersonalizeRouteImport.update({
   id: '/personalize',
   path: '/personalize',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/isla': typeof IslaRoute
   '/login': typeof LoginRoute
   '/missions': typeof MissionsRoute
+  '/parent': typeof ParentRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
 }
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/isla': typeof IslaRoute
   '/login': typeof LoginRoute
   '/missions': typeof MissionsRoute
+  '/parent': typeof ParentRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
 }
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/isla': typeof IslaRoute
   '/login': typeof LoginRoute
   '/missions': typeof MissionsRoute
+  '/parent': typeof ParentRoute
   '/personalize': typeof PersonalizeRoute
   '/world': typeof WorldRoute
 }
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/isla'
     | '/login'
     | '/missions'
+    | '/parent'
     | '/personalize'
     | '/world'
   fileRoutesByTo: FileRoutesByTo
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/isla'
     | '/login'
     | '/missions'
+    | '/parent'
     | '/personalize'
     | '/world'
   id:
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/isla'
     | '/login'
     | '/missions'
+    | '/parent'
     | '/personalize'
     | '/world'
   fileRoutesById: FileRoutesById
@@ -221,6 +233,7 @@ export interface RootRouteChildren {
   IslaRoute: typeof IslaRoute
   LoginRoute: typeof LoginRoute
   MissionsRoute: typeof MissionsRoute
+  ParentRoute: typeof ParentRoute
   PersonalizeRoute: typeof PersonalizeRoute
   WorldRoute: typeof WorldRoute
 }
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/parent': {
+      id: '/parent'
+      path: '/parent'
+      fullPath: '/parent'
+      preLoaderRoute: typeof ParentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/personalize': {
       id: '/personalize'
       path: '/personalize'
@@ -349,6 +369,7 @@ const rootRouteChildren: RootRouteChildren = {
   IslaRoute: IslaRoute,
   LoginRoute: LoginRoute,
   MissionsRoute: MissionsRoute,
+  ParentRoute: ParentRoute,
   PersonalizeRoute: PersonalizeRoute,
   WorldRoute: WorldRoute,
 }
