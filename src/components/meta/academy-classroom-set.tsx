@@ -59,35 +59,35 @@ function Plant({ position }: { position: [number, number, number] }) {
 
 function TeachingBoard({ title }: { title: string }) {
   return (
-    <group position={[0, 3.45, -9.64]}>
+    <group position={[-12.55, 2.7, 2.0]} rotation-y={Math.PI / 2}>
       <mesh position={[0, 0, -0.02]} castShadow receiveShadow>
-        <boxGeometry args={[4.2, 1.25, 0.05]} />
+        <boxGeometry args={[3.6, 1.4, 0.05]} />
         <meshStandardMaterial color="#1e293b" roughness={0.5} metalness={0.4} />
       </mesh>
       <mesh position={[0, 0, 0.02]}>
-        <planeGeometry args={[4.05, 1.15]} />
+        <planeGeometry args={[3.45, 1.3]} />
         <meshStandardMaterial color="#04111f" emissive="#082f49" emissiveIntensity={0.28} />
       </mesh>
-      <Text position={[0, 0.35, 0.03]} fontSize={0.11} color="#22d3ee" anchorX="center" anchorY="middle" letterSpacing={0.08}>
+      <Text position={[0, 0.42, 0.03]} fontSize={0.1} color="#22d3ee" anchorX="center" anchorY="middle" letterSpacing={0.08}>
         DIGITAL SAFETY FOUNDATIONS
       </Text>
-      <Text position={[0, 0.08, 0.03]} fontSize={0.22} maxWidth={3.8} color="#f8fafc" anchorX="center" anchorY="middle">
+      <Text position={[0, 0.12, 0.03]} fontSize={0.22} maxWidth={3.2} color="#f8fafc" anchorX="center" anchorY="middle">
         {title}
       </Text>
-      <Text position={[0, -0.15, 0.03]} fontSize={0.09} color="#bae6fd" anchorX="center" anchorY="middle">
+      <Text position={[0, -0.16, 0.03]} fontSize={0.09} maxWidth={3.2} color="#bae6fd" anchorX="center" anchorY="middle">
         Be smart. Stay safe. Don't get hooked.
       </Text>
       {[
-        { x: -1.2, label: "SPOT THE BAIT", color: "#22d3ee" },
+        { x: -1.0, label: "SPOT THE BAIT", color: "#22d3ee" },
         { x: 0, label: "GUARDIAN SHIELD", color: "#fbbf24" },
-        { x: 1.2, label: "VERIFY LINKS", color: "#34d399" },
+        { x: 1.0, label: "VERIFY LINKS", color: "#34d399" },
       ].map((item) => (
-        <group key={item.label} position={[item.x, -0.38, 0.035]}>
+        <group key={item.label} position={[item.x, -0.42, 0.035]}>
           <mesh>
-            <boxGeometry args={[0.95, 0.22, 0.02]} />
+            <boxGeometry args={[0.85, 0.2, 0.02]} />
             <meshStandardMaterial color="#0f172a" emissive={item.color} emissiveIntensity={0.18} />
           </mesh>
-          <Text position={[0, 0, 0.015]} fontSize={0.065} color={item.color} anchorX="center" anchorY="middle">
+          <Text position={[0, 0, 0.015]} fontSize={0.055} color={item.color} anchorX="center" anchorY="middle">
             {item.label}
           </Text>
         </group>
@@ -122,14 +122,10 @@ export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatI
         <meshStandardMaterial color="#f1f5f9" roughness={0.9} />
       </mesh>
 
-      {/* Front wall with the lesson board mounted directly on it. */}
+      {/* Clean front wall. */}
       <mesh position={[0, 2.4, -9.72]} receiveShadow>
         <boxGeometry args={[26, 4.8, 0.28]} />
         <meshStandardMaterial color="#d9e7ef" roughness={0.72} />
-      </mesh>
-      <mesh position={[0, 2.72, -9.61]} receiveShadow>
-        <boxGeometry args={[7.9, 2.85, 0.05]} />
-        <meshStandardMaterial color="#a9bdc9" roughness={0.82} />
       </mesh>
 
       {/* Rear wall built around the real main-door opening. */}
