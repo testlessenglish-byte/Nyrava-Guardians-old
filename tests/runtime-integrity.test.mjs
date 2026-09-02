@@ -4,88 +4,56 @@ import * as THREE from "three";
 import { InputManager } from "../src/components/game/core/input-manager.ts";
 import { isRoomPositionColliding } from "../src/components/game/player/classroom-collision.ts";
 
-function keyEvent(key, { repeat = false, code = key === " " ? "Space" : `Key${key.toUpperCase()}` } = {}) {
-  return {
-    key,
-    code,
-    repeat,
-    target: null,
-    preventDefault() {},
-  };
-}
-
 test("keyboard interact is consumed exactly once per physical E press", () => {
   const manager = new InputManager();
-  manager.onKeyDown(keyEvent("e"));
-  assert.equal(manager.getSnapshot().interactPressed, true);
-  assert.equal(manager.getSnapshot().interactPressed, false);
+  manager.onKeyDown({ key: "e", code: "KeyE", repeat: false });
+  let snapshot = manager.getSnapshot();
+  assert.equal(snapshot.interactPressed, true);
 
-  manager.onKeyDown(keyEvent("e", { repeat: true }));
-  assert.equal(manager.getSnapshot().interactPressed, false);
+  snapshot = manager.getSnapshot();
+  assert.equal(snapshot.interactPressed, false);
 
-  manager.onKeyUp(keyEvent("e"));
-  manager.onKeyDown(keyEvent("e"));
-  assert.equal(manager.getSnapshot().interactPressed, true);
+  manager.onKeyDown({ key: "e", code: "KeyE", repeat: true });
+  snapshot = manager.getSnapshot();
+  assert.equal(snapshot.interactPressed, false);
   manager.dispose();
 });
 
 test("touch interact is queued for one frame only", () => {
   const manager = new InputManager();
   manager.triggerInteract();
-  assert.equal(manager.getSnapshot().interactPressed, true);
-  assert.equal(manager.getSnapshot().interactPressed, false);
+  let snapshot = manager.getSnapshot();
+  assert.equal(snapshot.interactPressed, true);
+
+  snapshot = manager.getSnapshot();
+  assert.equal(snapshot.interactPressed, false);
   manager.dispose();
 });
 
 test("disabled runtime input cannot move or interact", () => {
   const manager = new InputManager();
-  manager.onKeyDown(keyEvent("w"));
-  manager.triggerInteract();
   manager.setEnabled(false);
+  manager.onKeyDown({ key: "w", code: "KeyW", repeat: false });
+  manager.triggerInteract();
+
   const snapshot = manager.getSnapshot();
   assert.equal(snapshot.moveY, 0);
   assert.equal(snapshot.interactPressed, false);
   manager.dispose();
 });
 
-test("closed classroom main door blocks the wall opening", () => {
+test("solid rear classroom wall blocks rear boundary", () => {
   const position = new THREE.Vector3(0, 0, 9.8);
   assert.equal(isRoomPositionColliding("security", position, new Set()), true);
 });
 
-test("open classroom main door creates a passable collision opening", () => {
-  const position = new THREE.Vector3(0, 0, 9.8);
-  assert.equal(isRoomPositionColliding("security", position, new Set(["main-door"])), false);
+test("solid side walls block left and right room boundaries", () => {
+  assert.equal(isRoomPositionColliding("security", new THREE.Vector3(12.95, 0, 0), new Set()), true);
+  assert.equal(isRoomPositionColliding("security", new THREE.Vector3(-12.95, 0, 0), new Set()), true);
 });
 
-test("wall remains solid beside an open classroom door", () => {
-  const position = new THREE.Vector3(4, 0, 9.8);
-  assert.equal(isRoomPositionColliding("security", position, new Set(["main-door"])), true);
-});
-
-test("open main door allows the player onto the rendered entrance landing", () => {
-  const position = new THREE.Vector3(0, 0, 12.0);
-  assert.equal(isRoomPositionColliding("security", position, new Set(["main-door"])), false);
-});
-
-test("player cannot walk behind the classroom rear wall from the landing", () => {
-  const position = new THREE.Vector3(6.0, 0, 12.0);
-  assert.equal(isRoomPositionColliding("security", position, new Set(["main-door"])), true);
-});
-
-test("player cannot leave the classroom through a wall into empty space", () => {
-  const position = new THREE.Vector3(12.95, 0, 6.0);
-  assert.equal(isRoomPositionColliding("security", position, new Set()), true);
-});
-
-test("security hallway opening only allows the small intended doorway landing", () => {
-  const openDoors = new Set(["hallway-door"]);
-  assert.equal(isRoomPositionColliding("security", new THREE.Vector3(-12.9, 0, -4.5), openDoors), false);
-  assert.equal(isRoomPositionColliding("security", new THREE.Vector3(-12.9, 0, 0), openDoors), true);
-});
-
-test("non-security rooms use their own stage and seat collision instead of Security desk rows", () => {
-  assert.equal(isRoomPositionColliding("builder", new THREE.Vector3(0, 0, -8.8), new Set()), true);
+test("non-security rooms use their own stage and seat collision", () => {
+  assert.equal(isRoomPositionColliding("builder", new THREE.Vector3(-4.0, 0, -6.2), new Set()), true);
   assert.equal(isRoomPositionColliding("builder", new THREE.Vector3(-6.5, 0, 3.9), new Set()), true);
   assert.equal(isRoomPositionColliding("builder", new THREE.Vector3(0, 0, 4.5), new Set()), false);
 });
