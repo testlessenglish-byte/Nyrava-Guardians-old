@@ -1,5 +1,4 @@
 import { Text } from "@react-three/drei";
-import { missions } from "@/domain/progression/catalog";
 import { InteractiveSeat, type SeatData } from "@/components/game/interactive-seat";
 import { InteractivePortal } from "@/components/game/interactive-portal";
 import { InteractiveDoor, type DoorData } from "@/components/game/interactive-door";
@@ -55,10 +54,6 @@ function Plant({ position }: { position: [number, number, number] }) {
   );
 }
 
-/**
- * ONE authoritative wall-mounted lesson board.
- * Mounted flush against the front wall at y = 3.2, z = -9.62.
- */
 export function AcademyClassroomSet({ activeSeatId, openDoorIds }: { activeSeatId?: string | null; openDoorIds?: Set<string> }) {
   return (
     <group>

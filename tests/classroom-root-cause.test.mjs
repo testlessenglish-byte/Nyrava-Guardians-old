@@ -19,6 +19,8 @@ test("digital safety foundations sign is completely removed from classroom set",
   const setPath = path.resolve("src/components/meta/academy-classroom-set.tsx");
   const content = fs.readFileSync(setPath, "utf8");
   assert.equal(content.includes("DIGITAL SAFETY FOUNDATIONS"), false, "DIGITAL SAFETY FOUNDATIONS sign must be completely removed.");
+  assert.equal(content.includes("LessonBoard"), false, "The classroom set must not render a lesson board component.");
+  assert.equal(content.includes("missions[0]"), false, "The removed board must not retain lesson-title wiring in the 3D classroom set.");
 });
 
 test("classroom scene renders 3D world-space text for teacher and player labels without 2D HTML occlusion", () => {
