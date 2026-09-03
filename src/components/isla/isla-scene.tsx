@@ -1287,12 +1287,21 @@ function Player({ color, name, guardianId }: { color: string; name: string; guar
       player.rotation.y += diff * (1 - Math.exp(-12 * delta));
     }
 
-    // jump + gravity + buoyancy
-    const ground = terrainHeight(player.position.x, player.position.z);
+    // jump + gravity + height stepping
+    const baseGround = terrainHeight(player.position.x, player.position.z);
+    
+    // Check plinths, boulders, and plaza steps height offsets
+    let surfaceOffset = 0;
+    // Central Plaza Emblem / Wayfinder steps
+    if (Math.hypot(player.position.x, player.position.z) < 5.2) surfaceOffset = 0.12;
+    // Valley plinths [-26*S, 48*S]
+    if (Math.hypot(player.position.x + 26 * S, player.position.z - 48 * S) < 12) surfaceOffset = 0.6;
+    
+    const ground = baseGround + surfaceOffset;
     const inWater = ground < WATER_LEVEL - 0.5;
     swimming.current = inWater;
 
-    if (islaControls.jump) {
+    if (islaControls.jump || keys.has(" ") || keys.has("space")) {
       islaControls.jump = false;
       if (!airborne.current && !busy && !inWater) {
         vy.current = 9.5;
@@ -1482,7 +1491,9 @@ function CentralGuardianPlaza() {
         </mesh>
         <Html position={[0, 4.2, 0]} transform distanceFactor={14} occlude={false}>
           <div className="w-64 rounded-2xl border border-cyan-400/40 bg-slate-950/90 p-3 text-center text-white shadow-2xl backdrop-blur-md">
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400">ISLA CENTRAL WAYFINDER</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400">
+              ISLA CENTRAL WAYFINDER
+            </p>
             <div className="mt-2 space-y-1 text-[11px] font-extrabold">
               <p className="text-amber-300">← Academy District</p>
               <p className="text-cyan-300">→ Mission Hub</p>
@@ -1503,11 +1514,17 @@ function CentralGuardianPlaza() {
         <Html position={[0, 2.0, 0.1]} transform distanceFactor={14} occlude={false}>
           <div className="w-[280px] select-none rounded-xl border border-amber-500/40 bg-slate-950/90 p-3 text-white backdrop-blur">
             <div className="flex items-center justify-between border-b border-slate-800 pb-1">
-              <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">WORLD EVENT</span>
-              <span className="rounded-full bg-amber-950 px-2 py-0.5 text-[8px] font-extrabold text-amber-300">ACTIVE</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">
+                WORLD EVENT
+              </span>
+              <span className="rounded-full bg-amber-950 px-2 py-0.5 text-[8px] font-extrabold text-amber-300">
+                ACTIVE
+              </span>
             </div>
             <p className="mt-2 text-xs font-black text-white">Safer Internet Week</p>
-            <p className="mt-1 text-[10px] font-medium text-slate-300">Suspicious phishing messages reported in Digital City. Talk to Sarah at Mission Hub!</p>
+            <p className="mt-1 text-[10px] font-medium text-slate-300">
+              Suspicious phishing messages reported in Digital City. Talk to Sarah at Mission Hub!
+            </p>
           </div>
         </Html>
       </group>

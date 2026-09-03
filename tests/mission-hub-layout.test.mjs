@@ -2,7 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const scene = readFileSync(new URL("../src/components/missions/mission-hub-scene.tsx", import.meta.url), "utf8");
+const scene = readFileSync(
+  new URL("../src/components/missions/mission-hub-scene.tsx", import.meta.url),
+  "utf8",
+);
 const route = readFileSync(new URL("../src/routes/missions.tsx", import.meta.url), "utf8");
 
 test("Mission Hub permanent signage uses world-space text instead of giant HTML boards", () => {
@@ -16,7 +19,7 @@ test("Mission Hub player label does not append Guardian name", () => {
   assert.doesNotMatch(route, /guardianName \|\| \(es \? "Tú" : "You"\)\}\$\{chosen/);
 });
 
-test("Mission Hub pins player to the room floor", () => {
-  assert.match(scene, /player\.position\.y = 0/);
+test("Mission Hub configures player spawn and floor height evaluation", () => {
+  assert.match(scene, /getSurfaceHeight/);
   assert.match(scene, /PLAYER_SPAWN/);
 });

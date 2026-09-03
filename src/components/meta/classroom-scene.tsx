@@ -8,8 +8,14 @@ import { PlayerController } from "@/components/game/core/player-controller";
 import { updateThirdPersonCamera } from "@/components/game/core/camera-follower";
 import { type InputManager } from "@/components/game/core/input-manager";
 import { type PlayerMode } from "@/components/game/core/player-state-machine";
-import { InteractionManager, type InteractiveTarget } from "@/components/game/core/interaction-manager";
-import { CLASSROOM_TRAVEL_BOUNDS, isRoomPositionColliding } from "@/components/game/player/classroom-collision";
+import {
+  InteractionManager,
+  type InteractiveTarget,
+} from "@/components/game/core/interaction-manager";
+import {
+  CLASSROOM_TRAVEL_BOUNDS,
+  isRoomPositionColliding,
+} from "@/components/game/player/classroom-collision";
 import { STUDENT_SEATS } from "./academy-classroom-set";
 import { BUILDER_SEATS } from "./builder-lab-set";
 import { COMMUNICATION_SEATS } from "./communication-studio-set";
@@ -36,17 +42,37 @@ function Loader() {
  * Authoritative Teacher NPC (Sarah)
  * Anchored to world position [-4.0, 0.2, -6.0] with 3D text label.
  */
-function TeacherNpc({ guardian, position, rotation = 0.3 }: { guardian: ClassGuardian; position: [number, number, number]; rotation?: number }) {
+function TeacherNpc({
+  guardian,
+  position,
+  rotation = 0.3,
+}: {
+  guardian: ClassGuardian;
+  position: [number, number, number];
+  rotation?: number;
+}) {
   return (
     <group position={position} rotation-y={rotation}>
       <Character color={guardian.color} clip="idle" guardianId={guardian.id} />
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
         <ringGeometry args={[0.7, 0.95, 36]} />
-        <meshStandardMaterial color={guardian.color} emissive={guardian.color} emissiveIntensity={1.2} transparent opacity={0.85} />
+        <meshStandardMaterial
+          color={guardian.color}
+          emissive={guardian.color}
+          emissiveIntensity={1.2}
+          transparent
+          opacity={0.85}
+        />
       </mesh>
       {/* 3D World Space Label anchored to Sarah's head */}
       <group position={[0, 2.15, 0]}>
-        <Text fontSize={0.16} color={guardian.color} anchorX="center" anchorY="middle" letterSpacing={0.06}>
+        <Text
+          fontSize={0.16}
+          color={guardian.color}
+          anchorX="center"
+          anchorY="middle"
+          letterSpacing={0.06}
+        >
           {`${guardian.name} · ${guardian.role}`}
         </Text>
       </group>
@@ -79,7 +105,14 @@ export function ClassroomScene({
   setActiveSeatId?: (id: string | null) => void;
   openDoorIds?: Set<string>;
   setOpenDoorIds?: (updater: (prev: Set<string>) => Set<string>) => void;
-  setActiveInteraction?: (interaction: { id: string; type: string; label: { en: string; es: string }; action: () => void } | null) => void;
+  setActiveInteraction?: (
+    interaction: {
+      id: string;
+      type: string;
+      label: { en: string; es: string };
+      action: () => void;
+    } | null,
+  ) => void;
 }) {
   const group = useRef<THREE.Group>(null);
   const lastInteractionKey = useRef<string | null>(null);
@@ -115,9 +148,21 @@ export function ClassroomScene({
     const mode: PlayerMode = activeSeatId
       ? "seated"
       : input.moveX !== 0 || input.moveY !== 0
-        ? input.run ? "running" : "walking"
+        ? input.run
+          ? "running"
+          : "walking"
         : "idle";
     const currentOpenDoors = openDoorIds ?? EMPTY_OPEN_DOORS;
+
+    const getSurfaceHeight = (pos: THREE.Vector3) => {
+      // Teacher podium at [-4.0, -6.0]
+      if (Math.hypot(pos.x + 4.0, pos.z + 6.0) < 2.2) return 0.25;
+      // Student desks
+      for (const seat of roomData.seats) {
+        if (Math.hypot(pos.x - seat.position[0], pos.z - seat.position[2]) < 1.1) return 0.75;
+      }
+      return 0;
+    };
 
     playerController.update(
       player.position,
@@ -127,6 +172,7 @@ export function ClassroomScene({
       delta,
       CLASSROOM_TRAVEL_BOUNDS,
       (nextPos) => isRoomPositionColliding(room, nextPos, currentOpenDoors, 0.45),
+      getSurfaceHeight,
     );
 
     if (!activeSeatId) player.rotation.y = playerController.rotationY;
@@ -146,7 +192,11 @@ export function ClassroomScene({
       );
     }
 
-    const pPos: [number, number, number] = [player.position.x, player.position.y, player.position.z];
+    const pPos: [number, number, number] = [
+      player.position.x,
+      player.position.y,
+      player.position.z,
+    ];
     const targets: InteractiveTarget[] = [];
 
     if (activeSeatId) {
@@ -171,7 +221,10 @@ export function ClassroomScene({
       position: [-4.0, 0, -6.0],
       range: 3.5,
       priority: 80,
-      label: { en: "Press E to Talk to Sarah / Start Class", es: "Presiona E para hablar con Sarah / Iniciar clase" },
+      label: {
+        en: "Press E to Talk to Sarah / Start Class",
+        es: "Presiona E para hablar con Sarah / Iniciar clase",
+      },
       action: () => onStartCourse?.(),
     });
 
@@ -200,7 +253,10 @@ export function ClassroomScene({
       position: [11.2, 0, 2.0],
       range: 2.5,
       priority: 20,
-      label: { en: "Press E / Tap to Enter Mission Hub", es: "Presiona E / Toca para entrar al Centro de Misiones" },
+      label: {
+        en: "Press E / Tap to Enter Mission Hub",
+        es: "Presiona E / Toca para entrar al Centro de Misiones",
+      },
       action: () => {
         if (typeof window !== "undefined") window.location.assign("/missions");
       },
@@ -210,12 +266,15 @@ export function ClassroomScene({
     const nextKey = best ? `${best.id}:${best.label.en}` : null;
     if (nextKey !== lastInteractionKey.current) {
       lastInteractionKey.current = nextKey;
-      setActiveInteraction?.(best ? { id: best.id, type: best.type, label: best.label, action: best.action } : null);
+      setActiveInteraction?.(
+        best ? { id: best.id, type: best.type, label: best.label, action: best.action } : null,
+      );
     }
     if (best && input.interactPressed) best.action();
   });
 
-  const teacher = CLASS_GUARDIANS.find((guardian) => guardian.id === roomData.teacherId) ?? CLASS_GUARDIANS[0]!;
+  const teacher =
+    CLASS_GUARDIANS.find((guardian) => guardian.id === roomData.teacherId) ?? CLASS_GUARDIANS[0]!;
 
   return (
     <>
@@ -227,15 +286,34 @@ export function ClassroomScene({
 
         {/* Player Avatar */}
         <group ref={group} position={PLAYER_SPAWN} rotation-y={0}>
-          <Character color={playerColor} clip={moving ? "walk" : "idle"} guardianId={guardianId} height={1.7} />
+          <Character
+            color={playerColor}
+            clip={moving ? "walk" : "idle"}
+            guardianId={guardianId}
+            height={1.7}
+          />
           <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
             <ringGeometry args={[0.55, 0.72, 40]} />
-            <meshStandardMaterial color={playerColor} emissive={playerColor} emissiveIntensity={1.5} transparent opacity={0.85} />
+            <meshStandardMaterial
+              color={playerColor}
+              emissive={playerColor}
+              emissiveIntensity={1.5}
+              transparent
+              opacity={0.85}
+            />
           </mesh>
           <pointLight position={[0, 1.7, 0]} color={playerColor} intensity={4} distance={5} />
-          {/* 3D World Space Player Label anchored to player head */}
+          // Text font
           <group position={[0, 2.15, 0]}>
-            <Text fontSize={0.16} color="#38bdf8" anchorX="center" anchorY="middle" letterSpacing={0.05}>
+            <Text
+              font="arial"
+
+              fontSize={0.16}
+              color="#38bdf8"
+              anchorX="center"
+              anchorY="middle"
+              letterSpacing={0.05}
+            >
               {playerLabel}
             </Text>
           </group>

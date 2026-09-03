@@ -37,8 +37,16 @@ export function DigitalCityScene({
     const mode: PlayerMode = blocked
       ? "interacting"
       : input.moveX !== 0 || input.moveY !== 0
-        ? input.run ? "running" : "walking"
+        ? input.run
+          ? "running"
+          : "walking"
         : "idle";
+
+    const getSurfaceHeight = (pos: THREE.Vector3) => {
+      // Terminal pedestal at [0, -8]
+      if (Math.hypot(pos.x, pos.z + 8) < 1.4) return 1.2;
+      return 0;
+    };
 
     playerController.update(
       player.position,
@@ -46,7 +54,14 @@ export function DigitalCityScene({
       input,
       mode,
       delta,
-      { minX: -22, maxX: 22, minZ: -22, maxZ: 22 },
+      {
+        minX: -22,
+        maxX: 22,
+        minZ: -22,
+        maxZ: 22,
+      },
+      undefined,
+      getSurfaceHeight,
     );
 
     player.rotation.y = playerController.rotationY;
@@ -98,8 +113,12 @@ export function DigitalCityScene({
         </mesh>
         <Html position={[0, 0, 0.15]} transform distanceFactor={14} occlude={false}>
           <div className="w-[600px] select-none text-center text-white">
-            <h1 className="text-2xl font-black tracking-widest text-cyan-300">DIGITAL CITY PLAZA</h1>
-            <p className="mt-1 text-xs font-bold text-slate-200">Official Nyrava Communications & Security District</p>
+            <h1 className="text-2xl font-black tracking-widest text-cyan-300">
+              DIGITAL CITY PLAZA
+            </h1>
+            <p className="mt-1 text-xs font-bold text-slate-200">
+              Official Nyrava Communications & Security District
+            </p>
           </div>
         </Html>
       </group>
@@ -123,7 +142,13 @@ export function DigitalCityScene({
           <Character color={playerColor} clip={moving ? "walk" : "idle"} guardianId={guardianId} />
           <mesh rotation-x={-Math.PI / 2} position={[0, 0.02, 0]}>
             <ringGeometry args={[0.55, 0.72, 40]} />
-            <meshStandardMaterial color={playerColor} emissive={playerColor} emissiveIntensity={1.5} transparent opacity={0.85} />
+            <meshStandardMaterial
+              color={playerColor}
+              emissive={playerColor}
+              emissiveIntensity={1.5}
+              transparent
+              opacity={0.85}
+            />
           </mesh>
           <Html position={[0, 2.35, 0]} center distanceFactor={14}>
             <span className="pointer-events-none select-none rounded-full border border-cyan-400/30 bg-slate-950/80 px-3 py-1 text-xs font-black uppercase tracking-widest text-cyan-300 backdrop-blur">
