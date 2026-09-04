@@ -158,9 +158,15 @@ export function ClassroomScene({
     const getSurfaceHeight = (pos: THREE.Vector3) => {
       // Teacher podium at [-4.0, -6.0]
       if (Math.hypot(pos.x + 4.0, pos.z + 6.0) < 2.2) return 0.25;
-      // Student desks
-      for (const seat of roomData.seats) {
-        if (Math.hypot(pos.x - seat.position[0], pos.z - seat.position[2]) < 1.1) return 0.75;
+      // Student desks (tables only - chairs are sat IN via E key, not stepped ON)
+      const deskPositions: [number, number][] = [
+        [-6.5, 2.5],
+        [-6.5, 6.0],
+        [6.5, 2.5],
+        [6.5, 6.0],
+      ];
+      for (const [dx, dz] of deskPositions) {
+        if (Math.hypot(pos.x - dx, pos.z - dz) < 1.1) return 0.75;
       }
       return 0;
     };
