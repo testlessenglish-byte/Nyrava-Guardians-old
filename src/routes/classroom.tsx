@@ -16,6 +16,7 @@ import { QUALITY, useQuality } from "@/services/game/quality";
 import { useAppActive } from "@/services/platform/lifecycle";
 import { InputManager } from "@/components/game/core/input-manager";
 import { FullViewportCourseExperience } from "@/components/progression/full-course-experience";
+import { SeatedCourseBoard } from "@/components/classroom/seated-course-board";
 import { PauseMenu } from "@/components/game/pause-menu";
 import { missions } from "@/domain/progression/catalog";
 
@@ -204,6 +205,18 @@ function ClassroomPage() {
           </button>
         </div>
       </div>
+      {activeSeatId && (
+        <SeatedCourseBoard
+          room={currentRoom}
+          locale={chosen ? "en-US" : "en-US"}
+          onStartTest={() => {
+            startCourse();
+          }}
+          onStandUp={() => {
+            setActiveSeatId(null);
+          }}
+        />
+      )}
       <WorldLoading />
       <GameSettings />
       <PauseMenu />
