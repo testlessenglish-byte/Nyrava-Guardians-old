@@ -24,7 +24,7 @@ export function StoryStageView({
     // Speak first Nyrava dialogue line when chapter opens
     const nyravaLine = currentChapter.dialogue.find((d) => d.speaker === "Nyrava");
     if (nyravaLine) {
-      conversationalVoiceEngine.speak(text(nyravaLine.text));
+      conversationalVoiceEngine.speakGuardianResponse(text(nyravaLine.text));
     }
   }, [chapterIdx]);
 
