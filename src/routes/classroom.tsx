@@ -32,7 +32,7 @@ function ClassroomPage() {
   const active = useAppActive();
   const dragging = useRef(false);
   const { guardianId, guardianName, hydrated } = useGuardian();
-  const chosen = guardianId ? CLASS_GUARDIANS.find((g) => g.id === guardianId) : undefined;
+  const chosen = (guardianId ? CLASS_GUARDIANS.find((g) => g.id === guardianId) : undefined) ?? CLASS_GUARDIANS[0]!;
   const playerColor = chosen?.color ?? "#f4f7ff";
   const playerLabel = guardianName || "Guardian";
   const inputManager = useMemo(() => new InputManager(), []);
@@ -91,15 +91,30 @@ function ClassroomPage() {
       <div className="fixed inset-0 grid place-items-center bg-slate-950 p-6 text-white">
         <div className="max-w-md rounded-3xl border border-amber-400/30 bg-slate-900/90 p-6 text-center shadow-2xl">
           <h1 className="text-xl font-black">Choose your Guardian first</h1>
-          <p className="mt-2 text-sm text-slate-300">Your classroom will not substitute a different avatar. Return to Isla Central, select your Guardian, then enter class again.</p>
-          <button type="button" onClick={() => window.location.assign("/isla")} className="mt-5 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950">Return to Isla Central</button>
+          <p className="mt-2 text-sm text-slate-300">
+            Your classroom will not substitute a different avatar. Return to Isla Central, select
+            your Guardian, then enter class again.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.assign("/isla")}
+            className="mt-5 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950"
+          >
+            Return to Isla Central
+          </button>
         </div>
       </div>
     );
   }
 
   if (courseOpen) {
-    return <FullViewportCourseExperience missionId={selectedMissionId} onExit={exitCourse} onComplete={() => undefined} />;
+    return (
+      <FullViewportCourseExperience
+        missionId={selectedMissionId}
+        onExit={exitCourse}
+        onComplete={() => undefined}
+      />
+    );
   }
 
   return (
@@ -108,7 +123,12 @@ function ClassroomPage() {
         className="absolute inset-0 touch-none"
         onPointerDown={(event) => {
           const target = event.target as HTMLElement | null;
-          if (target?.closest("button, a, select, input, summary, details, label, [role='button'], .game-panel, .game-panel-content")) return;
+          if (
+            target?.closest(
+              "button, a, select, input, summary, details, label, [role='button'], .game-panel, .game-panel-content",
+            )
+          )
+            return;
           if (event.pointerType === "mouse" && event.button !== 0) return;
           dragging.current = true;
         }}
@@ -124,7 +144,12 @@ function ClassroomPage() {
         onLostPointerCapture={() => (dragging.current = false)}
       >
         <GameErrorBoundary>
-          <Canvas frameloop={active ? "always" : "never"} shadows={quality.shadows} dpr={quality.dpr} camera={{ position: [0, 3.2, 13.2], fov: 58 }}>
+          <Canvas
+            frameloop={active ? "always" : "never"}
+            shadows={quality.shadows}
+            dpr={quality.dpr}
+            camera={{ position: [0, 3.2, 13.2], fov: 58 }}
+          >
             <Suspense fallback={null}>
               <ClassroomScene
                 room={currentRoom}
@@ -139,21 +164,44 @@ function ClassroomPage() {
                 setOpenDoorIds={setOpenDoorIds}
                 setActiveInteraction={setActiveInteraction}
               />
-              {currentRoom === "security" && <AcademyClassroomSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
-              {currentRoom === "builder" && <BuilderLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
-              {currentRoom === "communication" && <CommunicationStudioSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
-              {currentRoom === "truth" && <TruthLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />}
+              {currentRoom === "security" && (
+                <AcademyClassroomSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
+              )}
+              {currentRoom === "builder" && (
+                <BuilderLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
+              )}
+              {currentRoom === "communication" && (
+                <CommunicationStudioSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
+              )}
+              {currentRoom === "truth" && (
+                <TruthLabSet activeSeatId={activeSeatId} openDoorIds={openDoorIds} />
+              )}
             </Suspense>
           </Canvas>
         </GameErrorBoundary>
       </div>
 
-      <ClassHud room={currentRoom} activeInteraction={activeInteraction} activeSeatId={activeSeatId} />
+      <ClassHud
+        room={currentRoom}
+        activeInteraction={activeInteraction}
+        activeSeatId={activeSeatId}
+      />
       <div className="mobile-game-controls pointer-events-none fixed inset-0 z-40">
-        <div className="game-left pointer-events-auto"><AnalogJoystick target={inputManager.joystick} /></div>
-        <div className="game-right pointer-events-auto"><LookPad target={inputManager} /></div>
+        <div className="game-left pointer-events-auto">
+          <AnalogJoystick target={inputManager.joystick} />
+        </div>
+        <div className="game-right pointer-events-auto">
+          <LookPad target={inputManager} />
+        </div>
         <div className="game-actions pointer-events-auto">
-          <button type="button" className="game-action" aria-label="Interact" onClick={() => inputManager.triggerInteract()}>Use</button>
+          <button
+            type="button"
+            className="game-action"
+            aria-label="Interact"
+            onClick={() => inputManager.triggerInteract()}
+          >
+            Use
+          </button>
         </div>
       </div>
       <WorldLoading />
