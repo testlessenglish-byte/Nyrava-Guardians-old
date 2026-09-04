@@ -144,10 +144,7 @@
       "indexes": {
         "api_secret_audit_provider_created_idx": {
           "name": "api_secret_audit_provider_created_idx",
-          "columns": [
-            "provider",
-            "created_at"
-          ],
+          "columns": ["provider", "created_at"],
           "isUnique": false
         }
       },

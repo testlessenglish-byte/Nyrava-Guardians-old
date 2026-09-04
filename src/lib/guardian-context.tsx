@@ -67,8 +67,11 @@ function setVoiceLocale(locale: LocaleId, idle = false) {
       .catch(() => undefined);
   };
   if (idle && "requestIdleCallback" in window) {
-    (window as Window & { requestIdleCallback: (cb: () => void, options?: { timeout: number }) => number })
-      .requestIdleCallback(apply, { timeout: 1200 });
+    (
+      window as Window & {
+        requestIdleCallback: (cb: () => void, options?: { timeout: number }) => number;
+      }
+    ).requestIdleCallback(apply, { timeout: 1200 });
   } else if (idle) {
     window.setTimeout(apply, 0);
   } else {

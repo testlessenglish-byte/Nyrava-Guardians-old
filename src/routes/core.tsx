@@ -93,12 +93,8 @@ function CoreContent() {
           {VALUES.map(({ id, label, icon: Icon, blurb }) => (
             <div key={id} className="panel p-4 text-center">
               <Icon className="mx-auto h-6 w-6 text-primary" />
-              <p className="mt-2 text-xs font-extrabold uppercase tracking-wider">
-                {label}
-              </p>
-              <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
-                {blurb}
-              </p>
+              <p className="mt-2 text-xs font-extrabold uppercase tracking-wider">{label}</p>
+              <p className="mt-1 text-[10px] leading-snug text-muted-foreground">{blurb}</p>
             </div>
           ))}
         </div>

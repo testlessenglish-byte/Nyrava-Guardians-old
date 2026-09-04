@@ -69,7 +69,9 @@ function LoginPage() {
             const action = createAccount
               ? signUpWithEmail(email, password).then((needsConfirmation) => {
                   if (needsConfirmation) {
-                    setMessage("Check your email to confirm the account, then return here to sign in.");
+                    setMessage(
+                      "Check your email to confirm the account, then return here to sign in.",
+                    );
                     setCreateAccount(false);
                   }
                 })
@@ -85,7 +87,10 @@ function LoginPage() {
               .finally(() => setBusy(false));
           }}
         >
-          <label className="block text-xs font-extrabold text-muted-foreground" htmlFor="guardian-email">
+          <label
+            className="block text-xs font-extrabold text-muted-foreground"
+            htmlFor="guardian-email"
+          >
             Email
           </label>
           <input
@@ -98,7 +103,10 @@ function LoginPage() {
             className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground"
             placeholder="guardian@example.com"
           />
-          <label className="block text-xs font-extrabold text-muted-foreground" htmlFor="guardian-password">
+          <label
+            className="block text-xs font-extrabold text-muted-foreground"
+            htmlFor="guardian-password"
+          >
             Password
           </label>
           <input

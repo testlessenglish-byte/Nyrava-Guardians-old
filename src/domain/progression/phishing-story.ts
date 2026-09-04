@@ -15,7 +15,10 @@ export type PhishingStoryState = {
   certificateEarned: boolean;
 };
 
-export const STORY_STEP_LABELS: Record<PhishingStoryStep, { title: string; objective: string; route: string }> = {
+export const STORY_STEP_LABELS: Record<
+  PhishingStoryStep,
+  { title: string; objective: string; route: string }
+> = {
   SPAWN_ISLA: {
     title: "Step 1: Welcome to Isla Central",
     objective: "Explore Isla Central Plaza and head to Mission Hub when you are ready.",
@@ -58,7 +61,8 @@ export const STORY_STEP_LABELS: Record<PhishingStoryStep, { title: string; objec
   },
   MISSION_COMPLETED: {
     title: "Mission Complete: The Phishing Attack",
-    objective: "Phishing Defense progress and its real engine rewards are saved. Continue all three Foundation classes to earn the Digital Safety Foundations certificate.",
+    objective:
+      "Phishing Defense progress and its real engine rewards are saved. Continue all three Foundation classes to earn the Digital Safety Foundations certificate.",
     route: "/missions",
   },
 };

@@ -40,9 +40,7 @@ const SECURITY_INTERIOR: BoxCollider[] = [
 
 export const CLASSROOM_COLLIDERS = SECURITY_INTERIOR;
 
-const SIMPLE_ROOM_INTERIOR: BoxCollider[] = [
-  { minX: -5.8, maxX: -2.2, minZ: -7.5, maxZ: -5.2 },
-];
+const SIMPLE_ROOM_INTERIOR: BoxCollider[] = [{ minX: -5.8, maxX: -2.2, minZ: -7.5, maxZ: -5.2 }];
 
 const SECURITY_SEATS: Array<[number, number]> = [
   [-6.5, 3.9],
@@ -91,11 +89,7 @@ function isInsideApprovedWalkZone(
   );
 }
 
-function collidesWithShell(
-  _room: ClassroomCollisionRoom,
-  pos: THREE.Vector3,
-  radius: number,
-) {
+function collidesWithShell(_room: ClassroomCollisionRoom, pos: THREE.Vector3, radius: number) {
   const touchingRearWall = pos.z + radius > WALL_Z - WALL_HALF_THICKNESS;
   if (touchingRearWall) return true;
 

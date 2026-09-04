@@ -79,9 +79,9 @@ keys and produces a clear error instead of referencing undefined `process`.
 | Editor auth-session broker                            | REPLACE                      | Origin-local Supabase storage; no parent-frame forwarding |
 | Error-reporting hooks                                 | REMOVE from active app       | Detached from root; historical helper retained unused     |
 | Cloud-specific configuration errors                   | REPLACE                      | Independent environment guidance                          |
-| Legacy AI gateway                                     | REPLACE                      | Replaced by direct server-side provider integrations       |
-| Legacy cron-specific secret names                     | REMOVE                       | Obsolete helper and variables removed                      |
-| Historical Bun/editor files                           | REMOVE from active toolchain | Removed; maintained path uses npm                           |
+| Legacy AI gateway                                     | REPLACE                      | Replaced by direct server-side provider integrations      |
+| Legacy cron-specific secret names                     | REMOVE                       | Obsolete helper and variables removed                     |
+| Historical Bun/editor files                           | REMOVE from active toolchain | Removed; maintained path uses npm                         |
 | Legacy README/agent sync instructions                 | REPLACE                      | Updated for the independent repository                    |
 
 ## Reference documentation

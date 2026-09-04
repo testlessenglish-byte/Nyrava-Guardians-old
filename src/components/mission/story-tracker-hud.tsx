@@ -3,10 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Shield, ArrowRight } from "lucide-react";
 import { type PhishingStoryStep, STORY_STEP_LABELS } from "@/domain/progression/phishing-story";
 import { Button } from "@/components/ui/button";
-import {
-  getPhishingStoryStep,
-  subscribePhishingStory,
-} from "@/lib/phishing-story-state";
+import { getPhishingStoryStep, subscribePhishingStory } from "@/lib/phishing-story-state";
 
 export function StoryTrackerHud() {
   const [step, setStep] = useState<PhishingStoryStep>(() => getPhishingStoryStep());
@@ -35,8 +32,11 @@ export function StoryTrackerHud() {
 
       {!completed && (
         <div className="flex items-center justify-end pt-1">
-          <Link to={info.route as any}>
-            <Button size="sm" className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-[10px] rounded-lg px-2.5 py-1 h-7">
+          <Link to={info.route as string}>
+            <Button
+              size="sm"
+              className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-[10px] rounded-lg px-2.5 py-1 h-7"
+            >
               Go to Objective <ArrowRight className="size-3 ml-1" />
             </Button>
           </Link>

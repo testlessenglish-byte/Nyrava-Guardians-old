@@ -37,7 +37,8 @@ export function startPhishingStory() {
 
 export function subscribePhishingStory(listener: (step: PhishingStoryStep) => void) {
   if (typeof window === "undefined") return () => undefined;
-  const customHandler = (event: Event) => listener((event as CustomEvent<PhishingStoryStep>).detail);
+  const customHandler = (event: Event) =>
+    listener((event as CustomEvent<PhishingStoryStep>).detail);
   const storageHandler = (event: StorageEvent) => {
     if (!event.key || event.key === STORAGE_KEY) listener(getPhishingStoryStep());
   };

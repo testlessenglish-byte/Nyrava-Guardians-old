@@ -28,7 +28,8 @@ export class IntelligenceCoreService {
    */
   calculateCapability(events: MasteryEvidenceEvent[]): GuardianCapabilityState {
     const validEvents = events.filter((e) => e.validationStatus === "validated");
-    const skills: Record<string, { score: number; evidenceCount: number; lastUpdated: string }> = {};
+    const skills: Record<string, { score: number; evidenceCount: number; lastUpdated: string }> =
+      {};
 
     let totalScoreSum = 0;
     let skillCount = 0;

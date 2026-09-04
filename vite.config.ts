@@ -32,7 +32,11 @@ export default defineConfig(({ command, mode }) => {
                   rollupConfig: { output: { entryFileNames: "index.js" } },
                   cloudflare: { nodeCompat: true },
                   routeRules: {
-                    "/**": { headers: { "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0" } },
+                    "/**": {
+                      headers: {
+                        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+                      },
+                    },
                   },
                 }),
           ]

@@ -61,7 +61,13 @@ export function InteractivePortal({
         }}
       >
         <circleGeometry args={[1.2, 40]} />
-        <meshStandardMaterial color="#312e81" emissive="#6366f1" emissiveIntensity={1.8} transparent opacity={0.78} />
+        <meshStandardMaterial
+          color="#312e81"
+          emissive="#6366f1"
+          emissiveIntensity={1.8}
+          transparent
+          opacity={0.78}
+        />
       </mesh>
 
       {/* Portal Title Signage */}

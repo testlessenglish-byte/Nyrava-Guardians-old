@@ -12,7 +12,7 @@ export interface InteractiveTarget {
 export class InteractionManager {
   getBestInteraction(
     playerPos: [number, number, number],
-    targets: InteractiveTarget[]
+    targets: InteractiveTarget[],
   ): InteractiveTarget | null {
     let best: InteractiveTarget | null = null;
     let bestPriority = -Infinity;

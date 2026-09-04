@@ -1,11 +1,5 @@
 export type PlayerMode =
-  | "idle"
-  | "walking"
-  | "running"
-  | "seated"
-  | "interacting"
-  | "conversation"
-  | "course";
+  "idle" | "walking" | "running" | "seated" | "interacting" | "conversation" | "course";
 
 export function isMovementAllowed(mode: PlayerMode): boolean {
   return mode === "idle" || mode === "walking" || mode === "running";

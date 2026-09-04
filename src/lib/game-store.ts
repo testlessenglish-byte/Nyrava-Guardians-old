@@ -40,7 +40,7 @@ export function useGameStore(): GameStoreState {
       return () => listeners.delete(l);
     },
     () => state,
-    () => state
+    () => state,
   );
 }
 

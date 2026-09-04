@@ -16,7 +16,14 @@ export function updateThirdPersonCamera(
   distance = 4.5,
   targetHeight = 1.5,
   collisionObjects: THREE.Object3D[] = EMPTY_COLLISION_OBJECTS,
-  roomBounds?: { minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number }
+  roomBounds?: {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    minZ: number;
+    maxZ: number;
+  },
 ) {
   tempTargetOffset.set(0, targetHeight, 0);
   tempTargetPos.copy(playerPos).add(tempTargetOffset);
@@ -31,13 +38,25 @@ export function updateThirdPersonCamera(
   tempDesiredCamPos.set(
     tempTargetPos.x + offsetX,
     tempTargetPos.y + offsetY,
-    tempTargetPos.z + offsetZ
+    tempTargetPos.z + offsetZ,
   );
 
   if (roomBounds) {
-    tempDesiredCamPos.x = THREE.MathUtils.clamp(tempDesiredCamPos.x, roomBounds.minX, roomBounds.maxX);
-    tempDesiredCamPos.y = THREE.MathUtils.clamp(tempDesiredCamPos.y, roomBounds.minY, roomBounds.maxY);
-    tempDesiredCamPos.z = THREE.MathUtils.clamp(tempDesiredCamPos.z, roomBounds.minZ, roomBounds.maxZ);
+    tempDesiredCamPos.x = THREE.MathUtils.clamp(
+      tempDesiredCamPos.x,
+      roomBounds.minX,
+      roomBounds.maxX,
+    );
+    tempDesiredCamPos.y = THREE.MathUtils.clamp(
+      tempDesiredCamPos.y,
+      roomBounds.minY,
+      roomBounds.maxY,
+    );
+    tempDesiredCamPos.z = THREE.MathUtils.clamp(
+      tempDesiredCamPos.z,
+      roomBounds.minZ,
+      roomBounds.maxZ,
+    );
   }
 
   tempRayDirection.subVectors(tempDesiredCamPos, tempTargetPos);

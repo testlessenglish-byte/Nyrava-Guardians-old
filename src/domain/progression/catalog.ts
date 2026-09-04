@@ -146,7 +146,10 @@ export const missions: PublicMission[] = [
     questions: [
       {
         id: "q1",
-        prompt: { en: "Which password is the strongest choice?", es: "¿Cuál contraseña es la opción más fuerte?" },
+        prompt: {
+          en: "Which password is the strongest choice?",
+          es: "¿Cuál contraseña es la opción más fuerte?",
+        },
         options: [
           { en: "alex2016", es: "alex2016" },
           { en: "Purple-River-Cloud-Train!", es: "Rio-Morado-Nube-Tren!" },
@@ -161,7 +164,10 @@ export const missions: PublicMission[] = [
         },
         options: [
           { en: "Nothing changes", es: "No cambia nada" },
-          { en: "The stolen password may also unlock your email", es: "La contraseña robada también puede abrir tu correo" },
+          {
+            en: "The stolen password may also unlock your email",
+            es: "La contraseña robada también puede abrir tu correo",
+          },
           { en: "Your screen becomes slower", es: "Tu pantalla se vuelve más lenta" },
         ],
       },
@@ -173,7 +179,10 @@ export const missions: PublicMission[] = [
         },
         options: [
           { en: "Share it because they are a friend", es: "Compartirlo porque es tu amigo" },
-          { en: "Keep it private and deny any sign-in you did not start", es: "Mantenerlo privado y rechazar cualquier inicio que no comenzaste" },
+          {
+            en: "Keep it private and deny any sign-in you did not start",
+            es: "Mantenerlo privado y rechazar cualquier inicio que no comenzaste",
+          },
           { en: "Post it in the group chat", es: "Publicarlo en el chat grupal" },
         ],
       },
@@ -243,7 +252,10 @@ export const missions: PublicMission[] = [
         },
         options: [
           { en: "Post it with live location", es: "Publicarla con ubicación en vivo" },
-          { en: "Crop or avoid identifying details before sharing", es: "Recortar o evitar datos identificables antes de compartir" },
+          {
+            en: "Crop or avoid identifying details before sharing",
+            es: "Recortar o evitar datos identificables antes de compartir",
+          },
           { en: "Add your class schedule too", es: "Agregar también tu horario de clases" },
         ],
       },
@@ -255,7 +267,10 @@ export const missions: PublicMission[] = [
         },
         options: [
           { en: "Send the address", es: "Enviar la dirección" },
-          { en: "Do not share it and tell a trusted adult", es: "No compartirla y avisar a un adulto de confianza" },
+          {
+            en: "Do not share it and tell a trusted adult",
+            es: "No compartirla y avisar a un adulto de confianza",
+          },
           { en: "Send a nearby landmark instead", es: "Enviar un punto cercano" },
         ],
       },
@@ -267,7 +282,10 @@ export const missions: PublicMission[] = [
         },
         options: [
           { en: "Will it get likes?", es: "¿Conseguirá muchos me gusta?" },
-          { en: "Who can see this and does it reveal something private?", es: "¿Quién puede verlo y revela algo privado?" },
+          {
+            en: "Who can see this and does it reveal something private?",
+            es: "¿Quién puede verlo y revela algo privado?",
+          },
           { en: "Can I post it faster?", es: "¿Puedo publicarlo más rápido?" },
         ],
       },
@@ -306,13 +324,69 @@ export type ShieldCatalogItem = {
     | "capstone";
 };
 export const shields: ShieldCatalogItem[] = [
-  ["basic-shield", 1, "Basic Shield", "Escudo Básico", "Join the Guardians", "Únete a los Guardianes", "joined"],
-  ["protector-shield", 2, "Protector Shield", "Escudo Protector", "Complete Password Safety, Phishing Defense, and Personal Information Safety", "Completa Seguridad de contraseñas, Defensa contra phishing y Seguridad de información personal", "foundations"],
-  ["guardian-shield", 3, "Guardian Shield", "Escudo Guardián", "Complete 10 missions and their mastery checks", "Completa 10 misiones y sus comprobaciones de dominio", "ten-mastery"],
-  ["defender-shield", 4, "Defender Shield", "Escudo Defensor", "Reach Level 10 and pass the applied protection challenge", "Alcanza el nivel 10 y supera el reto de protección aplicada", "level10-challenge"],
-  ["champion-shield", 5, "Champion Shield", "Escudo Campeón", "Earn 2 substantial certificates from distinct learning paths", "Obtén 2 certificados sustanciales de rutas distintas", "two-certificates"],
-  ["elite-shield", 6, "Elite Shield", "Escudo de Élite", "Reach Level 20 with advanced mastery and creator safety", "Alcanza el nivel 20 con dominio avanzado y seguridad creadora", "level20-creator"],
-  ["legendary-shield", 7, "Legendary Shield", "Escudo Legendario", "Complete the multi-skill Guardian Capstone", "Completa el reto final Guardián multidisciplinario", "capstone"],
+  [
+    "basic-shield",
+    1,
+    "Basic Shield",
+    "Escudo Básico",
+    "Join the Guardians",
+    "Únete a los Guardianes",
+    "joined",
+  ],
+  [
+    "protector-shield",
+    2,
+    "Protector Shield",
+    "Escudo Protector",
+    "Complete Password Safety, Phishing Defense, and Personal Information Safety",
+    "Completa Seguridad de contraseñas, Defensa contra phishing y Seguridad de información personal",
+    "foundations",
+  ],
+  [
+    "guardian-shield",
+    3,
+    "Guardian Shield",
+    "Escudo Guardián",
+    "Complete 10 missions and their mastery checks",
+    "Completa 10 misiones y sus comprobaciones de dominio",
+    "ten-mastery",
+  ],
+  [
+    "defender-shield",
+    4,
+    "Defender Shield",
+    "Escudo Defensor",
+    "Reach Level 10 and pass the applied protection challenge",
+    "Alcanza el nivel 10 y supera el reto de protección aplicada",
+    "level10-challenge",
+  ],
+  [
+    "champion-shield",
+    5,
+    "Champion Shield",
+    "Escudo Campeón",
+    "Earn 2 substantial certificates from distinct learning paths",
+    "Obtén 2 certificados sustanciales de rutas distintas",
+    "two-certificates",
+  ],
+  [
+    "elite-shield",
+    6,
+    "Elite Shield",
+    "Escudo de Élite",
+    "Reach Level 20 with advanced mastery and creator safety",
+    "Alcanza el nivel 20 con dominio avanzado y seguridad creadora",
+    "level20-creator",
+  ],
+  [
+    "legendary-shield",
+    7,
+    "Legendary Shield",
+    "Escudo Legendario",
+    "Complete the multi-skill Guardian Capstone",
+    "Completa el reto final Guardián multidisciplinario",
+    "capstone",
+  ],
 ].map(([id, tier, en, es, ren, res, gate]) => ({
   id: id as string,
   tier: tier as ShieldTier,

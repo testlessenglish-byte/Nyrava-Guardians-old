@@ -10,3 +10,9 @@
 - Review migrations before remote operations; configuration alone is not permission to apply SQL.
 - Preserve the app's React/TanStack/Three.js architecture and existing design.
 - Consult `MIGRATION_STATUS.md` for known incomplete features before describing the app as production-ready.
+
+# Execution & Rigor Standards (Auto-Boost)
+
+- **Deep Planning**: Always evaluate architecture and multi-file dependencies before writing code.
+- **Rigorous Verification**: Cross-verify code correctness, TypeScript types, and Supabase RLS schemas before finalizing changes.
+- **Default to Boost**: Treat all feature requests as if they were initiated with `/boost` by acting as a team of senior engineers executing deep thinking and strategic planning.

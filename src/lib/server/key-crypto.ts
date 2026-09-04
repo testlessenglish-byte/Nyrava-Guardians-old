@@ -25,7 +25,11 @@ async function importEncryptionKey(encodedKey: string) {
 export async function encryptSecret(plaintext: string, encodedKey: string) {
   const key = await importEncryptionKey(encodedKey);
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoder.encode(plaintext));
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    encoder.encode(plaintext),
+  );
   return {
     ciphertext: bytesToBase64(new Uint8Array(encrypted)),
     iv: bytesToBase64(iv),

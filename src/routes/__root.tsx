@@ -99,9 +99,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "An interactive academy where kids learn digital safety, AI literacy and creativity alongside six Guardian heroes.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://nyrava-guardians-academy.w-g4972.chatgpt.site/og.png" },
+      {
+        property: "og:image",
+        content: "https://nyrava-guardians-academy.w-g4972.chatgpt.site/og.png",
+      },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://nyrava-guardians-academy.w-g4972.chatgpt.site/og.png" },
+      {
+        name: "twitter:image",
+        content: "https://nyrava-guardians-academy.w-g4972.chatgpt.site/og.png",
+      },
     ],
     links: [
       {

@@ -1,10 +1,4 @@
-const IMMERSIVE_GAME_PREFIXES = [
-  "/isla",
-  "/classroom",
-  "/missions",
-  "/city",
-  "/home-hq",
-] as const;
+const IMMERSIVE_GAME_PREFIXES = ["/isla", "/classroom", "/missions", "/city", "/home-hq"] as const;
 
 export function isImmersiveGameRoute(pathname: string) {
   return IMMERSIVE_GAME_PREFIXES.some(

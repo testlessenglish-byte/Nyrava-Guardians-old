@@ -13,15 +13,18 @@ export function CertificateGallery() {
 
   useEffect(() => {
     let cancelled = false;
-    getProgression().then((value) => {
-      if (!cancelled) setProgress(value);
-    }).catch(() => undefined);
+    getProgression()
+      .then((value) => {
+        if (!cancelled) setProgress(value);
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const certificate = progress?.certificates.find((item) => item.course === FOUNDATION_CERTIFICATE.id) ?? null;
+  const certificate =
+    progress?.certificates.find((item) => item.course === FOUNDATION_CERTIFICATE.id) ?? null;
   if (!certificate) return null;
 
   return (
@@ -39,7 +42,8 @@ export function CertificateGallery() {
               {es ? FOUNDATION_CERTIFICATE.name.es : FOUNDATION_CERTIFICATE.name.en}
             </h2>
             <p className="mt-1 text-sm text-slate-400">
-              ID {certificate.verificationId} · {es ? "Currículo" : "Curriculum"} {certificate.curriculumVersion}
+              ID {certificate.verificationId} · {es ? "Currículo" : "Curriculum"}{" "}
+              {certificate.curriculumVersion}
             </p>
           </div>
           <button
@@ -115,7 +119,9 @@ function CertificateSheet({
             <h1 className="mt-4 text-3xl font-black uppercase tracking-tight sm:text-5xl">
               {es ? "Certificado de Finalización" : "Certificate of Completion"}
             </h1>
-            <p className="mt-5 text-base italic text-slate-600">{es ? "Otorgado a" : "Presented to"}</p>
+            <p className="mt-5 text-base italic text-slate-600">
+              {es ? "Otorgado a" : "Presented to"}
+            </p>
             <p className="mt-2 border-b-2 border-[#d4af58] px-10 pb-2 text-3xl font-black sm:text-5xl">
               {learner}
             </p>
@@ -129,9 +135,18 @@ function CertificateSheet({
               {es ? "Phishing · Contraseñas · Privacidad" : "Phishing · Passwords · Privacy"}
             </p>
             <div className="mt-8 grid w-full max-w-3xl grid-cols-1 gap-4 text-xs text-slate-600 sm:grid-cols-3">
-              <div><b className="block text-[#14213d]">{date}</b>{es ? "Fecha" : "Date"}</div>
-              <div><b className="block text-[#14213d]">{certificate.curriculumVersion}</b>{es ? "Versión" : "Version"}</div>
-              <div><b className="block text-[#14213d]">{certificate.verificationId}</b>{es ? "ID del certificado" : "Certificate ID"}</div>
+              <div>
+                <b className="block text-[#14213d]">{date}</b>
+                {es ? "Fecha" : "Date"}
+              </div>
+              <div>
+                <b className="block text-[#14213d]">{certificate.curriculumVersion}</b>
+                {es ? "Versión" : "Version"}
+              </div>
+              <div>
+                <b className="block text-[#14213d]">{certificate.verificationId}</b>
+                {es ? "ID del certificado" : "Certificate ID"}
+              </div>
             </div>
             <p className="mt-7 max-w-3xl text-[10px] leading-4 text-slate-500">
               {es

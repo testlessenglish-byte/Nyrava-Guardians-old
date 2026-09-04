@@ -1,7 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Brain, Heart, Shield } from "lucide-react";
 import { useState } from "react";
-import { COSMETIC_SLOTS, GUARDIANS, GUARDIAN_IMAGES, resolveGuardian, resolveGuardianId } from "@/data/guardians";
+import {
+  COSMETIC_SLOTS,
+  GUARDIANS,
+  GUARDIAN_IMAGES,
+  resolveGuardian,
+  resolveGuardianId,
+} from "@/data/guardians";
 import { GUARDIAN_STYLES } from "@/lib/guardian-colors";
 import { useGuardian } from "@/lib/guardian-context";
 import { cn } from "@/lib/utils";
@@ -18,8 +24,7 @@ export const Route = createFileRoute("/personalize")({
       { property: "og:title", content: "Personalize Your Guardian — Nyrava Guardians" },
       {
         property: "og:description",
-        content:
-          "Name your Guardian, pick a look, and choose the core value that guides you.",
+        content: "Name your Guardian, pick a look, and choose the core value that guides you.",
       },
     ],
   }),
@@ -33,8 +38,7 @@ const VALUES = [
 ];
 
 function PersonalizePage() {
-  const { guardianId, guardianName, setGuardianName, cosmetics, setCosmetic } =
-    useGuardian();
+  const { guardianId, guardianName, setGuardianName, cosmetics, setCosmetic } = useGuardian();
   const [value, setValue] = useState("protect");
   const navigate = useNavigate();
 
@@ -173,9 +177,7 @@ function PersonalizePage() {
                     )}
                   />
                   <p className="mt-2 text-sm font-extrabold">{label}</p>
-                  <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-                    {blurb}
-                  </p>
+                  <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{blurb}</p>
                 </button>
               ))}
             </div>

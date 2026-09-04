@@ -101,9 +101,10 @@ export class GroqAdapter implements ProviderAdapter {
         safetyStatus: "passed",
         ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       clearTimeout(timer);
-      throw new Error(`Groq Execution Error: ${err.message}`);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      throw new Error(`Groq Execution Error: ${errMsg}`);
     }
   }
 }
@@ -122,12 +123,12 @@ export class GeminiAdapter implements ProviderAdapter {
       const res = await fetch(
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
         {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: request.prompt }] }],
-        }),
-        signal: controller.signal,
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: request.prompt }] }],
+          }),
+          signal: controller.signal,
         },
       );
 
@@ -153,9 +154,10 @@ export class GeminiAdapter implements ProviderAdapter {
         safetyStatus: "passed",
         ...(request.idempotencyKey ? { idempotencyKey: request.idempotencyKey } : {}),
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       clearTimeout(timer);
-      throw new Error(`Gemini Execution Error: ${err.message}`);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      throw new Error(`Gemini Execution Error: ${errMsg}`);
     }
   }
 }
@@ -167,10 +169,10 @@ export class AIProviderRouter {
 
   private get config() {
     return {
-      defaultProvider: process.env['AI_DEFAULT_PROVIDER'] ?? "groq",
-      fallbackProvider: process.env['AI_FALLBACK_PROVIDER'] ?? "gemini",
-      timeoutMs: Number(process.env['AI_TIMEOUT_MS'] ?? 30000),
-      maxRetries: Number(process.env['AI_MAX_RETRIES'] ?? 2),
+      defaultProvider: process.env["AI_DEFAULT_PROVIDER"] ?? "groq",
+      fallbackProvider: process.env["AI_FALLBACK_PROVIDER"] ?? "gemini",
+      timeoutMs: Number(process.env["AI_TIMEOUT_MS"] ?? 30000),
+      maxRetries: Number(process.env["AI_MAX_RETRIES"] ?? 2),
     };
   }
 

@@ -152,9 +152,11 @@ export function resolveChildPolicy({
     canAccessWorld: controls.allowWorld && entitlements.worldAccess,
     canAccessMissions: controls.allowMissions && entitlements.missionAccess,
     canAccessBuilder: controls.allowAiBuilder && entitlements.builderAccess,
-    canUseAI: systemPolicy.systemAiApproved && controls.allowAiBuilder && entitlements.builderAccess,
+    canUseAI:
+      systemPolicy.systemAiApproved && controls.allowAiBuilder && entitlements.builderAccess,
     canUseVoice: systemPolicy.systemVoiceSupported && controls.allowVoice,
-    canUseMicrophone: systemPolicy.systemVoiceSupported && controls.allowVoice && controls.allowMicrophone,
+    canUseMicrophone:
+      systemPolicy.systemVoiceSupported && controls.allowVoice && controls.allowMicrophone,
     canUseSocial: systemPolicy.systemMultiplayerSafe && controls.allowMultiplayer,
     canUseMultiplayer: systemPolicy.systemMultiplayerSafe && controls.allowMultiplayer,
     canOpenExternalLinks: systemPolicy.systemExternalLinksSafe && controls.allowExternalLinks,

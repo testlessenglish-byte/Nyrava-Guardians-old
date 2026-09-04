@@ -48,12 +48,24 @@ test("solid rear classroom wall blocks rear boundary", () => {
 });
 
 test("solid side walls block left and right room boundaries", () => {
-  assert.equal(isRoomPositionColliding("security", new THREE.Vector3(12.95, 0, 0), new Set()), true);
-  assert.equal(isRoomPositionColliding("security", new THREE.Vector3(-12.95, 0, 0), new Set()), true);
+  assert.equal(
+    isRoomPositionColliding("security", new THREE.Vector3(12.95, 0, 0), new Set()),
+    true,
+  );
+  assert.equal(
+    isRoomPositionColliding("security", new THREE.Vector3(-12.95, 0, 0), new Set()),
+    true,
+  );
 });
 
 test("non-security rooms use their own stage and seat collision", () => {
-  assert.equal(isRoomPositionColliding("builder", new THREE.Vector3(-4.0, 0, -6.2), new Set()), true);
-  assert.equal(isRoomPositionColliding("builder", new THREE.Vector3(-6.5, 0, 3.9), new Set()), true);
+  assert.equal(
+    isRoomPositionColliding("builder", new THREE.Vector3(-4.0, 0, -6.2), new Set()),
+    true,
+  );
+  assert.equal(
+    isRoomPositionColliding("builder", new THREE.Vector3(-6.5, 0, 3.9), new Set()),
+    true,
+  );
   assert.equal(isRoomPositionColliding("builder", new THREE.Vector3(0, 0, 4.5), new Set()), false);
 });

@@ -18,7 +18,7 @@ export function updateFollowCamera(
   yaw: number,
   pitch: number,
   delta: number,
-  colliders?: THREE.Object3D[]
+  colliders?: THREE.Object3D[],
 ) {
   // 1. Target torso / shoulders
   tempTarget.copy(playerPosition);
@@ -28,7 +28,7 @@ export function updateFollowCamera(
   const clampedPitch = THREE.MathUtils.clamp(
     pitch,
     THREE.MathUtils.degToRad(-20),
-    THREE.MathUtils.degToRad(65)
+    THREE.MathUtils.degToRad(65),
   );
 
   // 3. Compute desired camera position offset using spherical Euler angles

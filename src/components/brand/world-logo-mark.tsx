@@ -15,7 +15,13 @@ export function WorldLogoMark({
   return (
     <mesh position={position} rotation={rotation} renderOrder={10}>
       <planeGeometry args={[size, size]} />
-      <meshBasicMaterial map={texture} transparent alphaTest={0.05} toneMapped={false} depthWrite={false} />
+      <meshBasicMaterial
+        map={texture}
+        transparent
+        alphaTest={0.05}
+        toneMapped={false}
+        depthWrite={false}
+      />
     </mesh>
   );
 }

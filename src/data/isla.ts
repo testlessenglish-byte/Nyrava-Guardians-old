@@ -7,14 +7,7 @@
 import { WORLD_SCALE, ws } from "@/lib/isla-terrain";
 
 export type RegionId =
-  | "city"
-  | "forest"
-  | "mountains"
-  | "valley"
-  | "desert"
-  | "beach"
-  | "ocean"
-  | "spaceport";
+  "city" | "forest" | "mountains" | "valley" | "desert" | "beach" | "ocean" | "spaceport";
 
 export type Region = {
   id: RegionId;
@@ -173,7 +166,8 @@ export const CRYSTALS: Crystal[] = [
     challenge: {
       kind: "logic",
       skill: "Logic",
-      prompt: "Three symbols guard the temple. Order them: the one that gives light, the one that holds water, the one that carries a message.",
+      prompt:
+        "Three symbols guard the temple. Order them: the one that gives light, the one that holds water, the one that carries a message.",
       options: ["Wave", "Sun", "Signal"],
       answer: [1, 0, 2],
       success: "Clean reasoning. You ordered it by meaning, not by guesswork.",
@@ -207,7 +201,8 @@ export const CRYSTALS: Crystal[] = [
     challenge: {
       kind: "safety",
       skill: "Digital Safety",
-      prompt: "A player you have never met messages you: 'Hey! Send me your home address and I'll mail you a free crystal.' What do you do?",
+      prompt:
+        "A player you have never met messages you: 'Hey! Send me your home address and I'll mail you a free crystal.' What do you do?",
       options: [
         "Send the address — a free crystal sounds great",
         "Don't share it, and tell a trusted adult",
@@ -230,18 +225,49 @@ export type Secret = {
 };
 
 export const SECRETS: Secret[] = [
-  { id: "secret-book", name: "Ancient Book", region: "valley", position: [-18, 41], note: "A book written before the city existed." },
-  { id: "secret-tech", name: "Technology Piece", region: "desert", position: [-64, 8], note: "A Nyrava component half-buried in the dunes." },
-  { id: "secret-key", name: "Guardian Key", region: "mountains", position: [34, -34], note: "Old metal, still warm. Something this opens." },
-  { id: "secret-map", name: "Torn Map", region: "forest", position: [-33, -25], note: "Half a map. The other half is somewhere on Isla Central." },
-  { id: "secret-shell", name: "Signal Shell", region: "beach", position: [21, 47], note: "Hold it to your ear and you hear Nyrava code." },
+  {
+    id: "secret-book",
+    name: "Ancient Book",
+    region: "valley",
+    position: [-18, 41],
+    note: "A book written before the city existed.",
+  },
+  {
+    id: "secret-tech",
+    name: "Technology Piece",
+    region: "desert",
+    position: [-64, 8],
+    note: "A Nyrava component half-buried in the dunes.",
+  },
+  {
+    id: "secret-key",
+    name: "Guardian Key",
+    region: "mountains",
+    position: [34, -34],
+    note: "Old metal, still warm. Something this opens.",
+  },
+  {
+    id: "secret-map",
+    name: "Torn Map",
+    region: "forest",
+    position: [-33, -25],
+    note: "Half a map. The other half is somewhere on Isla Central.",
+  },
+  {
+    id: "secret-shell",
+    name: "Signal Shell",
+    region: "beach",
+    position: [21, 47],
+    note: "Hold it to your ear and you hear Nyrava code.",
+  },
 ];
 
 /** The final report challenge, asked when the child returns to the Academy. */
 export const REPORT_CHALLENGE: Challenge = {
   kind: "observation",
   skill: "Observation",
-  prompt: "Before you report in: which region of Isla Central sits at the highest point of the island?",
+  prompt:
+    "Before you report in: which region of Isla Central sits at the highest point of the island?",
   options: ["Emerald Beach", "Knowledge Mountains", "History Valley"],
   answer: [1],
   success: "You were paying attention while you explored. That is the whole skill.",

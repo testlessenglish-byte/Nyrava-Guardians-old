@@ -15,6 +15,7 @@ The repeated broken-page reports are not one isolated classroom bug. The reposit
 `AppShell` treated only `/isla` and `/classroom` as full-screen 3D routes. `/missions`, `/city`, and `/home-hq` are also real-time Canvas/gameplay routes, but they were mounted through the standard application header/sidebar/mobile navigation shell.
 
 Impact:
+
 - competing fixed/sticky layers over 3D canvases;
 - incorrect pointer/touch areas;
 - inconsistent viewport measurements;
@@ -48,6 +49,7 @@ Fix: automatic selection now starts capable devices at `MEDIUM`; `HIGH` remains 
 After local Guardian state became hydrated, the provider immediately enabled cloud saving while the initial cloud read was still in flight. On a slow connection, the debounced local write could race the cloud read and risk stale progress/identity synchronization.
 
 Fix:
+
 - local progress still hydrates first so gameplay does not wait on the network;
 - cloud writes are withheld until the initial cloud read finishes;
 - current in-session avatar/name/progress takes precedence over stale cloud defaults;

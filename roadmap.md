@@ -21,6 +21,7 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [ ] Replace robot avatar with humanoid armored guardian model (walk/idle animations, per-guardian armor tint)
 
 ## World 1 — Isla Central (big spec, staged)
+
 - [ ] Humanoid armored avatar with working idle/walk/run animations (in progress)
 - [ ] Isla Central island world: Central City, Forest of Wisdom, Knowledge Mountains, History Valley, Desert Zone, Emerald Beach, Infinite Ocean, Space Port, Academy interior
 - [ ] Walkable spatial travel between regions (no click-to-teleport-only), paths/bridges/hidden areas
@@ -34,6 +35,7 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [ ] Keep service-boundary architecture (world data / mission data / progress / AI / mastery separated)
 
 ## Isla Central polish pass (Aug 30)
+
 - [x] Bigger island world (scale terrain + regions), denser props
 - [x] Immersive fullscreen layout for 3D routes (no site chrome overlap)
 - [x] Fix avatar walking backwards (camera-relative input)
@@ -46,6 +48,7 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [ ] Next art pass: distinct per-guardian kid models
 
 ## Safe shared metaverse rooms
+
 - [ ] Subscriber accounts and child-safe profiles with verified age bands and interests
 - [ ] Live room presence so eligible Guardians appear together in the same classroom/world
 - [ ] Age-banded, interest-aware room matching with strict capacity and separation rules
@@ -54,6 +57,7 @@ Frontend foundation per starter package (visual/interactive layer; backend hando
 - [ ] Realtime avatar movement and room state synchronization
 
 ## Isla Central polish (Aug 30)
+
 - [x] Swimming: enter the ocean, float, swim gait, reach offshore crystals
 - [x] Avatar textures show through (no flat tint wash, gentle emissive rim)
 - [x] Replace white block buildings with tropical palapa huts / island architecture

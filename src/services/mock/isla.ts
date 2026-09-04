@@ -29,9 +29,13 @@ export const islaService = {
   /** Grades an answer and records mastery evidence for the Intelligence Core. */
   async submitChallenge(sourceId: string, challenge: Challenge, answer: number[]) {
     const correct =
-      answer.length === challenge.answer.length && answer.every((v, i) => v === challenge.answer[i]);
+      answer.length === challenge.answer.length &&
+      answer.every((v, i) => v === challenge.answer[i]);
     if (correct) recordMastery(challenge.skill, sourceId);
-    return { correct, message: correct ? challenge.success : "Not quite — think it through and try again." };
+    return {
+      correct,
+      message: correct ? challenge.success : "Not quite — think it through and try again.",
+    };
   },
 
   getReportChallenge() {

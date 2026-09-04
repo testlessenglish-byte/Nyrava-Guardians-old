@@ -5,7 +5,8 @@
  * know whether data is mock, REST, or RPC.
  */
 
-export type GuardianId = "lex" | "nova" | "zoey" | "jacob" | "dayana" | "sarah" | "tess" | "byte" | "echo";
+export type GuardianId =
+  "lex" | "nova" | "zoey" | "jacob" | "dayana" | "sarah" | "tess" | "byte" | "echo";
 
 export interface Guardian {
   id: GuardianId;
@@ -69,13 +70,7 @@ export interface Mission {
 }
 
 export type BuilderStatus =
-  | "idle"
-  | "understanding"
-  | "planning"
-  | "safety"
-  | "generating"
-  | "done"
-  | "error";
+  "idle" | "understanding" | "planning" | "safety" | "generating" | "done" | "error";
 
 export interface BuilderRequest {
   prompt: string;

@@ -97,20 +97,37 @@ function IslaCentral() {
       onPointerDown={(event) => {
         if (isGameInputPaused()) return;
         const target = event.target as HTMLElement | null;
-        if (target?.closest("button, a, select, input, summary, details, label, [role='button'], .game-panel, .game-panel-content, .isla-talk-prompt, .isla-conversation")) return;
+        if (
+          target?.closest(
+            "button, a, select, input, summary, details, label, [role='button'], .game-panel, .game-panel-content, .isla-talk-prompt, .isla-conversation",
+          )
+        )
+          return;
         if (event.pointerType === "mouse" && event.button !== 0) return;
         dragging.current = true;
         islaControls.dragged = false;
       }}
-      onPointerUp={() => { dragging.current = false; }}
-      onPointerLeave={() => { dragging.current = false; }}
-      onPointerCancel={() => { dragging.current = false; clearLegacyInput(); }}
-      onLostPointerCapture={() => { dragging.current = false; }}
+      onPointerUp={() => {
+        dragging.current = false;
+      }}
+      onPointerLeave={() => {
+        dragging.current = false;
+      }}
+      onPointerCancel={() => {
+        dragging.current = false;
+        clearLegacyInput();
+      }}
+      onLostPointerCapture={() => {
+        dragging.current = false;
+      }}
       onPointerMove={(event) => {
         if (!dragging.current || isGameInputPaused()) return;
         if (Math.abs(event.movementX) + Math.abs(event.movementY) > 2) islaControls.dragged = true;
         islaControls.cameraYaw -= event.movementX * 0.005;
-        islaControls.cameraPitch = Math.min(0.85, Math.max(-0.15, islaControls.cameraPitch + event.movementY * 0.003));
+        islaControls.cameraPitch = Math.min(
+          0.85,
+          Math.max(-0.15, islaControls.cameraPitch + event.movementY * 0.003),
+        );
       }}
     >
       {mounted && (

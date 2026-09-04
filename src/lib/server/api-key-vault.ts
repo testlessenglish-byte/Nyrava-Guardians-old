@@ -41,7 +41,11 @@ async function findStoredSecret(provider: ApiProvider): Promise<StoredSecret | n
   return rows[0] ?? null;
 }
 
-async function audit(provider: ApiProvider, action: "created" | "rotated" | "removed", actor: string) {
+async function audit(
+  provider: ApiProvider,
+  action: "created" | "rotated" | "removed",
+  actor: string,
+) {
   await getDb().insert(apiSecretAudit).values({
     id: crypto.randomUUID(),
     provider,
@@ -70,7 +74,9 @@ export async function validateProviderApiKey(provider: ApiProvider, rawKey: stri
       if (response.status === 401 || response.status === 403) {
         throw new Error(`${PROVIDER_LABEL[provider]} rejected this key.`);
       }
-      throw new Error(`${PROVIDER_LABEL[provider]} validation is unavailable [${response.status}].`);
+      throw new Error(
+        `${PROVIDER_LABEL[provider]} validation is unavailable [${response.status}].`,
+      );
     }
     return key;
   } catch (error) {

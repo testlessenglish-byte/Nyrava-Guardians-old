@@ -22,8 +22,7 @@ export const Route = createFileRoute("/builder")({
       { property: "og:title", content: "AI Builder — Nyrava Guardians" },
       {
         property: "og:description",
-        content:
-          "Describe a world and watch your Guardian team plan it with AI.",
+        content: "Describe a world and watch your Guardian team plan it with AI.",
       },
     ],
   }),
@@ -54,9 +53,13 @@ function BuilderPage() {
         <Sparkles className="mx-auto h-12 w-12 text-amber-400 opacity-60" />
         <h1 className="text-xl font-black">AI Builder Not Available</h1>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          This feature isn’t available on your account right now. Ask your parent or guardian if you’d like to use it.
+          This feature isn’t available on your account right now. Ask your parent or guardian if
+          you’d like to use it.
         </p>
-        <Link to="/home" className="inline-flex rounded-xl bg-primary px-5 py-2.5 text-xs font-extrabold text-primary-foreground">
+        <Link
+          to="/home"
+          className="inline-flex rounded-xl bg-primary px-5 py-2.5 text-xs font-extrabold text-primary-foreground"
+        >
           Return to Guardian Base
         </Link>
       </div>
@@ -105,8 +108,7 @@ function BuilderPage() {
       <header>
         <h1 className="text-2xl font-extrabold md:text-3xl">AI Builder</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Describe a world. Your Guardian team plans it with AI — with safety checks
-          on every step.
+          Describe a world. Your Guardian team plans it with AI — with safety checks on every step.
         </p>
       </header>
 
@@ -163,11 +165,7 @@ function BuilderPage() {
               disabled={busy || !prompt.trim()}
               className="glow-primary mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wider text-primary-foreground transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
             >
-              {busy ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Wand2 className="h-4 w-4" />
-              )}
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
               {busy ? "Building…" : "Build with AI"}
             </button>
           </div>

@@ -11,13 +11,7 @@ export type DoorData = {
   height: number;
 };
 
-export function InteractiveDoor({
-  door,
-  isOpen = false,
-}: {
-  door: DoorData;
-  isOpen?: boolean;
-}) {
+export function InteractiveDoor({ door, isOpen = false }: { door: DoorData; isOpen?: boolean }) {
   const hingeRef = useRef<THREE.Group>(null);
   const targetRotY = isOpen ? Math.PI / 2 : 0;
 
@@ -27,7 +21,7 @@ export function InteractiveDoor({
         hingeRef.current.rotation.y,
         targetRotY,
         10,
-        delta
+        delta,
       );
     }
   });

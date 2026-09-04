@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const classroom = readFileSync(new URL("../src/routes/classroom.tsx", import.meta.url), "utf8");
-const academy = readFileSync(new URL("../src/components/academy/academy-course-dashboard.tsx", import.meta.url), "utf8");
+const academy = readFileSync(
+  new URL("../src/components/academy/academy-course-dashboard.tsx", import.meta.url),
+  "utf8",
+);
 const home = readFileSync(new URL("../src/routes/home.tsx", import.meta.url), "utf8");
 const isla = readFileSync(new URL("../src/routes/isla.tsx", import.meta.url), "utf8");
 

@@ -22,7 +22,8 @@ function allowedAdminEmails() {
 
 function verifiedEmail(user: User) {
   const email = user.email?.trim().toLowerCase();
-  if (!email || !user.email_confirmed_at) throw new Error("A verified administrator email is required.");
+  if (!email || !user.email_confirmed_at)
+    throw new Error("A verified administrator email is required.");
   return email;
 }
 

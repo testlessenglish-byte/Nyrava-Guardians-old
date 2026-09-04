@@ -33,7 +33,9 @@ export const CLASSROOM_ROOMS: Array<{
 ];
 
 export function isClassroomRoomId(value: string | null): value is ClassroomRoomId {
-  return value === "security" || value === "builder" || value === "communication" || value === "truth";
+  return (
+    value === "security" || value === "builder" || value === "communication" || value === "truth"
+  );
 }
 
 export function readSelectedClassroom(): ClassroomRoomId {

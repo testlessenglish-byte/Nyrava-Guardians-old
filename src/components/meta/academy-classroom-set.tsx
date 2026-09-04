@@ -5,12 +5,54 @@ import { type DoorData } from "@/components/game/interactive-door";
 import { WorldLogoMark } from "@/components/brand/world-logo-mark";
 
 export const STUDENT_SEATS: SeatData[] = [
-  { id: "seat-left-1", position: [-6.5, 0.05, 3.9], rotation: Math.PI, seatPosition: [-6.5, 0.45, 3.7], seatRotation: Math.PI, standPosition: [-5.0, 0, 3.9] },
-  { id: "seat-left-2", position: [-5.3, 0.05, 3.9], rotation: Math.PI, seatPosition: [-5.3, 0.45, 3.7], seatRotation: Math.PI, standPosition: [-3.8, 0, 3.9] },
-  { id: "seat-left-3", position: [-6.5, 0.05, 7.4], rotation: Math.PI, seatPosition: [-6.5, 0.45, 7.2], seatRotation: Math.PI, standPosition: [-5.0, 0, 7.4] },
-  { id: "seat-left-4", position: [-5.3, 0.05, 7.4], rotation: Math.PI, seatPosition: [-5.3, 0.45, 7.2], seatRotation: Math.PI, standPosition: [-3.8, 0, 7.4] },
-  { id: "seat-right-1", position: [5.3, 0.05, 3.9], rotation: Math.PI, seatPosition: [5.3, 0.45, 3.7], seatRotation: Math.PI, standPosition: [3.8, 0, 3.9] },
-  { id: "seat-right-2", position: [6.5, 0.05, 3.9], rotation: Math.PI, seatPosition: [6.5, 0.45, 3.7], seatRotation: Math.PI, standPosition: [5.0, 0, 3.9] },
+  {
+    id: "seat-left-1",
+    position: [-6.5, 0.05, 3.9],
+    rotation: Math.PI,
+    seatPosition: [-6.5, 0.45, 3.7],
+    seatRotation: Math.PI,
+    standPosition: [-5.0, 0, 3.9],
+  },
+  {
+    id: "seat-left-2",
+    position: [-5.3, 0.05, 3.9],
+    rotation: Math.PI,
+    seatPosition: [-5.3, 0.45, 3.7],
+    seatRotation: Math.PI,
+    standPosition: [-3.8, 0, 3.9],
+  },
+  {
+    id: "seat-left-3",
+    position: [-6.5, 0.05, 7.4],
+    rotation: Math.PI,
+    seatPosition: [-6.5, 0.45, 7.2],
+    seatRotation: Math.PI,
+    standPosition: [-5.0, 0, 7.4],
+  },
+  {
+    id: "seat-left-4",
+    position: [-5.3, 0.05, 7.4],
+    rotation: Math.PI,
+    seatPosition: [-5.3, 0.45, 7.2],
+    seatRotation: Math.PI,
+    standPosition: [-3.8, 0, 7.4],
+  },
+  {
+    id: "seat-right-1",
+    position: [5.3, 0.05, 3.9],
+    rotation: Math.PI,
+    seatPosition: [5.3, 0.45, 3.7],
+    seatRotation: Math.PI,
+    standPosition: [3.8, 0, 3.9],
+  },
+  {
+    id: "seat-right-2",
+    position: [6.5, 0.05, 3.9],
+    rotation: Math.PI,
+    seatPosition: [6.5, 0.45, 3.7],
+    seatRotation: Math.PI,
+    standPosition: [5.0, 0, 3.9],
+  },
 ];
 
 export const CLASSROOM_DOORS: DoorData[] = [];
@@ -56,7 +98,13 @@ function TeacherPodium({ position }: { position: [number, number, number] }) {
       {/* Hologram Display */}
       <mesh position={[0, 1.25, -0.8]}>
         <planeGeometry args={[1.2, 0.4]} />
-        <meshStandardMaterial color="#38bdf8" emissive="#38bdf8" emissiveIntensity={0.6} transparent opacity={0.8} />
+        <meshStandardMaterial
+          color="#38bdf8"
+          emissive="#38bdf8"
+          emissiveIntensity={0.6}
+          transparent
+          opacity={0.8}
+        />
       </mesh>
     </group>
   );
@@ -77,7 +125,12 @@ function Plant({ position }: { position: [number, number, number] }) {
   );
 }
 
-export function AcademyClassroomSet({ activeSeatId }: { activeSeatId?: string | null; openDoorIds?: Set<string> }) {
+export function AcademyClassroomSet({
+  activeSeatId,
+}: {
+  activeSeatId?: string | null;
+  openDoorIds?: Set<string>;
+}) {
   return (
     <group>
       {/* Main Floor */}
@@ -133,16 +186,27 @@ export function AcademyClassroomSet({ activeSeatId }: { activeSeatId?: string | 
       <Plant position={[10.8, 0, -7.8]} />
 
       {/* Student Seats */}
-      {STUDENT_SEATS.map((seat) => <InteractiveSeat key={seat.id} seat={seat} occupied={activeSeatId === seat.id} />)}
+      {STUDENT_SEATS.map((seat) => (
+        <InteractiveSeat key={seat.id} seat={seat} occupied={activeSeatId === seat.id} />
+      ))}
 
       {/* Achievements Plaque on Right Wall */}
       <group position={[12.48, 2.9, -4.0]} rotation-y={-Math.PI / 2}>
-        <mesh><boxGeometry args={[4.4, 2.3, 0.12]} /><meshStandardMaterial color="#11283f" /></mesh>
-        <Text position={[0, 0.65, 0.08]} fontSize={0.18} color="#fbbf24" anchorX="center">ACHIEVEMENTS</Text>
+        <mesh>
+          <boxGeometry args={[4.4, 2.3, 0.12]} />
+          <meshStandardMaterial color="#11283f" />
+        </mesh>
+        <Text position={[0, 0.65, 0.08]} fontSize={0.18} color="#fbbf24" anchorX="center">
+          ACHIEVEMENTS
+        </Text>
         {[-1.2, -0.6, 0, 0.6, 1.2].map((x, index) => (
           <mesh key={x} position={[x, -0.15, 0.09]}>
             <circleGeometry args={[0.23, 24]} />
-            <meshStandardMaterial color={index === 0 ? "#fbbf24" : "#334155"} emissive={index === 0 ? "#d97706" : "#0f172a"} emissiveIntensity={0.5} />
+            <meshStandardMaterial
+              color={index === 0 ? "#fbbf24" : "#334155"}
+              emissive={index === 0 ? "#d97706" : "#0f172a"}
+              emissiveIntensity={0.5}
+            />
           </mesh>
         ))}
       </group>
@@ -153,7 +217,14 @@ export function AcademyClassroomSet({ activeSeatId }: { activeSeatId?: string | 
       {/* Lighting */}
       <ambientLight intensity={0.95} color="#fff7ed" />
       <hemisphereLight args={["#e0f2fe", "#451a03", 0.9]} />
-      <directionalLight position={[8, 14, 6]} intensity={1.8} color="#fff7d6" castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} />
+      <directionalLight
+        position={[8, 14, 6]}
+        intensity={1.8}
+        color="#fff7d6"
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+      />
       <pointLight position={[-4.0, 3.8, -6.2]} color="#38bdf8" intensity={6} distance={10} />
       <pointLight position={[0, 4.2, 4.5]} color="#fbbf24" intensity={4} distance={11} />
     </group>

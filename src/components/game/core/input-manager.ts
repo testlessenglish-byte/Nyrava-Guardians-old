@@ -65,7 +65,10 @@ export class InputManager {
   setCameraLook(deltaX: number, deltaY: number, sensitivity = 0.005) {
     if (!this.enabled || gameInputPaused) return;
     this.cameraYaw -= deltaX * sensitivity;
-    this.cameraPitch = Math.min(0.85, Math.max(-0.15, this.cameraPitch + deltaY * sensitivity * 0.6));
+    this.cameraPitch = Math.min(
+      0.85,
+      Math.max(-0.15, this.cameraPitch + deltaY * sensitivity * 0.6),
+    );
     this.inputMethod = "mouse";
   }
 

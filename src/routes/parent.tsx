@@ -105,10 +105,19 @@ function ParentPortalPage() {
 
       // 3. Query profiles, guardian_state, safety_settings, mission_attempts for linked children
       const [profilesRes, stateRes, safetyRes, attemptsRes] = await Promise.all([
-        supabase.from("profiles").select("user_id, display_name, avatar_guardian").in("user_id", learnerIds),
-        supabase.from("guardian_state").select("user_id, xp, completed_missions, guardian_name").in("user_id", learnerIds),
+        supabase
+          .from("profiles")
+          .select("user_id, display_name, avatar_guardian")
+          .in("user_id", learnerIds),
+        supabase
+          .from("guardian_state")
+          .select("user_id, xp, completed_missions, guardian_name")
+          .in("user_id", learnerIds),
         supabase.from("safety_settings").select("*").in("learner_user_id", learnerIds),
-        supabase.from("mission_attempts").select("id, user_id, mission_id, outcome, created_at").in("user_id", learnerIds),
+        supabase
+          .from("mission_attempts")
+          .select("id, user_id, mission_id, outcome, created_at")
+          .in("user_id", learnerIds),
       ]);
 
       const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.user_id, p]));
@@ -122,7 +131,18 @@ function ParentPortalPage() {
         const childAttempts = (attemptsRes.data ?? []).filter((a) => a.user_id === childId);
 
         const scores: Record<string, number> = {};
-        const safAny = saf as any;
+        const safTyped = saf as {
+          allow_academy?: boolean;
+          allow_world?: boolean;
+          allow_missions?: boolean;
+          allow_ai_builder?: boolean;
+          voice_enabled?: boolean;
+          allow_external_links?: boolean;
+          multiplayer_consent?: boolean;
+          daily_limit_minutes?: number;
+          allowed_start?: string;
+          allowed_end?: string;
+        };
         for (const att of childAttempts) {
           if (att.outcome && att.outcome.endsWith("%")) {
             const num = parseInt(att.outcome.replace("%", ""), 10);
@@ -143,13 +163,13 @@ function ParentPortalPage() {
           lastActive: "Recently active",
           scores,
           controls: {
-            allowAcademy: safAny?.allow_academy ?? true,
-            allowWorld: safAny?.allow_world ?? true,
-            allowMissions: safAny?.allow_missions ?? true,
-            allowAiBuilder: safAny?.allow_ai_builder ?? false,
+            allowAcademy: safTyped?.allow_academy ?? true,
+            allowWorld: safTyped?.allow_world ?? true,
+            allowMissions: safTyped?.allow_missions ?? true,
+            allowAiBuilder: safTyped?.allow_ai_builder ?? false,
             allowVoice: saf?.voice_enabled ?? false,
             allowMicrophone: false,
-            allowExternalLinks: safAny?.allow_external_links ?? false,
+            allowExternalLinks: safTyped?.allow_external_links ?? false,
             allowMultiplayer: saf?.multiplayer_consent ?? false,
             dailyLimitMinutes: saf?.daily_limit_minutes ?? 120,
             allowedStart: saf?.allowed_start ?? "07:00",
@@ -212,9 +232,7 @@ function ParentPortalPage() {
     const nextControls = { ...targetChild.controls, ...updates };
 
     setChildrenList((current) =>
-      current.map((child) =>
-        child.id === childId ? { ...child, controls: nextControls } : child,
-      ),
+      current.map((child) => (child.id === childId ? { ...child, controls: nextControls } : child)),
     );
 
     try {
@@ -236,7 +254,11 @@ function ParentPortalPage() {
   }
 
   if (authLoading || loadingData) {
-    return <div className="panel p-8 text-center text-sm font-bold">Checking parent authorization & family profiles…</div>;
+    return (
+      <div className="panel p-8 text-center text-sm font-bold">
+        Checking parent authorization & family profiles…
+      </div>
+    );
   }
 
   if (!user) {
@@ -245,7 +267,8 @@ function ParentPortalPage() {
         <ShieldCheck className="mx-auto h-12 w-12 text-primary" />
         <h1 className="text-2xl font-black">Parent Portal Access</h1>
         <p className="text-sm text-muted-foreground">
-          Sign in with your parent or guardian account to manage safety controls and monitor real learning progress.
+          Sign in with your parent or guardian account to manage safety controls and monitor real
+          learning progress.
         </p>
         <Link
           to="/login"
@@ -263,7 +286,8 @@ function ParentPortalPage() {
         <Lock className="mx-auto h-12 w-12 text-amber-400" />
         <h1 className="text-2xl font-black">Parent Access Reserved</h1>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          This area is reserved for parents and guardians. Return to your Guardian Base to continue your adventure.
+          This area is reserved for parents and guardians. Return to your Guardian Base to continue
+          your adventure.
         </p>
         <Link
           to="/home"
@@ -291,14 +315,17 @@ function ParentPortalPage() {
             </div>
             <h1 className="mt-2 text-3xl font-black sm:text-4xl">Parent & Guardian Portal</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Monitor real child learning achievements, configure persistent safety boundaries, and manage subscriptions.
+              Monitor real child learning achievements, configure persistent safety boundaries, and
+              manage subscriptions.
             </p>
           </div>
           <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-background/80 px-4 py-3 backdrop-blur">
             <Users className="h-6 w-6 text-primary" />
             <div>
               <p className="text-xs font-bold text-muted-foreground">Subscription Tier</p>
-              <p className="text-sm font-black uppercase text-emerald-400">{subscriptionTier} Plan</p>
+              <p className="text-sm font-black uppercase text-emerald-400">
+                {subscriptionTier} Plan
+              </p>
             </div>
           </div>
         </div>
@@ -337,7 +364,8 @@ function ParentPortalPage() {
           <Users className="mx-auto h-10 w-10 text-muted-foreground opacity-50" />
           <h2 className="text-lg font-black">No Linked Child Profiles</h2>
           <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            You do not have any linked child accounts yet. Use the box above to link your child's User ID and start managing their safety settings and progress.
+            You do not have any linked child accounts yet. Use the box above to link your child's
+            User ID and start managing their safety settings and progress.
           </p>
         </div>
       ) : (
@@ -354,7 +382,9 @@ function ParentPortalPage() {
                     type="button"
                     onClick={() => setSelectedChildId(child.id)}
                     className={`panel flex items-start justify-between p-4 text-left transition ${
-                      isSelected ? "border-primary bg-primary/5 shadow-lg" : "hover:border-border/80"
+                      isSelected
+                        ? "border-primary bg-primary/5 shadow-lg"
+                        : "hover:border-border/80"
                     }`}
                   >
                     <div>
@@ -382,7 +412,9 @@ function ParentPortalPage() {
                 <div className="panel p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl font-black">{selectedChild.displayName}’s Real Learning Progress</h3>
+                      <h3 className="text-xl font-black">
+                        {selectedChild.displayName}’s Real Learning Progress
+                      </h3>
                       <p className="text-xs text-muted-foreground">Authoritative backend state</p>
                     </div>
                     <Award className="h-7 w-7 text-amber-400" />
@@ -447,7 +479,9 @@ function ParentPortalPage() {
                 <div className="panel p-6 space-y-4">
                   <h3 className="text-lg font-black">Educational Activity Log</h3>
                   {selectedChild.attempts.length === 0 ? (
-                    <p className="text-xs text-muted-foreground italic">No educational attempts recorded yet.</p>
+                    <p className="text-xs text-muted-foreground italic">
+                      No educational attempts recorded yet.
+                    </p>
                   ) : (
                     <div className="space-y-3">
                       {selectedChild.attempts.map((att) => (
@@ -457,7 +491,9 @@ function ParentPortalPage() {
                         >
                           <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-400" />
                           <div className="flex-1">
-                            <p className="font-extrabold text-foreground">Completed {att.missionId} Assessment</p>
+                            <p className="font-extrabold text-foreground">
+                              Completed {att.missionId} Assessment
+                            </p>
                             <p className="text-muted-foreground">Result: {att.outcome}</p>
                           </div>
                           <span className="text-[11px] font-bold text-muted-foreground">
@@ -538,7 +574,9 @@ function ParentPortalPage() {
                       <span className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5 text-primary" /> Daily Time Limit
                       </span>
-                      <span className="text-primary font-black">{selectedChild.controls.dailyLimitMinutes} min</span>
+                      <span className="text-primary font-black">
+                        {selectedChild.controls.dailyLimitMinutes} min
+                      </span>
                     </div>
                     <input
                       type="range"
@@ -559,8 +597,9 @@ function ParentPortalPage() {
                   <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-xs space-y-1">
                     <p className="font-extrabold text-primary">Resolved Safety Authority</p>
                     <p className="text-[11px] text-muted-foreground">
-                      AI Builder: {resolvedPolicy.canAccessBuilder ? "Allowed" : "Disabled"} · Voice:{" "}
-                      {resolvedPolicy.canUseVoice ? "Allowed" : "Disabled"} · Time: {resolvedPolicy.dailyLimitMinutes} min
+                      AI Builder: {resolvedPolicy.canAccessBuilder ? "Allowed" : "Disabled"} ·
+                      Voice: {resolvedPolicy.canUseVoice ? "Allowed" : "Disabled"} · Time:{" "}
+                      {resolvedPolicy.dailyLimitMinutes} min
                     </p>
                   </div>
                 </div>

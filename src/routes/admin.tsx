@@ -64,7 +64,10 @@ type Status = {
   providers: ProviderStatus[];
 };
 
-const providerDetails: Record<ProviderId, { description: string; placeholder: string; use: string }> = {
+const providerDetails: Record<
+  ProviderId,
+  { description: string; placeholder: string; use: string }
+> = {
   gemini: {
     description: "Guardian conversations, teaching explanations and classroom voice.",
     placeholder: "Paste your Gemini API key",
@@ -93,7 +96,10 @@ function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<ProviderId | "status" | null>(null);
   const [keys, setKeys] = useState<Record<ProviderId, string>>({ gemini: "", groq: "" });
-  const [visible, setVisible] = useState<Record<ProviderId, boolean>>({ gemini: false, groq: false });
+  const [visible, setVisible] = useState<Record<ProviderId, boolean>>({
+    gemini: false,
+    groq: false,
+  });
   const accessToken = session?.access_token ?? "";
 
   const configuredCount = useMemo(
@@ -108,7 +114,9 @@ function AdminPage() {
     try {
       setStatus(await getStatus({ data: { accessToken } }));
     } catch (refreshError) {
-      setError(refreshError instanceof Error ? refreshError.message : "Admin status could not load.");
+      setError(
+        refreshError instanceof Error ? refreshError.message : "Admin status could not load.",
+      );
     } finally {
       setBusy(null);
     }
@@ -157,12 +165,17 @@ function AdminPage() {
     setBusy(provider);
     try {
       const next = await saveKey({ data: { accessToken, provider, apiKey } });
-      setStatus((current) => ({ ...next, administrator: current?.administrator ?? administratorEmail }));
+      setStatus((current) => ({
+        ...next,
+        administrator: current?.administrator ?? administratorEmail,
+      }));
       setKeys((current) => ({ ...current, [provider]: "" }));
       setVisible((current) => ({ ...current, [provider]: false }));
       toast.success(`${provider === "gemini" ? "Gemini" : "Groq"} key validated and protected.`);
     } catch (saveError) {
-      toast.error(saveError instanceof Error ? saveError.message : "The API key could not be saved.");
+      toast.error(
+        saveError instanceof Error ? saveError.message : "The API key could not be saved.",
+      );
     } finally {
       setBusy(null);
     }
@@ -172,10 +185,15 @@ function AdminPage() {
     setBusy(provider);
     try {
       const next = await deleteKey({ data: { accessToken, provider } });
-      setStatus((current) => ({ ...next, administrator: current?.administrator ?? administratorEmail }));
+      setStatus((current) => ({
+        ...next,
+        administrator: current?.administrator ?? administratorEmail,
+      }));
       toast.success(`${provider === "gemini" ? "Gemini" : "Groq"} key removed.`);
     } catch (removeError) {
-      toast.error(removeError instanceof Error ? removeError.message : "The API key could not be removed.");
+      toast.error(
+        removeError instanceof Error ? removeError.message : "The API key could not be removed.",
+      );
     } finally {
       setBusy(null);
     }
@@ -194,10 +212,12 @@ function AdminPage() {
             <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.18em] text-cyan-300">
               <ShieldCheck className="h-4 w-4" /> Verified administrator
             </div>
-            <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Nyrava Control Center</h1>
+            <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+              Nyrava Control Center
+            </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              Connect the protected AI services that power Guardian teaching, voice and learning tools.
-              Saved keys are encrypted and can never be displayed again.
+              Connect the protected AI services that power Guardian teaching, voice and learning
+              tools. Saved keys are encrypted and can never be displayed again.
             </p>
           </div>
           <div className="rounded-2xl border border-border/80 bg-background/70 px-4 py-3 backdrop-blur">
@@ -215,8 +235,8 @@ function AdminPage() {
       )}
       {status && !status.storageReady && (
         <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100">
-          Secure panel storage is waiting for the new deployment. Existing protected environment keys
-          remain available, but saving from this page will activate after publishing.
+          Secure panel storage is waiting for the new deployment. Existing protected environment
+          keys remain available, but saving from this page will activate after publishing.
         </div>
       )}
 
@@ -252,13 +272,17 @@ function AdminPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-5 pt-6">
-                <p className="text-sm leading-relaxed text-muted-foreground">{details.description}</p>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {details.description}
+                </p>
 
                 {provider.configured && (
                   <div className="grid gap-3 rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-4 text-xs sm:grid-cols-2">
                     <div>
                       <p className="font-bold text-muted-foreground">Protected key</p>
-                      <p className="mt-1 font-mono font-black text-emerald-200">•••• •••• {full.lastFour}</p>
+                      <p className="mt-1 font-mono font-black text-emerald-200">
+                        •••• •••• {full.lastFour}
+                      </p>
                     </div>
                     <div>
                       <p className="font-bold text-muted-foreground">Last validated</p>
@@ -274,7 +298,10 @@ function AdminPage() {
                 )}
 
                 <div>
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground" htmlFor={`${id}-key`}>
+                  <label
+                    className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground"
+                    htmlFor={`${id}-key`}
+                  >
                     {provider.configured ? "Replace API key" : "API key"}
                   </label>
                   <div className="mt-2 flex gap-2">
@@ -284,7 +311,9 @@ function AdminPage() {
                       autoComplete="off"
                       spellCheck={false}
                       value={keys[id]}
-                      onChange={(event) => setKeys((current) => ({ ...current, [id]: event.target.value }))}
+                      onChange={(event) =>
+                        setKeys((current) => ({ ...current, [id]: event.target.value }))
+                      }
                       placeholder={details.placeholder}
                       className="h-11 font-mono"
                     />
@@ -300,8 +329,8 @@ function AdminPage() {
                     </Button>
                   </div>
                   <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-                    The key is sent only to the protected server, validated with {provider.label}, encrypted,
-                    and cleared from this form.
+                    The key is sent only to the protected server, validated with {provider.label},
+                    encrypted, and cleared from this form.
                   </p>
                 </div>
 
@@ -326,7 +355,8 @@ function AdminPage() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Remove the {provider.label} key?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Guardian features using this provider will stop until another valid key is saved.
+                            Guardian features using this provider will stop until another valid key
+                            is saved.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -352,23 +382,35 @@ function AdminPage() {
         <div className="panel p-5">
           <LockKeyhole className="h-5 w-5 text-cyan-300" />
           <h2 className="mt-3 text-sm font-extrabold">Write-only secrets</h2>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Keys are never returned to the browser after saving.</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Keys are never returned to the browser after saving.
+          </p>
         </div>
         <div className="panel p-5">
           <ServerCog className="h-5 w-5 text-violet-300" />
           <h2 className="mt-3 text-sm font-extrabold">Server-side access</h2>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Only verified admins can read status or change providers.</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Only verified admins can read status or change providers.
+          </p>
         </div>
         <div className="panel p-5">
           <ShieldCheck className="h-5 w-5 text-emerald-300" />
           <h2 className="mt-3 text-sm font-extrabold">Live validation</h2>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Invalid keys are rejected before anything is stored.</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Invalid keys are rejected before anything is stored.
+          </p>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
         <span>Signed in securely as {status?.administrator ?? user.email}</span>
-        <Button type="button" variant="ghost" size="sm" disabled={busy === "status"} onClick={() => void refresh()}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={busy === "status"}
+          onClick={() => void refresh()}
+        >
           <RefreshCw className={busy === "status" ? "animate-spin" : ""} /> Refresh service status
         </Button>
       </div>

@@ -12,7 +12,10 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Nyrava Guardians — Choose Your Guardian & Enter World" },
-      { name: "description", content: "Enter Nyrava: Choose your hero and explore the 3D educational world." },
+      {
+        name: "description",
+        content: "Enter Nyrava: Choose your hero and explore the 3D educational world.",
+      },
     ],
   }),
   component: WelcomePage,
@@ -27,7 +30,9 @@ function WelcomePage() {
       {/* DIRECT 3D WORLD NAV BAR */}
       <div className="max-w-6xl mx-auto rounded-3xl border border-cyan-500/40 bg-slate-950/90 p-4 shadow-2xl backdrop-blur-md">
         <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
-          <span className="text-xs font-black uppercase tracking-[0.25em] text-cyan-400">DIRECT 3D WORLD LOCATIONS</span>
+          <span className="text-xs font-black uppercase tracking-[0.25em] text-cyan-400">
+            DIRECT 3D WORLD LOCATIONS
+          </span>
           <span className="rounded-full bg-cyan-950 px-2.5 py-0.5 text-[9px] font-black text-cyan-300 border border-cyan-500/30">
             PLAYABLE ENGINE ACTIVE
           </span>
@@ -75,8 +80,8 @@ function WelcomePage() {
           Welcome to <span className="text-primary text-glow">NYRAVA</span>
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground md:text-base">
-          A living digital world where you train with five Guardians, take on real
-          missions, and learn to be smart, safe and kind online.
+          A living digital world where you train with five Guardians, take on real missions, and
+          learn to be smart, safe and kind online.
         </p>
         <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary">
           <Sparkles className="h-3.5 w-3.5" />
@@ -116,9 +121,7 @@ function WelcomePage() {
                 </div>
                 <h2 className={cn("text-lg font-extrabold", styles.text)}>{g.name}</h2>
                 <p className="text-xs font-bold text-foreground/80">{g.role}</p>
-                <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
-                  {g.tagline}
-                </p>
+                <p className="mt-2 text-[11px] leading-snug text-muted-foreground">{g.tagline}</p>
                 <span
                   className={cn(
                     "mt-3 rounded-full border px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider",

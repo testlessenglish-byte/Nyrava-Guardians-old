@@ -49,8 +49,11 @@ export const ALLOWED_ASSET_TYPES = new Set([
 export class WorldBuilderPipeline {
   async processRequest(
     userId: string,
-    prompt: string
-  ): Promise<{ status: "completed" | "rejected" | "failed"; result: WorldBuilderValidationResult }> {
+    prompt: string,
+  ): Promise<{
+    status: "completed" | "rejected" | "failed";
+    result: WorldBuilderValidationResult;
+  }> {
     // Stage 1: Input Validation
     if (!prompt || prompt.trim().length < 3 || prompt.length > 500) {
       return {
@@ -58,7 +61,8 @@ export class WorldBuilderPipeline {
         result: {
           valid: false,
           reasonCodes: ["INVALID_PROMPT_LENGTH"],
-          safeExplanation: "Please provide a description between 3 and 500 characters for your world.",
+          safeExplanation:
+            "Please provide a description between 3 and 500 characters for your world.",
         },
       };
     }
@@ -96,8 +100,20 @@ Return ONLY valid JSON matching this schema:
         title: "Guardian Safe Base",
         theme: "Guardian Headquarters",
         items: [
-          { id: "base-1", assetType: "base_structure", name: "Guardian Base", category: "structure", position: [0, 0, 0] },
-          { id: "control-1", assetType: "control_room", name: "Control Center", category: "tech", position: [5, 0, 0] },
+          {
+            id: "base-1",
+            assetType: "base_structure",
+            name: "Guardian Base",
+            category: "structure",
+            position: [0, 0, 0],
+          },
+          {
+            id: "control-1",
+            assetType: "control_room",
+            name: "Control Center",
+            category: "tech",
+            position: [5, 0, 0],
+          },
         ],
         rules: ["Keep environment clean and secure"],
       };
@@ -114,16 +130,26 @@ Return ONLY valid JSON matching this schema:
         result: {
           valid: false,
           reasonCodes: ["SAFETY_POLICY_VIOLATION"],
-          safeExplanation: "Your request contained concepts that don't fit our safe Guardian universe. Try building a safe training area or research lab instead!",
+          safeExplanation:
+            "Your request contained concepts that don't fit our safe Guardian universe. Try building a safe training area or research lab instead!",
         },
       };
     }
 
     // Stage 6: Asset Allowlist Validation
     const filteredItems = plan.items.filter((item) => ALLOWED_ASSET_TYPES.has(item.assetType));
-    plan.items = filteredItems.length > 0 ? filteredItems : [
-      { id: "base-def", assetType: "base_structure", name: "Safe Haven Base", category: "structure", position: [0, 0, 0] }
-    ];
+    plan.items =
+      filteredItems.length > 0
+        ? filteredItems
+        : [
+            {
+              id: "base-def",
+              assetType: "base_structure",
+              name: "Safe Haven Base",
+              category: "structure",
+              position: [0, 0, 0],
+            },
+          ];
 
     // Stage 7 & 8: Size / Resource Limits
     if (plan.items.length > 20) {
