@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html, Text, useProgress } from "@react-three/drei";
+import worldFont from "@fontsource/nunito/files/nunito-latin-400-normal.woff?url";
 import * as THREE from "three";
 import { Character } from "./character";
 import { CLASS_GUARDIANS, type ClassGuardian } from "@/lib/class-guardians";
@@ -303,17 +304,8 @@ export function ClassroomScene({
             />
           </mesh>
           <pointLight position={[0, 1.7, 0]} color={playerColor} intensity={4} distance={5} />
-          // Text font
           <group position={[0, 2.15, 0]}>
-            <Text
-              font="arial"
-
-              fontSize={0.16}
-              color="#38bdf8"
-              anchorX="center"
-              anchorY="middle"
-              letterSpacing={0.05}
-            >
+            <Text font={worldFont} fontSize={0.16} color="#38bdf8" anchorX="center" anchorY="middle" letterSpacing={0.05}>
               {playerLabel}
             </Text>
           </group>
